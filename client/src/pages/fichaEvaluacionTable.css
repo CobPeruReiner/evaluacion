@@ -1,0 +1,103 @@
+.ficha-evaluacion-table__item{
+    text-align: center;
+}
+
+.reporteTable-date-container{
+    display: flex;
+    padding: 1em;
+    align-items: center;
+    gap: 2em;
+  }
+
+  .reporteTable-date__input-container{
+    display: flex;
+    gap: .5em;
+    align-items: center;
+  }
+
+  .reporteTable-date__firstDate-input{
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 1rem;
+  }
+
+  .reporteTable-date__secondDate-input{
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 1rem;
+  }
+
+  .reporteTable-date__button{
+    display: flex;
+    align-items: center;
+    gap: .5em;
+    border: 1px solid #ccc;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  .reporteTable-date__button:hover{
+    background-color: #5E5D5B;
+    color: #fafafa;
+  }
+
+  .registros-multicanal___filter-export{
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row-reverse;
+    margin-top: 2em;
+    margin-bottom: 2em;
+  }
+  
+  .registros-multicanal-button {
+    background-color: #c2fbd7;
+    border-radius: 100px;
+    box-shadow: rgba(44, 187, 99, .2) 0 -25px 18px -14px inset,rgba(44, 187, 99, .15) 0 1px 2px,rgba(44, 187, 99, .15) 0 2px 4px,rgba(44, 187, 99, .15) 0 4px 8px,rgba(44, 187, 99, .15) 0 8px 16px,rgba(44, 187, 99, .15) 0 16px 32px;
+    color: green;
+    cursor: pointer;
+    font-family: CerebriSans-Regular,-apple-system,system-ui,Roboto,sans-serif;
+    padding: 15px 25px;
+    transition: all 250ms;
+    font-size: 16px;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+  
+  .registros-multicanal-button:hover {
+    box-shadow: rgba(44,187,99,.35) 0 -25px 18px -14px inset,rgba(44,187,99,.25) 0 1px 2px,rgba(44,187,99,.25) 0 2px 4px,rgba(44,187,99,.25) 0 4px 8px,rgba(44,187,99,.25) 0 8px 16px,rgba(44,187,99,.25) 0 16px 32px;
+    transform: scale(1.05) rotate(-1deg);
+  }
+  
+  /* INPUT TEXT FILTER*/
+  
+  .registros-multicanal__search-container{
+    position: relative;
+    width: 300px;
+  }
+  
+  .registros-multicanal__input{
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+  }
+  
+  .registros-multicanal__input-search{
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    color: #5E5D5B;
+  }
+
+  /* ADDED FILTERS AND IMPROVED DESIGN */
+
+  .ficha-evaluacion-table__filter-container{
+    display: flex;
+    gap: 2em;
+    margin-top: 3em;
+  }

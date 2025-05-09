@@ -1,0 +1,80 @@
+.usersView-insert-table-container{
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+  }
+
+  .usersView-insert-table-title{
+    text-align: center;
+    margin-top: 2em;
+    margin-bottom: 1em;
+    text-transform: uppercase;
+  }
+  
+  .usersView-insert-table{
+    width: 50%;
+    margin: auto;
+  }
+  
+  .usersView-insert-table__head{
+    background-color: rgb(57, 62, 63);
+    border-bottom: 3px solid #fff;
+  }
+  
+  .usersView-insert-table__header{
+    text-align: center;
+    font-weight: bold;
+  }
+  
+  .usersView-insert-table__header-item{
+    padding: 1em;
+    color: #fff;
+  }
+  
+  .usersView-insert-table__body{
+    padding: 1.2em;
+  }
+  
+  .usersView-insert-table__row{
+    text-align: center;
+    background-color: azure;
+  }
+  
+  .usersView-insert-table__cell{
+    padding: 1em;
+  
+  }
+
+  .usersView-insert-table-nombres{
+    background-color: rgb(183, 247, 242);
+    color: #000;
+    font-size: 1rem;
+    text-transform: uppercase;
+  }
+
+  .usersView-insert-table-usuario{
+    background-color: rgb(191, 242, 182);
+  }
+
+  .usersView-insert-table__options{
+    display: flex;
+    justify-content: center;
+    gap: 1em;
+    margin-top: .5em;
+  }
+
+  .usersView-edit{
+    color: rgb(61, 47, 225);
+  }
+
+  .usersView-delete{
+    color: rgb(224, 41, 68);
+  }
+
+  .usersView-insert-table__options > *{
+    font-size: 2rem;
+  }
+
+  .usersView-insert-table__options > * :hover {
+    cursor: pointer;
+  }

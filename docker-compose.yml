@@ -1,0 +1,30 @@
+version: '3'
+services:
+  client:
+    image: evaluacion-client
+    build:
+      context: ./client
+    ports:
+      - "5174:5173"
+    env_file:
+      - ./client/.env.production
+    command: npm run build
+    volumes:
+      - client-build:/app/build # Comparte la carpeta build como un volumen
+    depends_on:
+      - server
+
+  server:
+    image: evaluacion-server
+    build:
+      context: ./server
+    ports:
+      - "4001:4001"
+    env_file:
+      - ./server/config.env
+    volumes:
+      - client-build:/app/public # Usa el volumen compartido para la carpeta public
+    command: ["node", "server.js"]
+
+volumes:
+  client-build:

@@ -1,0 +1,48 @@
+.asignarFicha-container{
+    width: 100%;
+    display: flex;
+    max-width: 1000px;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2em;
+    margin-bottom: 1em;
+}
+
+.asignarFicha__select{
+    position: relative;
+    z-index: 2;
+    width: 600px;
+}
+
+.asignarFicha__radio-container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1em;
+}
+
+.asignarFicha__radio-container > div {
+    display: flex;
+    gap: .5em;
+}
+
+.asignarFicha__button {
+    border: none;
+    background-color: #f39b44;
+    border-radius: 100px;
+    box-shadow: rgba(201, 48, 10, 0.52) 0 -25px 18px -14px inset,rgba(201, 48, 10, 0.52) 0 1px 2px,rgba(201, 48, 10, 0.52) 0 2px 4px,rgba(201, 48, 10, 0.52) 0 4px 8px,rgba(201, 48, 10, 0.52) 0 8px 16px,rgba(201, 48, 10, 0.52) 0 16px 32px;
+    color: rgb(246, 246, 246);
+    cursor: pointer;
+    font-family: CerebriSans-Regular,-apple-system,system-ui,Roboto,sans-serif;
+    padding: 15px 25px;
+    transition: all 250ms;
+    font-size: 16px;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+  
+  .asignarFicha__button:hover {
+    box-shadow: rgba(247, 87, 47, 0.52) 0 -25px 18px -14px inset,rgba(247, 87, 47, 0.52) 0 1px 2px,rgba(247, 87, 47, 0.52) 0 2px 4px,rgba(247, 87, 47, 0.52) 0 4px 8px,rgba(247, 87, 47, 0.52) 0 8px 16px,rgba(247, 87, 47, 0.52) 0 16px 32px;
+    transform: scale(1.05) rotate(-1deg);
+  }

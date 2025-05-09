@@ -1,0 +1,10 @@
+POST http://localhost:6000/api/v1/users/signup
+Content-Type: application/json
+
+{
+    "apellidos": "tezen",
+    "nombres": "raul",
+    "cargo": "admin",
+    "usuario": "raul",
+    "password": "123"
+}

@@ -1,0 +1,109 @@
+/* .asesorPerfil__main-container{
+    padding: 3em;
+}
+
+.asesorPerfil__container{
+    margin-top: 2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.asesorPerfil__container img {
+    width: 300px;   
+}
+
+.asesorPerfil__container__info p{
+    margin-bottom: 1em;
+    font-size: 1.4rem;
+} */
+
+/* CSS IMPROVEMENT */
+    .asesorPerfil__full-container{
+        height: 90vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+  
+      .asesorPerfil__main-container {
+        padding: 2em;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        width: 80%;
+        max-width: 800px;
+        margin: auto;
+      }
+      
+      .asesorPerfil__main__h1 {
+        font-size: 2rem;
+        color: #333;
+        margin-bottom: 1em;
+        padding: 0.5em;
+        background-color: #062241;
+        color: #fff;
+        border-radius: 8px;
+        width: 100%;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      
+      .asesorPerfil__container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        margin-top: 2em;
+      }
+      
+      .asesorPerfil__container img {
+        width: 200px;
+        border-radius: 50%;
+        margin-bottom: 2em;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      
+      .asesorPerfil__container__info {
+        display: grid;
+        grid-template-columns: auto auto;
+        gap: 1rem 2rem;
+        font-size: 1.2rem;
+        width: 100%;
+        max-width: 500px;
+        background-color: #f9f9f9;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .info-labels, .info-values{
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: .5em;
+      }
+      
+      .info-labels p, .info-values p {
+        /* margin: .6em 0; */
+        font-size: 1.4rem;
+        color: #555;
+      }
+
+      .info-values span {
+        font-size: 1rem;
+        color: #555;
+        display: block;
+        text-align: left;
+      }
+      
+      .info-labels p {
+        font-weight: bold;
+        color: #333;
+        text-align: left;
+      }
+      
+      .info-values p {
+        text-align: left;
+      }
+      

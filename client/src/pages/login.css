@@ -1,0 +1,85 @@
+.login-page{
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Kanit', sans-serif;
+}
+
+.login-body{
+    width: 100%;
+    max-width: 400px;
+    height: fit-content;
+    padding: 2em 3em;
+    background-color: #fafafa;  
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    border-radius: 20px;
+}
+
+.login-title{
+    color: #060b26;
+    font-size: 5rem;
+    display: block;
+    margin: auto;
+    margin-bottom: .5em;
+}
+
+.login-container{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2em;
+}
+
+.login-usuario, .login-password{
+    display: flex;
+    flex-direction: column;
+}
+
+.login-container select, .login-container input {
+    padding: 5px;
+    border-radius: 10px;
+    border-style: none;
+    border: 1px solid #ccc;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 700;
+    font-size: .9rem;
+}
+
+.login-button {
+  background: #060b26;
+  border: 1px solid #060b26;
+  border-radius: 6px;
+  box-shadow: rgba(0, 0, 0, 0.1) 1px 2px 4px;
+  box-sizing: border-box;
+  color: #FFFFFF;
+  cursor: pointer;
+  display: inline-block;
+  font-family: nunito,roboto,proxima-nova,"proxima nova",sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 16px;
+  min-height: 40px;
+  outline: 0;
+  padding: 12px 14px;
+  text-align: center;
+  text-rendering: geometricprecision;
+  text-transform: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  vertical-align: middle;
+}
+
+.login-button:hover,
+.login-button:active {
+  background-color: initial;
+  background-position: 0 0;
+  color: #060b26;
+}
+
+.login-button:active {
+  opacity: .5;
+}

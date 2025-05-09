@@ -1,0 +1,158 @@
+.vista-gestiones-web__view{
+    width: 95%;
+    margin: auto;
+}
+
+.vista-gestiones-web__filter-container{
+    display: flex;
+    justify-content: space-between;
+    /* flex-direction: column; */
+    align-items: center;
+    gap: 1em;
+    margin-bottom: 2em;
+}
+
+.vista-gestiones-web__filter-button{
+    width: 140px;
+    max-width: 100%;
+    gap: .5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
+    cursor: pointer;
+    color: rgb(27, 137, 205);
+    font-weight: bold;
+    background-color: #fff;
+    border-radius: 15px;
+    padding: 5px 20px;
+    box-shadow: rgba(9, 113, 232, 0.35) 0px -50px 36px -28px inset;
+    margin-bottom: 1em;
+}
+
+.vista-gestiones-web__filter-button:hover{
+    background-color: rgb(27, 137, 205);
+    color: #fff;
+    box-shadow: rgba(254, 254, 255, 0.35) 0px -50px 36px -28px inset;
+}
+
+.vista-gestiones-web__select{
+    position: relative;
+    z-index: 100;
+    width: 100%;
+}
+
+.vista-gestiones-web__date-input__container{
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+  }
+
+.vista-gestiones-web__date-input{
+    width: 100%;
+    max-width: 300px;
+    margin-right: 1em;
+    padding: .7em;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.vista-gestiones-web__filter-button-icon{
+    font-size: 2rem;
+}
+
+.vista-gestiones-web__monitor-button{
+    font-size: 2rem;
+    color: rgb(7, 168, 114);
+    cursor: pointer;
+}
+
+.vista-gestiones-web__title{
+    text-align: center;
+    margin: 2em;
+}
+
+.vista-gestiones-web__monitor-button:hover{
+    color: rgb(2, 59, 40);
+}
+
+.vista-gestiones-web-obs{
+    font-size: 13px;
+}
+
+/* TEXT SEARCH INPUT */
+.vista-gestiones-web__search-container{
+    position: relative;
+    width: 30%;
+  }
+  
+  .vista-gestiones-web__input{
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+  }
+  
+  .vista-gestiones-web__input-search{
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    color: #5E5D5B;
+  }
+
+  .vista-gestiones-web__search__main-container{
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .vista-gestiones-web__search-asesorFilter{
+    width: 35%;
+  }
+
+  .vista-gestiones-web__search-asesorFilter__select{
+    position: relative;
+    z-index: 99;
+  }
+
+  
+
+/* LOADER */
+
+.loader {
+    width: 60px;
+    height: 60px;
+    border:10px solid #FFF;
+    border-radius: 50%;
+    position: absolute;
+    z-index: 1000;
+    top: 50%;
+    left: 50%;
+    transform:rotate(45deg);
+    box-sizing: border-box;
+  }
+  .loader::before {
+    content: "";
+    position: absolute;
+    box-sizing: border-box;
+    inset:-10px;
+    border-radius: 50%;
+    border:10px solid #FF3D00;
+    animation: prixClipFix 2s infinite linear;
+  }
+
+
+
+  @keyframes prixClipFix {
+      0%   {clip-path:polygon(50% 50%,0 0,0 0,0 0,0 0,0 0)}
+      25%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 0,100% 0,100% 0)}
+      50%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,100% 100%,100% 100%)}
+      75%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 100%)}
+      100% {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 0)}
+  }
+    
+
+  /*DATATABLE COLUMNS*/
+  .vista-gestiones-web__center-column{
+    text-align: center;
+  }

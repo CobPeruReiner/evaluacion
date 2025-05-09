@@ -1,0 +1,48 @@
+.message-global{
+    height: 100vh;
+    width: 100%;
+    position: absolute;
+    z-index: 200;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.message-container{
+    width: 350px;
+    height: 200px;
+    position: absolute;
+    background-color: #DFF6FF;
+    border-radius: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    font-weight: bold;
+    padding: .2em 1em;
+    border: 5px solid rgba(93, 169, 234, 0.5);
+}
+
+.message-text{
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+.check{
+    color: #00bf72;
+    font-size: 3.5rem;
+}
+
+.message-close{
+    position: relative;
+    color: rgb(250, 108, 108);
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.message-close:hover{
+    color: rgb(250, 1, 1);
+}

@@ -1,0 +1,23 @@
+.App{
+  width: 100vw;
+  max-width: 1800px;
+  margin: auto;
+  
+}
+
+.error-modal{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1000;
+  background-color: rgb(246, 97, 97);
+  color: #fff;
+  font-size: 2rem;
+  text-align: center;
+  padding: 1em;
+}
+
+.h1-center{
+  text-align: center;
+  margin: 1em auto;
+}
