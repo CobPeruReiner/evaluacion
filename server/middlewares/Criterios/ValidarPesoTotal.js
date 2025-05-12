@@ -53,6 +53,50 @@ const validarPesoTotal = (tabla) => {
 
       const cambiarDePadre = !idPadreOriginal || idPadre != idPadreOriginal;
 
+      // Caso especial para CRITERIO (comparar con el peso del ITEM, no con 1)
+      if (tabla === "CRITERIO") {
+        const query = `
+          SELECT
+            COALESCE(SUM(C.PESO_CRITERIO), 0) AS sumaTotal,
+            (
+              SELECT I.PESO_ITEM
+              FROM calidad.ITEM I
+              WHERE I.ID_ITEM = :idPadre
+            ) AS pesoItem,
+            (
+              SELECT C2.PESO_CRITERIO
+              FROM calidad.CRITERIO C2
+              WHERE C2.ID_CRITERIO = :idElemento
+            ) AS pesoAnterior
+          FROM calidad.CRITERIO C
+          WHERE C.ID_ITEM = :idPadre;
+        `;
+
+        const [resultado] = await db.query(query, {
+          replacements: { idPadre, idElemento },
+          type: QueryTypes.SELECT,
+        });
+
+        const pesoAnterior = parseFloat(resultado.pesoAnterior || 0);
+        const pesoMaximoPermitido = parseFloat(resultado.pesoItem || 0);
+        const sumaCriteriosExistentes = parseFloat(resultado.sumaTotal || 0);
+
+        const sumaRecalculada =
+          Math.round(
+            (sumaCriteriosExistentes - pesoAnterior + pesoNuevo) * 100
+          ) / 100;
+
+        if (sumaRecalculada > pesoMaximoPermitido) {
+          return res.status(400).json({
+            ok: false,
+            msg: `La suma de pesos de los criterios (${sumaRecalculada}) excede el peso del ítem (${pesoMaximoPermitido})`,
+          });
+        }
+
+        return next();
+      }
+
+      // Casos normales: ITEM y ACCION_CRITERIO
       let query = `
         SELECT COALESCE(SUM(${campoPesoDB}), 0) AS sumaActual
         FROM calidad.${tabla}
@@ -72,7 +116,8 @@ const validarPesoTotal = (tabla) => {
         type: QueryTypes.SELECT,
       });
 
-      const sumaTotal = parseFloat(resultado.sumaActual) + pesoNuevo;
+      const sumaTotal =
+        Math.round((parseFloat(resultado.sumaActual) + pesoNuevo) * 100) / 100;
 
       if (sumaTotal > 1) {
         return res.status(400).json({
@@ -81,7 +126,7 @@ const validarPesoTotal = (tabla) => {
         });
       }
 
-      next();
+      return next();
     } catch (error) {
       console.error("❌ Error en validación de peso:", error);
       return res.status(500).json({

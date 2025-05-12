@@ -1,7 +1,7 @@
 const { QueryTypes } = require("sequelize");
 const { db } = require("../utils/database.util");
 
-// ITEMS
+// ======================== ITEMS ========================
 const getAllItems = async (_req, res) => {
   console.log("===================== OBTENIENDO ITEMS =====================");
 
@@ -202,7 +202,7 @@ const updateItem = async (req, res) => {
   }
 };
 
-// CRITERIOS
+// ======================== CRITERIOS ========================
 const getAllCriterios = async (_req, res) => {
   console.log(
     "===================== OBTENIENDO CRITERIOS ====================="
@@ -395,7 +395,7 @@ const updateCriterio = async (req, res) => {
   }
 };
 
-// ACCIONES
+// ======================== ACCIONES ========================
 const getAllAcciones = async (_req, res) => {
   console.log(
     "===================== OBTENIENDO ACCIONES ====================="
@@ -404,14 +404,19 @@ const getAllAcciones = async (_req, res) => {
   try {
     const acciones = await db.query(
       `
-        SELECT tb1.ID_ACCION_CRITERIO, tb1.NOMBRE_ACCION_CRITERIO, tb1.ID_CRITERIO, tb1.PESO_ACCION_CRITERIO, tb2.NOMBRE_CRITERIO, tb1.FECHA_ACTUALIZACION, tb1.USUARIO_ACTUALIZACION, CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION
+        SELECT
+          tb1.ID_ACCION_CRITERIO, tb1.NOMBRE_ACCION_CRITERIO, tb1.ID_CRITERIO, tb1.PESO_ACCION_CRITERIO, tb2.NOMBRE_CRITERIO,
+          tb1.FECHA_ACTUALIZACION, tb1.USUARIO_ACTUALIZACION, CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION,
+          tb4.NOMBRE_ITEM, tb5.NOMBRE_CARTERA
         FROM calidad.ACCION_CRITERIO tb1
         LEFT JOIN calidad.CRITERIO tb2
         ON tb1.ID_CRITERIO = tb2.ID_CRITERIO
         LEFT JOIN calidad.PERSONAL tb3
         ON tb1.USUARIO_ACTUALIZACION = tb3.IDPERSONAL
         LEFT JOIN calidad.ITEM tb4
-        ON tb2.ID_ITEM = tb4.ID_ITEM;
+        ON tb2.ID_ITEM = tb4.ID_ITEM
+        LEFT JOIN calidad.CARTERA tb5
+        ON tb4.ID_CARTERA = tb5.ID_CARTERA;
       `,
       {
         type: QueryTypes.SELECT,
@@ -459,8 +464,8 @@ const createAccion = async (req, res) => {
   try {
     await db.query(
       `
-        INSERT INTO calidad.ACCION_CRITERIO (NOMBRE_ACCION_CRITERIO, PESO_ACCION_CRITERIO, FECHA_ACTUALIZACION, USUARIO_ACTUALIZACION, ID_CRITERIO)
-        VALUES (:nombreAccion, :pesoAccion, :fechaActualizacion, :idUsuarioActualizacion, :idCriterio);
+        INSERT INTO calidad.ACCION_CRITERIO (NOMBRE_ACCION_CRITERIO, PESO_ACCION_CRITERIO, FECHA_ACTUALIZACION, USUARIO_ACTUALIZACION, ID_CRITERIO, ESTADO_ACCION)
+        VALUES (:nombreAccion, :pesoAccion, :fechaActualizacion, :idUsuarioActualizacion, :idCriterio, 1);
       `,
       {
         replacements: {
@@ -489,7 +494,7 @@ const createAccion = async (req, res) => {
 
 const updateAccion = async (req, res) => {};
 
-// MOTIVNOS NO PAGO
+// ======================== MOTIVNOS NO PAGO ========================
 const getAllMotivosNoPago = async (_req, res) => {
   console.log(
     "===================== OBTENIENDO MOTIVOS NO PAGO ====================="
@@ -566,7 +571,7 @@ const createMotivoNoPago = async (req, res) => {
 
 const updateMotivoNoPago = async (req, res) => {};
 
-// TIPOS DE GESTION
+// ======================== TIPOS DE GESTION ========================
 const getAllTiposGestion = async (_req, res) => {
   console.log(
     "===================== OBTENIENDO TIPOS DE GESTION ====================="
@@ -643,7 +648,7 @@ const createTipoGestion = async (req, res) => {
 
 const updateTipoGestion = async (req, res) => {};
 
-// TIPOS DE LLAMADA
+// ======================== TIPOS DE LLAMADA ========================
 const getAllTiposLlamada = async (_req, res) => {
   console.log(
     "===================== OBTENIENDO TIPOS DE LLAMADA ====================="

@@ -1,6 +1,7 @@
 import { useContext } from "react";
 import { Delete, Edit } from "../../../../../Icons/Iconos";
 import { CriteriosContext } from "../../../../../Context/Criterios/ItemContext";
+import moment from "moment";
 
 export const TCriterios = () => {
   const { criteriosPaginated, openModalNCriterio } =
@@ -18,7 +19,12 @@ export const TCriterios = () => {
             Item Relacionado
           </th>
           <th className="py-3 px-6 relative cursor-pointer">Peso</th>
-          <th className="py-3 px-6 relative cursor-pointer">Acciones</th>
+          <th className="py-3 px-6 relative cursor-pointer">
+            Fecha Actualización
+          </th>
+          <th className="py-3 px-6 relative cursor-pointer">
+            Usuario Actualización
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -41,13 +47,13 @@ export const TCriterios = () => {
               <td className="py-3 px-6">{criterio.NOMBRE_CRITERIO}</td>
               <td className="py-3 px-6">{criterio.NOMBRE_ITEM}</td>
               <td className="py-3 px-6">{criterio.PESO_CRITERIO * 100}%</td>
-              <td className="py-3 px-6 flex items-center gap-3">
-                <button className="text-xl text-[#67748e] hover:text-[#09f] transition-all duration-300">
-                  <Edit />
-                </button>
-                <button className="text-xl text-[#67748e] hover:text-red-500 transition-all duration-300">
-                  <Delete />
-                </button>
+              <td className="py-3 px-6">
+                {moment(criterio.FECHA_ACTUALIZACION)
+                  .utc()
+                  .format("DD/MM/YYYY HH:mm:ss")}
+              </td>
+              <td className="py-3 px-6">
+                {criterio.NOMBRE_USUARIO_ACTUALIZACION}
               </td>
             </tr>
           ))

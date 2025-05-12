@@ -24,6 +24,15 @@ const initCriterios = {
   idItem: null,
 };
 
+const initAccioness = {
+  idAccion: null,
+  nombreAccion: "",
+  pesoAccion: "",
+  fechaActualizacion: null,
+  idUsuarioActualizacion: null,
+  idCriterio: null,
+};
+
 export const CriteriosProvider = ({ children }) => {
   const API_URL = `${import.meta.env.VITE_API_URL}api/v1`;
 
@@ -310,7 +319,17 @@ export const CriteriosProvider = ({ children }) => {
   };
 
   // Filtros
-  const filteredItemsCriteriosBySearch = () => {};
+  const filteredItemsCriteriosBySearch = () => {
+    const queryFiltered = searchItem.toLowerCase();
+
+    return criteriosItems.filter(
+      (c) =>
+        c.NOMBRE_ITEM?.toLowerCase().includes(queryFiltered) ||
+        c.NOMBRE_CARTERA?.toLowerCase().includes(queryFiltered) ||
+        c.NOMBRE_USUARIO_ACTUALIZACION?.toLowerCase().includes(queryFiltered) ||
+        c.NOMBRE_CARTERA?.toLowerCase().includes(queryFiltered)
+    );
+  };
 
   // =========================== ItemsPaginacion ===========================
 
@@ -578,9 +597,192 @@ export const CriteriosProvider = ({ children }) => {
   };
 
   // Filtros
-  const filteredCriteriosCriteriosBySearch = () => {};
+  const filteredCriteriosCriteriosBySearch = () => {
+    const queryFiltered = searchCriterio.toLowerCase();
+
+    return criteriosItems.filter(
+      (c) =>
+        c.NOMBRE_CRITERIO?.toLowerCase().includes(queryFiltered) ||
+        c.NOMBRE_ITEM?.toLowerCase().includes(queryFiltered) ||
+        c.NOMBRE_USUARIO_ACTUALIZACION?.toLowerCase().includes(queryFiltered) ||
+        c.NOMBRE_CARTERA?.toLowerCase().includes(queryFiltered)
+    );
+  };
 
   // =========================== CriteriosPaginacion ===========================
+
+  // ================================= ACCIONES =================================
+  const refMNAcciones = useRef(null);
+  const [modalNAcciones, setModalNAcciones] = useState(false);
+  const [modoNAcciones, setModoNAcciones] = useState("new");
+  const [formNAcciones, setFormNAcciones] = useState(initAccioness);
+
+  const [criteriosAcciones, setCriteriosAcciones] = useState([]);
+  const [accionesPaginated, setaccionesPaginated] = useState([]);
+  const [loadingAcciones, setLoadingAcciones] = useState(false);
+  const [isPostingNAcciones, setIsPostingNAcciones] = useState(false);
+  const [exportingAcciones, setExportingAcciones] = useState(false);
+
+  // Input de cartera
+  const refSCriterios = useRef(null);
+  const [selectCarteraAcciones, setSelectCarteraAcciones] = useState(false);
+  const [inputCarteraAccionesAsoc, setinputCarteraAccionesAsoc] = useState("");
+  const [criteriosFiltrados, setcriteriosFiltrados] = useState([]);
+
+  // Abrir/cerrar modal
+  useOutsideClick(refMNAcciones, () => setModalNAcciones(false));
+
+  const openModalNAcciones = (newModo = "new", newData = null) => {
+    setModoNAcciones(newModo);
+
+    if (newModo === "edit") {
+      const pesoTransformado = newData.PESO_ACCION_CRITERIO * 100;
+
+      setFormNAcciones({
+        ...formNAcciones,
+        idAccion: newData.ID_ACCION_CRITERIO,
+        nombreAccion: newData.NOMBRE_ACCION_CRITERIO,
+        pesoAccion: pesoTransformado,
+        idCriterio: newData.ID_CRITERIO,
+        idCriterioOriginal: newData.ID_CRITERIO,
+      });
+
+      setinputCarteraAccionesAsoc(`${newData.NOMBRE_CRITERIO}`);
+    } else {
+      setFormNAcciones(initAccioness);
+      setinputCarteraAccionesAsoc("");
+    }
+
+    setModalNAcciones(true);
+  };
+
+  const closeModalNAcciones = () => {
+    setFormNAcciones(initAccioness);
+    setinputCarteraAccionesAsoc("");
+    setModalNAcciones(false);
+  };
+
+  // Capturar los inputs
+  const handleInputChangeFormNAcciones = (e) => {
+    const { value, name, type, checked } = e.target;
+
+    setFormNAcciones({
+      ...formNAcciones,
+      [name]: type === "checkbox" ? (checked ? 1 : 0) : value,
+    });
+  };
+
+  // Abrir/cerrar select
+  const handleSelectCriterio = () =>
+    setSelectCarteraAcciones(!selectCarteraAcciones);
+
+  useOutsideClick(refSCriterios, () => setSelectCarteraAcciones(false));
+
+  // Filtrar criterios
+  const filtrarCriterios = (e) => {
+    const query = e.target.value.toLowerCase().trim();
+    setinputCarteraAccionesAsoc(query);
+
+    if (query === "") {
+      setcriteriosFiltrados(criteriosCriterios);
+    } else {
+      const filtered = criteriosCriterios.filter((c) =>
+        c.NOMBRE_CRITERIO?.toLowerCase().includes(query)
+      );
+      setcriteriosFiltrados(filtered);
+    }
+  };
+
+  // Seleccionar criterio
+  const criterioAsocSelected = (criterio) => {
+    const { ID_CRITERIO, NOMBRE_CRITERIO } = criterio;
+
+    setFormNAcciones({
+      ...formNAcciones,
+      idCriterio: ID_CRITERIO,
+    });
+
+    setinputCarteraAccionesAsoc(NOMBRE_CRITERIO);
+    setSelectCarteraAcciones(false);
+  };
+
+  // ================================= ACCIONES =================================
+
+  // =========================== Acciones Paginacion ===========================
+  const [AccionesPerPage, setAccionesPerPage] = useState(10);
+  const refModalPageAcciones = useRef(null);
+  const [modalPageAcciones, setModalPageAcciones] = useState(false);
+  const [curPageAcciones, setCurPageAcciones] = useState(1);
+  const [totalAccionesPages, setTotalAccionesPages] = useState(0);
+  const maxButtonsAcciones = 5;
+  const [searchAcciones, setSearchAcciones] = useState("");
+
+  // Busqueda
+  const handleInputsearchAcciones = (e) => setSearchAcciones(e.target.value);
+
+  // Paginación
+  const pageStartAcciones = Math.max(
+    1,
+    curPageAcciones - Math.floor(maxButtonsAcciones / 2)
+  );
+
+  const pageEndAcciones = Math.min(
+    totalAccionesPages,
+    pageStartAcciones + maxButtonsAcciones - 1
+  );
+
+  // Abrir/cerrar modal de cantidad por página
+  const handleModalPageAcciones = () =>
+    setModalPageAcciones(!modalPageAcciones);
+
+  useOutsideClick(refModalPageAcciones, () => setModalPageAcciones(false));
+
+  // Cambiar cantidad de acciones por página
+  const changeAccionesPerPage = (newPerPage) => {
+    setAccionesPerPage(newPerPage);
+    setCurPageAcciones(1);
+    setModalPageAcciones(false);
+  };
+
+  // Cambiar página actual
+  const changeCurPageAcciones = (newPage) => {
+    setCurPageAcciones(newPage);
+  };
+
+  // Calcular total de páginas
+  const calcTotalAccionesPages = (filtered) => {
+    const total =
+      filtered && filtered.length > 0
+        ? Math.ceil(filtered.length / AccionesPerPage)
+        : 0;
+
+    setTotalAccionesPages(total);
+  };
+
+  // Actualizar acciones paginadas
+  const updateAccionesPaginated = (
+    data = criteriosAcciones,
+    page = curPageAcciones
+  ) => {
+    const startIndex = (page - 1) * AccionesPerPage;
+    const endIndex = startIndex + AccionesPerPage;
+    const paginated = data.slice(startIndex, endIndex);
+
+    setaccionesPaginated(paginated);
+  };
+
+  // Filtro por búsqueda
+  const filteredCriteriosAccionesBySearch = () => {
+    const queryFiltered = searchAcciones.toLowerCase();
+
+    return criteriosAcciones.filter(
+      (a) =>
+        a.NOMBRE_ACCION_CRITERIO?.toLowerCase().includes(queryFiltered) ||
+        a.NOMBRE_CRITERIO?.toLowerCase().includes(queryFiltered) ||
+        a.NOMBRE_USUARIO_ACTUALIZACION?.toLowerCase().includes(queryFiltered) ||
+        a.NOMBRE_CARTERA?.toLowerCase().includes(queryFiltered)
+    );
+  };
 
   // ====================== FUNCIONES PARA CARGAR DATOS ======================
   const loadItem = async () => {
@@ -625,11 +827,34 @@ export const CriteriosProvider = ({ children }) => {
     }
   };
 
+  const loadAcciones = async () => {
+    setLoadingAcciones(true);
+
+    try {
+      const { data } = await axios.get(
+        `${API_URL}/criteriosEvaluacion/acciones`
+      );
+
+      if (!data.ok) {
+        toast.error("Error al cargar Acciones");
+        throw new Error("Error al cargar Acciones");
+      }
+
+      setCriteriosAcciones(data.acciones);
+    } catch (error) {
+      console.log(error);
+      toast.error("Error al cargar Acciones");
+    } finally {
+      setLoadingAcciones(false);
+    }
+  };
+
   // Cargamos las carteras del CyC
   useEffect(() => {
     loadCarterasCyC();
     loadItem();
     loadCriterios();
+    loadAcciones();
   }, []);
 
   useEffect(() => {
@@ -657,6 +882,19 @@ export const CriteriosProvider = ({ children }) => {
     calctotalCriteriosPages(filteredData);
     updateCriteriosPaginated(filteredData, curPageCriterios);
   }, [searchCriterio, criteriosCriterios, CriteriosPerPage, curPageCriterios]);
+
+  useEffect(() => {
+    const filteredData = searchAcciones.trim()
+      ? filteredCriteriosAccionesBySearch()
+      : criteriosAcciones;
+
+    if (curPageAcciones > Math.ceil(filteredData.length / AccionesPerPage)) {
+      setCurPageAcciones(1);
+    }
+
+    calcTotalAccionesPages(filteredData);
+    updateAccionesPaginated(filteredData, curPageAcciones);
+  }, [searchAcciones, criteriosAcciones, AccionesPerPage, curPageAcciones]);
 
   return (
     <CriteriosContext.Provider
@@ -745,6 +983,47 @@ export const CriteriosProvider = ({ children }) => {
         updateCriteriosPaginated,
         filteredCriteriosCriteriosBySearch,
         handleInputsearchCriterio,
+
+        // ======================== Acciones ========================
+        refMNAcciones,
+        modalNAcciones,
+        modoNAcciones,
+        formNAcciones,
+        criteriosAcciones,
+        accionesPaginated,
+        loadingAcciones,
+        isPostingNAcciones,
+        exportingAcciones,
+        inputCarteraAccionesAsoc,
+        selectCarteraAcciones,
+        setFormNAcciones,
+        openModalNAcciones,
+        closeModalNAcciones,
+        criterioAsocSelected,
+        // submitFormNAcciones,
+        // updateFormNAcciones,
+        filtrarCriterios,
+        handleInputChangeFormNAcciones,
+        handleSelectCriterio,
+
+        // Paginacion
+        AccionesPerPage,
+        refModalPageAcciones,
+        criteriosFiltrados,
+        modalPageAcciones,
+        curPageAcciones,
+        totalAccionesPages,
+        maxButtonsAcciones,
+        pageStartAcciones,
+        pageEndAcciones,
+        handleModalPageAcciones,
+        changeAccionesPerPage,
+        changeCurPageAcciones,
+        calcTotalAccionesPages,
+        updateAccionesPaginated,
+        handleInputsearchAcciones,
+        filteredCriteriosAccionesBySearch,
+        refSCriterios,
       }}
     >
       {children}

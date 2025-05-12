@@ -6,6 +6,8 @@ import { tabs } from "./Data";
 import * as Pestanas from "./Pestanas";
 import { Toaster } from "sonner";
 import { MFormItem } from "./Pestanas/Items/Modal/MFormItem";
+import { MFormCriterio } from "./Pestanas/Criterios/Modal/MFormCriterio";
+import { MFormAcciones } from "./Pestanas/Acciones/Modal/MFormAcciones";
 
 export const CriteriosEvaluacion = () => {
   const navigate = useNavigate();
@@ -55,6 +57,8 @@ export const CriteriosEvaluacion = () => {
 
       {/* FORMULAS */}
       <MFormItem />
+      <MFormCriterio />
+      <MFormAcciones />
     </>
   );
 };

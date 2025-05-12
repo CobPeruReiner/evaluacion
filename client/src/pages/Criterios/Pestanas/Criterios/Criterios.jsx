@@ -2,7 +2,6 @@ import { useContext } from "react";
 import { Loader } from "../../../../components/Loader";
 import { CriteriosContext } from "../../../../Context/Criterios/ItemContext";
 import { buttonSubmit } from "../../../../utils/styles";
-import { MFormCriterio } from "./Modal/MFormCriterio";
 import { TCriterios } from "./Table/TCriterios";
 import { Pagination } from "./Pagination/Pagination";
 import { SCantCriterios } from "./Select/SCantCriterios";
@@ -38,8 +37,6 @@ export const Criterios = () => {
           )}
         </div>
       </div>
-
-      <MFormCriterio />
     </>
   );
 };

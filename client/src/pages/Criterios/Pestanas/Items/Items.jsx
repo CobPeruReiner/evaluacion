@@ -3,8 +3,8 @@ import { buttonSubmit } from "../../../../utils/styles";
 import { TItems } from "./Table/TItems";
 import { CriteriosContext } from "../../../../Context/Criterios/ItemContext";
 import { Loader } from "../../../../components/Loader";
-import { SCantItems } from "./Select/SCantItems";
 import { Pagination } from "./Pagination/Pagination";
+import { SCantItems } from "./Select/SCantItems";
 
 export const Items = () => {
   const { openModalNItem, loadingItems } = useContext(CriteriosContext);
