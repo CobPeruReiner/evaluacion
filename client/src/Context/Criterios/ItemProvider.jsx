@@ -33,6 +33,23 @@ const initAccioness = {
   idCriterio: null,
 };
 
+const initMotPago = {
+  idMotivo: null,
+  nombreMotivo: "",
+  idCartera: null,
+};
+
+const initTipoGestion = {
+  idTipoGestion: null,
+  nombreGestion: "",
+  idCartera: null,
+};
+
+const initTipoLlamada = {
+  idTipoLlamada: null,
+  nombreLlamada: "",
+};
+
 export const CriteriosProvider = ({ children }) => {
   const API_URL = `${import.meta.env.VITE_API_URL}api/v1`;
 
@@ -99,6 +116,7 @@ export const CriteriosProvider = ({ children }) => {
     } else {
       setFormNItem(initItems);
       setinputCarteraItemAsoc("");
+      setCarterasCyCFiltradas(carterasCyC);
     }
 
     setModalNItem(true);
@@ -107,6 +125,7 @@ export const CriteriosProvider = ({ children }) => {
   const closeModalNItem = () => {
     setFormNItem(initItems);
     setinputCarteraItemAsoc("");
+    setCarterasCyCFiltradas(carterasCyC);
     setModalNItem(false);
   };
 
@@ -126,7 +145,7 @@ export const CriteriosProvider = ({ children }) => {
 
   // Filtrar las carteras
   const filtrarCarteras = (e) => {
-    const query = e.target.value.toLowerCase().trim();
+    const query = e.target.value.toLowerCase();
 
     setinputCarteraItemAsoc(query);
 
@@ -400,7 +419,7 @@ export const CriteriosProvider = ({ children }) => {
 
   // Filtrar las carteras
   const filtrarItems = (e) => {
-    const query = e.target.value.toLowerCase().trim();
+    const query = e.target.value.toLowerCase();
 
     setInputItemAsoc(query);
 
@@ -651,6 +670,7 @@ export const CriteriosProvider = ({ children }) => {
     } else {
       setFormNAcciones(initAccioness);
       setinputCarteraAccionesAsoc("");
+      setcriteriosFiltrados(criteriosCriterios);
     }
 
     setModalNAcciones(true);
@@ -659,6 +679,7 @@ export const CriteriosProvider = ({ children }) => {
   const closeModalNAcciones = () => {
     setFormNAcciones(initAccioness);
     setinputCarteraAccionesAsoc("");
+    setcriteriosFiltrados(criteriosCriterios);
     setModalNAcciones(false);
   };
 
@@ -680,14 +701,17 @@ export const CriteriosProvider = ({ children }) => {
 
   // Filtrar criterios
   const filtrarCriterios = (e) => {
-    const query = e.target.value.toLowerCase().trim();
+    const query = e.target.value.toLowerCase();
     setinputCarteraAccionesAsoc(query);
 
     if (query === "") {
       setcriteriosFiltrados(criteriosCriterios);
     } else {
-      const filtered = criteriosCriterios.filter((c) =>
-        c.NOMBRE_CRITERIO?.toLowerCase().includes(query)
+      const filtered = criteriosCriterios.filter(
+        (c) =>
+          c.NOMBRE_CRITERIO?.toLowerCase().includes(query) ||
+          c.NOMBRE_ITEM?.toLowerCase().includes(query) ||
+          c.NOMBRE_CARTERA?.toLowerCase().includes(query)
       );
       setcriteriosFiltrados(filtered);
     }
@@ -704,6 +728,98 @@ export const CriteriosProvider = ({ children }) => {
 
     setinputCarteraAccionesAsoc(NOMBRE_CRITERIO);
     setSelectCarteraAcciones(false);
+  };
+
+  // Enviar formulario
+  const submitFormNAcciones = async (e) => {
+    e.preventDefault();
+
+    const pesoOriginal = parseInt(formNAcciones.pesoAccion, 10);
+
+    if (isNaN(pesoOriginal) || pesoOriginal < 0 || pesoOriginal > 100) {
+      toast.error("El peso debe ser un número entre 0 y 100");
+      return;
+    }
+
+    // Transformar peso a decimal
+    const pesoTransformado = pesoOriginal / 100;
+
+    // Datetime
+    const today = moment().format("YYYY-MM-DD HH:mm:ss");
+
+    const formNAccionesFinal = {
+      ...formNAcciones,
+      pesoAccion: pesoTransformado,
+      fechaActualizacion: today,
+      idUsuarioActualizacion: user.dni,
+    };
+
+    setIsPostingNAcciones(true);
+
+    try {
+      const { data } = await axios.post(
+        `${API_URL}/criteriosEvaluacion/acciones/create`,
+        formNAccionesFinal
+      );
+
+      toast.success(data.msg || "Accion creada exitosamente");
+      closeModalNAcciones();
+      loadAcciones();
+      setIsPostingNAcciones(false);
+    } catch (error) {
+      console.log(error);
+
+      const messageBackend = error.response?.data?.msg;
+
+      toast.error(messageBackend || "Error al crear accion");
+      setIsPostingNAcciones(false);
+    }
+  };
+
+  // Actualizar formulario
+  const updateFormNAcciones = async (e) => {
+    e.preventDefault();
+
+    const pesoOriginal = parseInt(formNAcciones.pesoAccion, 10);
+
+    if (isNaN(pesoOriginal) || pesoOriginal < 0 || pesoOriginal > 100) {
+      toast.error("El peso debe ser un número entre 0 y 100");
+      return;
+    }
+
+    // Transformar peso a decimal
+    const pesoTransformado = pesoOriginal / 100;
+
+    // Datetime
+    const today = moment().format("YYYY-MM-DD HH:mm:ss");
+
+    const formNAccionesFinal = {
+      ...formNAcciones,
+      pesoAccion: pesoTransformado,
+      fechaActualizacion: today,
+      idUsuarioActualizacion: user.dni,
+    };
+
+    setIsPostingNAcciones(true);
+
+    try {
+      const { data } = await axios.put(
+        `${API_URL}/criteriosEvaluacion/acciones/update`,
+        formNAccionesFinal
+      );
+
+      toast.success(data.msg || "Accion actualizada exitosamente");
+      closeModalNAcciones();
+      loadAcciones();
+      setIsPostingNAcciones(false);
+    } catch (error) {
+      console.log(error);
+
+      const messageBackend = error.response?.data?.msg;
+
+      toast.error(messageBackend || "Error al actualizar accion");
+      setIsPostingNAcciones(false);
+    }
   };
 
   // ================================= ACCIONES =================================
@@ -784,6 +900,633 @@ export const CriteriosProvider = ({ children }) => {
     );
   };
 
+  // =========================== Acciones Paginacion ===========================
+
+  // ============================== MOTIVOS NO PAGO ==============================
+  const refMNMotPago = useRef(null);
+  const [modalMNMotPago, setModalMNMotPago] = useState(false);
+  const [modoNMotPago, setModoNMotPago] = useState("new");
+  const [formNMotPago, setFormNMotPago] = useState(initMotPago);
+
+  const [motivosNoPago, setMotivosNoPago] = useState([]);
+  const [loadingMotNoPago, setLoadingMotNoPago] = useState(false);
+  const [isPostingNMotNoPago, setIsPostingNMotNoPago] = useState(false);
+
+  const refSCarteraMotNPago = useRef(null);
+  const [selectCarteraMNP, setSelectCarteraMNP] = useState(false);
+  const [inputCarteraMNP, setInputCarteraMNP] = useState("");
+  const [carterasMotNP, setCarterasMotNP] = useState([]);
+  // Abrir/carrar select
+  const handleSelectCarteraMotNPago = () =>
+    setSelectCarteraMNP(!selectCarteraMNP);
+  useOutsideClick(refSCarteraMotNPago, () => setSelectCarteraMNP(false));
+
+  // Filtrar las carteras
+  const filtrarCarterasMotNoPago = (e) => {
+    const query = e.target.value.toLowerCase();
+
+    setInputCarteraMNP(query);
+
+    if (query === "") {
+      setCarterasMotNP(carterasCyC);
+    } else {
+      const filtered = carterasCyC.filter((c) =>
+        c.cartera?.toLowerCase().includes(query)
+      );
+
+      setCarterasMotNP(filtered);
+    }
+  };
+
+  // Seleccionar cartera
+  const carteraAsocItemSelectedMotNoPago = (cartera) => {
+    const { id_cartera, cartera: carteraItem, cliente } = cartera;
+
+    const query = `${carteraItem} - ${cliente}`;
+
+    // Seteamos el formulario con el id
+    setFormNMotPago({
+      ...formNMotPago,
+      idCartera: id_cartera,
+    });
+
+    // Seteamos el input de cartera
+    setInputCarteraMNP(query);
+
+    // Cerramos el select
+    setSelectCarteraMNP(false);
+  };
+
+  const closeModalNMotNoPago = () => {
+    setModalMNMotPago(false);
+    setModoNMotPago("new");
+    setFormNMotPago(initMotPago);
+    setInputCarteraMNP("");
+    setCarterasMotNP(carterasCyC);
+  };
+
+  useOutsideClick(refMNMotPago, () => setModalMNMotPago(false));
+
+  const handleFormNMotPago = (e) => {
+    const { name, value } = e.target;
+    setFormNMotPago({ ...formNMotPago, [name]: value });
+  };
+
+  const openModalNMotNoPago = (newModo = "new", newData = null) => {
+    // console.log("Abriendo modal de motivos no pago", newData);
+
+    setModoNMotPago(newModo);
+
+    if (newModo === "edit") {
+      setFormNMotPago({
+        ...formNMotPago,
+        idMotivo: newData.ID_MOTIVO_NO_PAGO,
+        nombreMotivo: newData.NOMBRE_MOTIVO_NO_PAGO,
+        idCartera: newData.ID_CARTERA,
+      });
+
+      setInputCarteraMNP(`${newData.NOMBRE_CARTERA}`);
+    } else {
+      setFormNMotPago(initMotPago);
+
+      setInputCarteraMNP("");
+
+      setCarterasMotNP(carterasCyC);
+    }
+
+    setModalMNMotPago(true);
+  };
+
+  const submitFormNMotNoPago = async (e) => {
+    e.preventDefault();
+
+    // console.log("formNMotPago", formNMotPago);
+
+    if (!formNMotPago.nombreMotivo || !formNMotPago.idCartera) {
+      return toast.error("Todos los campos son obligatorios");
+    }
+
+    setIsPostingNMotNoPago(true);
+
+    try {
+      const { data } = await axios.post(
+        `${API_URL}/criteriosEvaluacion/motivos/create`,
+        formNMotPago
+      );
+
+      if (!data.ok) {
+        toast.error(data.msg);
+
+        throw new Error(data.msg);
+      }
+
+      toast.success(data.msg || "Motivo no pago creado");
+      closeModalNMotNoPago();
+      loadMotNoPago();
+    } catch (error) {
+      console.log(error);
+
+      const mensajeBackend = error.response
+        ? error.response.data.msg
+        : "Error al crear motivo no pago";
+
+      toast.error(mensajeBackend);
+    } finally {
+      setIsPostingNMotNoPago(false);
+    }
+  };
+
+  const updateFormNMotNoPago = async (e) => {
+    e.preventDefault();
+
+    if (
+      !formNMotPago.idMotivo ||
+      !formNMotPago.nombreMotivo ||
+      !formNMotPago.idCartera
+    ) {
+      return toast.error("Todos los campos son obligatorios");
+    }
+
+    setIsPostingNMotNoPago(true);
+
+    try {
+      const { data } = await axios.put(
+        `${API_URL}/criteriosEvaluacion/motivos/update`,
+        formNMotPago
+      );
+
+      if (!data.ok) {
+        toast.error(data.msg);
+
+        throw new Error(data.msg);
+      }
+
+      toast.success(data.msg || "Motivo no pago actualizado");
+      closeModalNMotNoPago();
+      loadMotNoPago();
+    } catch (error) {
+      console.log(error);
+
+      const mensajeBackend = error.response
+        ? error.response.data.msg
+        : "Error al actualizar motivo no pago";
+
+      toast.error(mensajeBackend);
+    } finally {
+      setIsPostingNMotNoPago(false);
+    }
+  };
+
+  // ============================== MOTIVOS NO PAGO ==============================
+
+  // =========================== MOTIVOS NO PAGO Paginacion ===========================
+
+  // Estados para la tabla paginada de motivos de no pago
+  const [motivosNoPagoPaginated, setMotivosNoPagoPaginated] = useState([]);
+  const [motivosPerPage, setMotivosPerPage] = useState(10);
+  const [curPageMotivos, setCurPageMotivos] = useState(1);
+  const [totalMotivosPages, setTotalMotivosPages] = useState(0);
+  const [modalPageMotivos, setModalPageMotivos] = useState(false);
+  const [searchMotivos, setSearchMotivos] = useState("");
+  const refModalPageMotivos = useRef(null);
+
+  const maxButtonsMotivos = 5;
+
+  const handleInputSearchMotivos = (e) => setSearchMotivos(e.target.value);
+
+  const filteredMotivosBySearch = () => {
+    const query = searchMotivos.toLowerCase();
+    return motivosNoPago.filter(
+      (m) =>
+        m.NOMBRE_MOTIVO_NO_PAGO?.toLowerCase().includes(query) ||
+        m.NOMBRE_CARTERA?.toLowerCase().includes(query)
+    );
+  };
+
+  // Calcular total de páginas
+  const calcTotalMotivosPages = (filtered) => {
+    const total = filtered?.length
+      ? Math.ceil(filtered.length / motivosPerPage)
+      : 0;
+    setTotalMotivosPages(total);
+  };
+
+  // Actualizar motivos paginados
+  const updateMotivosPaginated = (
+    data = motivosNoPago,
+    page = curPageMotivos
+  ) => {
+    const start = (page - 1) * motivosPerPage;
+    const end = start + motivosPerPage;
+    setMotivosNoPagoPaginated(data.slice(start, end));
+  };
+
+  // Cambiar página actual
+  const changeCurPageMotivos = (newPage) => {
+    setCurPageMotivos(newPage);
+  };
+
+  // Abrir/cerrar modal para cambiar cantidad por página
+  const handleModalPageMotivos = () => setModalPageMotivos(!modalPageMotivos);
+
+  useOutsideClick(refModalPageMotivos, () => setModalPageMotivos(false));
+
+  // Cambiar motivos por página
+  const changeMotivosPerPage = (newPerPage) => {
+    setMotivosPerPage(newPerPage);
+    setCurPageMotivos(1);
+    setModalPageMotivos(false);
+  };
+
+  // Rango de botones de paginación
+  const pageStartMotivos = Math.max(
+    1,
+    curPageMotivos - Math.floor(maxButtonsMotivos / 2)
+  );
+
+  const pageEndMotivos = Math.min(
+    totalMotivosPages,
+    pageStartMotivos + maxButtonsMotivos - 1
+  );
+
+  // =========================== MOTIVOS NO PAGO Paginacion ===========================
+
+  // ============================== TIPOS DE GESTIÓN ==============================
+  const refTipoGestion = useRef(null);
+  const [modalTipoGestion, setModalTipoGestion] = useState(false);
+  const [modoTipoGestion, setModoTipoGestion] = useState("new");
+  const [formTipoGestion, setFormTipoGestion] = useState(initTipoGestion);
+
+  const [tiposGestion, setTiposGestion] = useState([]);
+  const [loadingTiposGestion, setLoadingTiposGestion] = useState(false);
+  const [isPostingTipoGestion, setIsPostingTipoGestion] = useState(false);
+
+  const refSCarteraTipoGestion = useRef(null);
+  const [selectCarteraTipoGestion, setSelectCarteraTipoGestion] =
+    useState(false);
+  const [inputCarteraTipoGestion, setInputCarteraTipoGestion] = useState("");
+  const [carterasTipoGestion, setCarterasTipoGestion] = useState([]);
+
+  const handleSelectCarteraTipoGestion = () =>
+    setSelectCarteraTipoGestion(!selectCarteraTipoGestion);
+
+  useOutsideClick(refSCarteraTipoGestion, () =>
+    setSelectCarteraTipoGestion(false)
+  );
+
+  // Cierre del modal al hacer click fuera
+  useOutsideClick(refTipoGestion, () => setModalTipoGestion(false));
+
+  const closeModalTipoGestion = () => {
+    setModalTipoGestion(false);
+    setModoTipoGestion("new");
+    setFormTipoGestion(initTipoGestion);
+    setInputCarteraTipoGestion("");
+    setCarterasTipoGestion(carterasCyC);
+  };
+
+  const openModalTipoGestion = (modo = "new", data = null) => {
+    setModoTipoGestion(modo);
+
+    if (modo === "edit" && data) {
+      setFormTipoGestion({
+        idTipoGestion: data.ID_TIPO_GESTION,
+        nombreGestion: data.NOMBRE_TIPO_GESTION,
+        idCartera: data.ID_CARTERA,
+      });
+
+      setInputCarteraTipoGestion(`${data.NOMBRE_CARTERA}`);
+    } else {
+      setFormTipoGestion(initTipoGestion);
+      setInputCarteraTipoGestion("");
+      setCarterasTipoGestion(carterasCyC);
+    }
+
+    setModalTipoGestion(true);
+  };
+
+  const handleFormTipoGestion = (e) => {
+    const { name, value } = e.target;
+    setFormTipoGestion({ ...formTipoGestion, [name]: value });
+  };
+
+  const submitFormTipoGestion = async (e) => {
+    e.preventDefault();
+
+    if (!formTipoGestion.nombreGestion || !formTipoGestion.idCartera) {
+      return toast.error("Todos los campos son obligatorios");
+    }
+
+    setIsPostingTipoGestion(true);
+
+    try {
+      const { data } = await axios.post(
+        `${API_URL}/criteriosEvaluacion/gestiones/create`,
+        formTipoGestion
+      );
+
+      if (!data.ok) throw new Error(data.msg);
+
+      toast.success(data.msg || "Tipo de gestión creado");
+      closeModalTipoGestion();
+      loadTiposGestion();
+    } catch (error) {
+      const msg = error.response?.data?.msg || "Error al crear tipo de gestión";
+      toast.error(msg);
+    } finally {
+      setIsPostingTipoGestion(false);
+    }
+  };
+
+  const updateFormTipoGestion = async (e) => {
+    e.preventDefault();
+
+    if (
+      !formTipoGestion.idTipoGestion ||
+      !formTipoGestion.nombreGestion ||
+      !formTipoGestion.idCartera
+    ) {
+      return toast.error("Todos los campos son obligatorios");
+    }
+
+    setIsPostingTipoGestion(true);
+
+    try {
+      const { data } = await axios.put(
+        `${API_URL}/criteriosEvaluacion/gestiones/update`,
+        formTipoGestion
+      );
+
+      if (!data.ok) throw new Error(data.msg);
+
+      toast.success(data.msg || "Tipo de gestión actualizado");
+      closeModalTipoGestion();
+      loadTiposGestion();
+    } catch (error) {
+      const msg =
+        error.response?.data?.msg || "Error al actualizar tipo de gestión";
+      toast.error(msg);
+    } finally {
+      setIsPostingTipoGestion(false);
+    }
+  };
+
+  const filtrarCarterasTipoGestion = (e) => {
+    const query = e.target.value.toLowerCase();
+
+    setInputCarteraTipoGestion(query);
+
+    if (query === "") {
+      setCarterasTipoGestion(carterasCyC); // O la lista general
+    } else {
+      const filtered = carterasCyC.filter((c) =>
+        c.cartera?.toLowerCase().includes(query)
+      );
+      setCarterasTipoGestion(filtered);
+    }
+  };
+
+  const carteraAsocItemSelectedTipoGestion = (cartera) => {
+    const { id_cartera, cartera: carteraItem, cliente } = cartera;
+
+    const texto = `${carteraItem} - ${cliente}`;
+
+    setFormTipoGestion({
+      ...formTipoGestion,
+      idCartera: id_cartera,
+    });
+
+    setInputCarteraTipoGestion(texto);
+    setSelectCarteraTipoGestion(false);
+  };
+
+  // ============================== TIPOS DE GESTIÓN ==============================
+
+  // ============================== TIPOS DE GESTIÓN PAGINACION ==============================
+
+  const [tiposGestionPaginated, setTiposGestionPaginated] = useState([]);
+  const [tiposPerPage, setTiposPerPage] = useState(10);
+  const [curPageTipos, setCurPageTipos] = useState(1);
+  const [totalTiposPages, setTotalTiposPages] = useState(0);
+  const [modalPageTipos, setModalPageTipos] = useState(false);
+  const [searchTipos, setSearchTipos] = useState("");
+  const refModalPageTipos = useRef(null);
+
+  const maxButtonsTipos = 5;
+
+  const handleInputSearchTipos = (e) => setSearchTipos(e.target.value);
+
+  const filteredTiposBySearch = () => {
+    const query = searchTipos.toLowerCase();
+    return tiposGestion.filter(
+      (t) =>
+        t.nombreGestion?.toLowerCase().includes(query) ||
+        t.NOMBRE_CARTERA?.toLowerCase().includes(query) // si estás trayendo cartera
+    );
+  };
+
+  const calcTotalTiposPages = (filtered) => {
+    const total = filtered?.length
+      ? Math.ceil(filtered.length / tiposPerPage)
+      : 0;
+    setTotalTiposPages(total);
+  };
+
+  const updateTiposPaginated = (data = tiposGestion, page = curPageTipos) => {
+    const start = (page - 1) * tiposPerPage;
+    const end = start + tiposPerPage;
+    setTiposGestionPaginated(data.slice(start, end));
+  };
+
+  const changeCurPageTipos = (newPage) => {
+    setCurPageTipos(newPage);
+  };
+
+  const handleModalPageTipos = () => setModalPageTipos(!modalPageTipos);
+
+  useOutsideClick(refModalPageTipos, () => setModalPageTipos(false));
+
+  const changeTiposPerPage = (newPerPage) => {
+    setTiposPerPage(newPerPage);
+    setCurPageTipos(1);
+    setModalPageTipos(false);
+  };
+
+  const pageStartTipos = Math.max(
+    1,
+    curPageTipos - Math.floor(maxButtonsTipos / 2)
+  );
+
+  const pageEndTipos = Math.min(
+    totalTiposPages,
+    pageStartTipos + maxButtonsTipos - 1
+  );
+
+  // ============================== TIPOS DE GESTIÓN PAGINACION ==============================
+
+  // ============================== TIPO DE LLAMADA ==============================
+
+  const refTipoLlamada = useRef(null);
+  const [modalTipoLlamada, setModalTipoLlamada] = useState(false);
+  const [modoTipoLlamada, setModoTipoLlamada] = useState("new");
+  const [formTipoLlamada, setFormTipoLlamada] = useState(initTipoLlamada);
+
+  const [tiposLlamada, setTiposLlamada] = useState([]);
+  const [loadingTiposLlamada, setLoadingTiposLlamada] = useState(false);
+  const [isPostingTipoLlamada, setIsPostingTipoLlamada] = useState(false);
+
+  useOutsideClick(refTipoLlamada, () => setModalTipoLlamada(false));
+
+  const closeModalTipoLlamada = () => {
+    setModalTipoLlamada(false);
+    setModoTipoLlamada("new");
+    setFormTipoLlamada(initTipoLlamada);
+  };
+
+  const openModalTipoLlamada = (modo = "new", data = null) => {
+    setModoTipoLlamada(modo);
+
+    if (modo === "edit" && data) {
+      setFormTipoLlamada({
+        idTipoLlamada: data.ID_TIPO_LLAMADA,
+        nombreLlamada: data.NOMBRE_TIPO_LLAMADA,
+      });
+    } else {
+      setFormTipoLlamada(initTipoLlamada);
+    }
+
+    setModalTipoLlamada(true);
+  };
+
+  const handleFormTipoLlamada = (e) => {
+    const { name, value } = e.target;
+    setFormTipoLlamada({ ...formTipoLlamada, [name]: value });
+  };
+
+  const submitFormTipoLlamada = async (e) => {
+    e.preventDefault();
+
+    if (!formTipoLlamada.nombreLlamada) {
+      return toast.error("Todos los campos son obligatorios");
+    }
+
+    setIsPostingTipoLlamada(true);
+
+    try {
+      const { data } = await axios.post(
+        `${API_URL}/criteriosEvaluacion/llamadas/create`,
+        formTipoLlamada
+      );
+
+      if (!data.ok) throw new Error(data.msg);
+
+      toast.success(data.msg || "Tipo de llamada creado");
+      closeModalTipoLlamada();
+      loadTiposLlamada();
+    } catch (error) {
+      const msg = error.response?.data?.msg || "Error al crear tipo de llamada";
+      toast.error(msg);
+    } finally {
+      setIsPostingTipoLlamada(false);
+    }
+  };
+
+  const updateFormTipoLlamada = async (e) => {
+    e.preventDefault();
+
+    if (!formTipoLlamada.idTipoLlamada || !formTipoLlamada.nombreLlamada) {
+      return toast.error("Todos los campos son obligatorios");
+    }
+
+    setIsPostingTipoLlamada(true);
+
+    try {
+      const { data } = await axios.put(
+        `${API_URL}/criteriosEvaluacion/llamadas/update`,
+        formTipoLlamada
+      );
+
+      if (!data.ok) throw new Error(data.msg);
+
+      toast.success(data.msg || "Tipo de llamada actualizado");
+      closeModalTipoLlamada();
+      loadTiposLlamada();
+    } catch (error) {
+      const msg =
+        error.response?.data?.msg || "Error al actualizar tipo de llamada";
+      toast.error(msg);
+    } finally {
+      setIsPostingTipoLlamada(false);
+    }
+  };
+
+  // ============================== TIPO DE LLAMADA ==============================
+
+  // ============================== TIPOS DE LLAMADA PAGINACION ==============================
+
+  const [tiposLlamadaPaginated, setTiposLlamadaPaginated] = useState([]);
+  const [tiposLlamadaPerPage, setTiposLlamadaPerPage] = useState(10);
+  const [curPageTipoLlamada, setCurPageTipoLlamada] = useState(1);
+  const [totalPaginasTipoLlamada, setTotalPaginasTipoLlamada] = useState(0);
+  const [modalPageTipoLlamada, setModalPageTipoLlamada] = useState(false);
+  const [searchTipoLlamada, setSearchTipoLlamada] = useState("");
+  const refModalPageTipoLlamada = useRef(null);
+
+  const maxButtonsTipoLlamada = 5;
+
+  const handleInputSearchTipoLlamada = (e) =>
+    setSearchTipoLlamada(e.target.value);
+
+  const filteredTiposLlamada = () => {
+    const q = searchTipoLlamada.toLowerCase();
+    return tiposLlamada.filter((t) =>
+      t.NOMBRE_TIPO_LLAMADA?.toLowerCase().includes(q)
+    );
+  };
+
+  const calcTotalPaginasTipoLlamada = (filtered) => {
+    const total = filtered?.length
+      ? Math.ceil(filtered.length / tiposLlamadaPerPage)
+      : 0;
+    setTotalPaginasTipoLlamada(total);
+  };
+
+  const updatePaginatedTiposLlamada = (
+    data = tiposLlamada,
+    page = curPageTipoLlamada
+  ) => {
+    const start = (page - 1) * tiposLlamadaPerPage;
+    const end = start + tiposLlamadaPerPage;
+    setTiposLlamadaPaginated(data.slice(start, end));
+  };
+
+  const changeCurPageTipoLlamada = (newPage) => setCurPageTipoLlamada(newPage);
+
+  const handleModalPageTipoLlamada = () =>
+    setModalPageTipoLlamada(!modalPageTipoLlamada);
+
+  useOutsideClick(refModalPageTipoLlamada, () =>
+    setModalPageTipoLlamada(false)
+  );
+
+  const changePerPageTipoLlamada = (newPerPage) => {
+    setTiposLlamadaPerPage(newPerPage);
+    setCurPageTipoLlamada(1);
+    setModalPageTipoLlamada(false);
+  };
+
+  const pageStartTipoLlamada = Math.max(
+    1,
+    curPageTipoLlamada - Math.floor(maxButtonsTipoLlamada / 2)
+  );
+
+  const pageEndTipoLlamada = Math.min(
+    totalPaginasTipoLlamada,
+    pageStartTipoLlamada + maxButtonsTipoLlamada - 1
+  );
+
+  // ============================== TIPOS DE LLAMADA PAGINACION ==============================
+
   // ====================== FUNCIONES PARA CARGAR DATOS ======================
   const loadItem = async () => {
     setLoadingItems(true);
@@ -849,12 +1592,83 @@ export const CriteriosProvider = ({ children }) => {
     }
   };
 
+  const loadMotNoPago = async () => {
+    setLoadingMotNoPago(true);
+
+    try {
+      const { data } = await axios.get(
+        `${API_URL}/criteriosEvaluacion/motivos`
+      );
+
+      // console.log("Motivos de no pago", data);
+
+      if (!data.ok) {
+        toast.error("Error al cargar Motivos No Pago");
+        throw new Error("Error al cargar Motivos No Pago");
+      }
+
+      setMotivosNoPago(data.motivos);
+    } catch (error) {
+      console.log(error);
+      toast.error("Error al cargar Motivos No Pago");
+    } finally {
+      setLoadingMotNoPago(false);
+    }
+  };
+
+  const loadTiposGestion = async () => {
+    setLoadingTiposGestion(true);
+
+    try {
+      const { data } = await axios.get(
+        `${API_URL}/criteriosEvaluacion/gestiones`
+      );
+
+      if (!data.ok) {
+        toast.error("Error al cargar Tipos de Gestion");
+        throw new Error("Error al cargar Tipos de Gestion");
+      }
+
+      setTiposGestion(data.gestiones);
+    } catch (error) {
+      console.log(error);
+      toast.error("Error al cargar Tipos de Gestion");
+    } finally {
+      setLoadingTiposGestion(false);
+    }
+  };
+
+  const loadTiposLlamada = async () => {
+    setLoadingTiposLlamada(true);
+
+    try {
+      const { data } = await axios.get(
+        `${API_URL}/criteriosEvaluacion/llamadas`
+      );
+
+      if (!data.ok) {
+        toast.error("Error al cargar Tipos de Llamada");
+        throw new Error("Error al cargar Tipos de Llamada");
+      }
+
+      setTiposLlamada(data.llamadas);
+    } catch (error) {
+      console.log(error);
+      toast.error("Error al cargar Tipos de Llamada");
+    } finally {
+      setLoadingTiposLlamada(false);
+    }
+  };
+
   // Cargamos las carteras del CyC
   useEffect(() => {
     loadCarterasCyC();
     loadItem();
     loadCriterios();
     loadAcciones();
+    loadMotNoPago();
+    loadTiposGestion();
+    loadTiposLlamada();
   }, []);
 
   useEffect(() => {
@@ -895,6 +1709,52 @@ export const CriteriosProvider = ({ children }) => {
     calcTotalAccionesPages(filteredData);
     updateAccionesPaginated(filteredData, curPageAcciones);
   }, [searchAcciones, criteriosAcciones, AccionesPerPage, curPageAcciones]);
+
+  useEffect(() => {
+    const filteredData = searchMotivos.trim()
+      ? filteredMotivosBySearch()
+      : motivosNoPago;
+
+    if (curPageMotivos > Math.ceil(filteredData.length / motivosPerPage)) {
+      setCurPageMotivos(1);
+    }
+
+    calcTotalMotivosPages(filteredData);
+    updateMotivosPaginated(filteredData, curPageMotivos);
+  }, [searchMotivos, motivosNoPago, motivosPerPage, curPageMotivos]);
+
+  useEffect(() => {
+    const filteredData = searchTipos.trim()
+      ? filteredTiposBySearch()
+      : tiposGestion;
+
+    if (curPageTipos > Math.ceil(filteredData.length / tiposPerPage)) {
+      setCurPageTipos(1);
+    }
+
+    calcTotalTiposPages(filteredData);
+    updateTiposPaginated(filteredData, curPageTipos);
+  }, [tiposGestion, curPageTipos, tiposPerPage, searchTipos]);
+
+  useEffect(() => {
+    const filteredData = searchTipoLlamada.trim()
+      ? filteredTiposLlamada()
+      : tiposLlamada;
+
+    if (
+      curPageTipoLlamada > Math.ceil(filteredData.length / tiposLlamadaPerPage)
+    ) {
+      setCurPageTipoLlamada(1);
+    }
+
+    calcTotalPaginasTipoLlamada(filteredData);
+    updatePaginatedTiposLlamada(filteredData, curPageTipoLlamada);
+  }, [
+    tiposLlamada,
+    curPageTipoLlamada,
+    tiposLlamadaPerPage,
+    searchTipoLlamada,
+  ]);
 
   return (
     <CriteriosContext.Provider
@@ -1000,8 +1860,8 @@ export const CriteriosProvider = ({ children }) => {
         openModalNAcciones,
         closeModalNAcciones,
         criterioAsocSelected,
-        // submitFormNAcciones,
-        // updateFormNAcciones,
+        submitFormNAcciones,
+        updateFormNAcciones,
         filtrarCriterios,
         handleInputChangeFormNAcciones,
         handleSelectCriterio,
@@ -1024,6 +1884,112 @@ export const CriteriosProvider = ({ children }) => {
         handleInputsearchAcciones,
         filteredCriteriosAccionesBySearch,
         refSCriterios,
+
+        // ======================== Mot No Pago ========================
+        motivosNoPago,
+        refMNMotPago,
+        modalMNMotPago,
+        modoNMotPago,
+        formNMotPago,
+        handleFormNMotPago,
+        openModalNMotNoPago,
+        loadingMotNoPago,
+        isPostingNMotNoPago,
+        submitFormNMotNoPago,
+        updateFormNMotNoPago,
+        refSCarteraMotNPago,
+        selectCarteraMNP,
+        inputCarteraMNP,
+        carterasMotNP,
+        handleSelectCarteraMotNPago,
+        filtrarCarterasMotNoPago,
+        carteraAsocItemSelectedMotNoPago,
+        motivosNoPagoPaginated,
+        motivosPerPage,
+        curPageMotivos,
+        totalMotivosPages,
+        modalPageMotivos,
+        searchMotivos,
+        refModalPageMotivos,
+        maxButtonsMotivos,
+        handleInputSearchMotivos,
+        filteredMotivosBySearch,
+        calcTotalMotivosPages,
+        updateMotivosPaginated,
+        changeCurPageMotivos,
+        handleModalPageMotivos,
+        changeMotivosPerPage,
+        pageStartMotivos,
+        pageEndMotivos,
+
+        // ======================== TIPOS DE GESTION ========================
+        refTipoGestion,
+        modalTipoGestion,
+        modoTipoGestion,
+        formTipoGestion,
+        tiposGestion,
+        loadingTiposGestion,
+        isPostingTipoGestion,
+        refSCarteraTipoGestion,
+        selectCarteraTipoGestion,
+        inputCarteraTipoGestion,
+        carterasTipoGestion,
+        handleSelectCarteraTipoGestion,
+        closeModalTipoGestion,
+        openModalTipoGestion,
+        handleFormTipoGestion,
+        submitFormTipoGestion,
+        updateFormTipoGestion,
+        filtrarCarterasTipoGestion,
+        carteraAsocItemSelectedTipoGestion,
+        tiposGestionPaginated,
+        tiposPerPage,
+        curPageTipos,
+        totalTiposPages,
+        modalPageTipos,
+        searchTipos,
+        refModalPageTipos,
+        maxButtonsTipos,
+        handleInputSearchTipos,
+        filteredTiposBySearch,
+        calcTotalTiposPages,
+        updateTiposPaginated,
+        changeCurPageTipos,
+        handleModalPageTipos,
+        changeTiposPerPage,
+        pageStartTipos,
+        pageEndTipos,
+
+        // ======================== TIPO DE LLAMADA ========================
+        refTipoLlamada,
+        modalTipoLlamada,
+        modoTipoLlamada,
+        formTipoLlamada,
+        tiposLlamada,
+        loadingTiposLlamada,
+        isPostingTipoLlamada,
+        closeModalTipoLlamada,
+        openModalTipoLlamada,
+        handleFormTipoLlamada,
+        submitFormTipoLlamada,
+        updateFormTipoLlamada,
+        tiposLlamadaPaginated,
+        tiposLlamadaPerPage,
+        curPageTipoLlamada,
+        totalPaginasTipoLlamada,
+        modalPageTipoLlamada,
+        searchTipoLlamada,
+        refModalPageTipoLlamada,
+        maxButtonsTipoLlamada,
+        handleInputSearchTipoLlamada,
+        filteredTiposLlamada,
+        calcTotalPaginasTipoLlamada,
+        updatePaginatedTiposLlamada,
+        changeCurPageTipoLlamada,
+        handleModalPageTipoLlamada,
+        changePerPageTipoLlamada,
+        pageStartTipoLlamada,
+        pageEndTipoLlamada,
       }}
     >
       {children}

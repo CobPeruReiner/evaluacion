@@ -11,7 +11,7 @@ export const Items = () => {
 
   return (
     <>
-      <div className="container-modulo-imtes relative flex flex-col gap-5">
+      <div className="container-modulo-items relative flex flex-col gap-5">
         {/* TITLE */}
         <h1 className="text-2xl font-bold text-gray-800">Lista de Ítems</h1>
 

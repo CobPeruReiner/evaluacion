@@ -15,10 +15,9 @@ export const TCriterios = () => {
           <th className="py-3 px-6 relative cursor-pointer">
             Nombre del Criterio
           </th>
-          <th className="py-3 px-6 relative cursor-pointer">
-            Item Relacionado
-          </th>
+          <th className="py-3 px-6 relative cursor-pointer">Item Asoc</th>
           <th className="py-3 px-6 relative cursor-pointer">Peso</th>
+          <th className="py-3 px-6 relative cursor-pointer">Cartera Asoc</th>
           <th className="py-3 px-6 relative cursor-pointer">
             Fecha Actualización
           </th>
@@ -47,6 +46,7 @@ export const TCriterios = () => {
               <td className="py-3 px-6">{criterio.NOMBRE_CRITERIO}</td>
               <td className="py-3 px-6">{criterio.NOMBRE_ITEM}</td>
               <td className="py-3 px-6">{criterio.PESO_CRITERIO * 100}%</td>
+              <td className="py-3 px-6">{criterio.NOMBRE_CARTERA}</td>
               <td className="py-3 px-6">
                 {moment(criterio.FECHA_ACTUALIZACION)
                   .utc()

@@ -1,6 +1,10 @@
-import { Delete, Edit } from "../../../../../Icons/Iconos";
+import { useContext } from "react";
+import { CriteriosContext } from "../../../../../Context/Criterios/ItemContext";
 
 export const TMotNoPago = () => {
+  const { motivosNoPagoPaginated, openModalNMotNoPago } =
+    useContext(CriteriosContext);
+
   return (
     <table className="relative w-full text-[#67748e] text-nowrap">
       <thead>
@@ -10,29 +14,30 @@ export const TMotNoPago = () => {
           <th className="py-3 px-6 relative cursor-pointer">
             Cartera Relacionada
           </th>
-          <th className="py-3 px-6 relative cursor-pointer">Acciones</th>
         </tr>
       </thead>
       <tbody>
-        <tr className="text-xs text-left leading-[1.5] font-normal border-b border-[#e9ecef] cursor-pointer hover:bg-gray-100">
-          <td className="py-3 px-6">1</td>
-          <td className="py-3 px-6">No aplica - Cliente predispuesto</td>
-          <td className="py-3 px-6">PJOY M3</td>
-          <td className="py-3 px-6 flex items-center gap-3">
-            <button
-              // onClick={() => openMDetalleIncidente(incidente)}
-              className="text-xl text-[#67748e] hover:text-[#09f] transition-all duration-300"
+        {motivosNoPagoPaginated.length === 0 ? (
+          <tr>
+            <td colSpan={3} className="py-3 px-6 text-center">
+              No se encontraron registros
+            </td>
+          </tr>
+        ) : (
+          motivosNoPagoPaginated.map((motivoNoPago) => (
+            <tr
+              key={motivoNoPago.ID_MOTIVO_NO_PAGO}
+              className="text-xs text-left leading-[1.5] font-normal border-b border-[#e9ecef] cursor-pointer hover:bg-gray-100"
+              onClick={() => openModalNMotNoPago("edit", motivoNoPago)}
             >
-              <Edit />
-            </button>
-            <button
-              // onClick={() => openModalFecha(incidente)}
-              className="text-xl text-[#67748e] hover:text-red-500 transition-all duration-300"
-            >
-              <Delete />
-            </button>
-          </td>
-        </tr>
+              <td className="py-3 px-6">{motivoNoPago.ID_MOTIVO_NO_PAGO}</td>
+              <td className="py-3 px-6">
+                {motivoNoPago.NOMBRE_MOTIVO_NO_PAGO}
+              </td>
+              <td className="py-3 px-6">{motivoNoPago.NOMBRE_CARTERA}</td>
+            </tr>
+          ))
+        )}
       </tbody>
     </table>
   );

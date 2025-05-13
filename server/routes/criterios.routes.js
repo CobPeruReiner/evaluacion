@@ -64,8 +64,20 @@ criteriosEvaluacionRouter.put(
 
 // ACCIONES
 criteriosEvaluacionRouter.get("/acciones", getAllAcciones);
-criteriosEvaluacionRouter.post("/acciones/create", createAccion);
-criteriosEvaluacionRouter.put("/acciones/update", updateAccion);
+
+criteriosEvaluacionRouter.post(
+  "/acciones/create",
+  validarPesoTotal("ACCION_CRITERIO"),
+  buscarIdPersonal,
+  createAccion
+);
+
+criteriosEvaluacionRouter.put(
+  "/acciones/update",
+  validarPesoTotal("ACCION_CRITERIO"),
+  buscarIdPersonal,
+  updateAccion
+);
 
 // MOTIVNOS NO PAGO
 criteriosEvaluacionRouter.get("/motivos", getAllMotivosNoPago);

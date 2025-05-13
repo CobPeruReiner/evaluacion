@@ -14,13 +14,9 @@ export const TAcciones = () => {
           <th className="py-3 px-6 relative cursor-pointer">
             Nombre de la Acción
           </th>
-          <th className="py-3 px-6 relative cursor-pointer">
-            Criterios Relacionado
-          </th>
-          <th className="py-3 px-6 relative cursor-pointer">
-            Item Relacionado
-          </th>
-          <th className="py-3 px-6 relative cursor-pointer">Cartera</th>
+          <th className="py-3 px-6 relative cursor-pointer">Criterios Asoc</th>
+          <th className="py-3 px-6 relative cursor-pointer">Item Asoc</th>
+          <th className="py-3 px-6 relative cursor-pointer">Cartera Asoc</th>
           <th className="py-3 px-6 relative cursor-pointer">Peso</th>
           <th className="py-3 px-6 relative cursor-pointer">
             Fecha Actualización
@@ -58,7 +54,7 @@ export const TAcciones = () => {
                 %
               </td>
               <td className="py-3 px-6">
-                {accion.fecha_actualizacion
+                {accion.FECHA_ACTUALIZACION
                   ? moment(accion.FECHA_ACTUALIZACION)
                       .utc()
                       .format("DD/MM/YYYY HH:mm:ss")

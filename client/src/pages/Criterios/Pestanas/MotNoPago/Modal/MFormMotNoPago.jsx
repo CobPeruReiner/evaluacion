@@ -1,3 +1,145 @@
+import { useContext } from "react";
+import { Close, Down } from "../../../../../Icons/Iconos";
+import {
+  buttonSecondary,
+  buttonSubmit,
+  inputBorder,
+  labelBorder,
+} from "../../../../../utils/styles";
+import { CriteriosContext } from "../../../../../Context/Criterios/ItemContext";
+import { SCartera } from "../Select/SCartera";
+
 export const MFormMotNoPago = () => {
-  return <div>MFormMotNoPago</div>;
+  const {
+    refMNMotPago,
+    modalMNMotPago,
+    closeModalNMotNoPago,
+    modoNMotPago,
+    formNMotPago,
+    handleFormNMotPago,
+    isPostingNMotNoPago,
+    submitFormNMotNoPago,
+    updateFormNMotNoPago,
+    refSCartera,
+    handleSelectCarteraMotNPago,
+    inputCarteraMNP,
+    filtrarCarterasMotNoPago,
+    selectCarteraMNP,
+  } = useContext(CriteriosContext);
+
+  return (
+    <div
+      className={`modal-CrrearProducto-container fixed w-full h-full top-0 bottom-0 left-0 right-0 z-[1001] bg-[rgba(0,0,0,0.6)] transition-all duration-300 ${
+        modalMNMotPago ? "visible" : "invisible"
+      }`}
+    >
+      <div
+        ref={isPostingNMotNoPago ? null : refMNMotPago}
+        className={`modal-CrrearProducto w-[45%] h-full block absolute top-0 right-0 bottom-0 bg-gray-50 transition-all duration-300 ${
+          modalMNMotPago ? "translate-x-[0%]" : "translate-x-[100%]"
+        }`}
+      >
+        <form
+          onSubmit={
+            modoNMotPago === "new" ? submitFormNMotNoPago : updateFormNMotNoPago
+          }
+          autoComplete="off"
+          className="scroll cont-form w-full h-full relative flex flex-col gap-5 border-none p-6 overflow-y-auto transition-all duration-300"
+        >
+          {/* HEADER */}
+          <div className="form-header w-full flex justify-between items-center text-xl text-[#344767] font-semibold">
+            <h1 className="">
+              {modoNMotPago === "new"
+                ? "Crear Motivo de No Pago"
+                : "Editar Motivo de No Pago"}
+            </h1>
+            <button
+              type="button"
+              onClick={closeModalNMotNoPago}
+              className="cursor-pointer"
+              disabled={isPostingNMotNoPago}
+            >
+              <Close />
+            </button>
+          </div>
+
+          {/* DELIMITER */}
+          <hr />
+
+          {/* FORM */}
+          <div className="cont-forms flex-1 overflow-y-auto flex flex-col gap-5 py-1">
+            <div className="container-input-nombreMotivo relative w-ful">
+              <input
+                type="text"
+                id="nombreMotivo"
+                name="nombreMotivo"
+                className={inputBorder}
+                placeholder=" "
+                value={formNMotPago.nombreMotivo}
+                onChange={handleFormNMotPago}
+                disabled={isPostingNMotNoPago}
+                required
+              />
+              <label htmlFor="nombreMotivo" className={labelBorder}>
+                Motivo No Pago
+              </label>
+            </div>
+            <div
+              ref={refSCartera}
+              onClick={handleSelectCarteraMotNPago}
+              className="container-input-carteraItem relative w-ful"
+            >
+              <input
+                type="text"
+                id="carteraItem"
+                name="carteraItem"
+                className={inputBorder}
+                placeholder=""
+                value={inputCarteraMNP}
+                onChange={filtrarCarterasMotNoPago}
+                disabled={isPostingNMotNoPago}
+                required
+              />
+              <label htmlFor="carteraItem" className={labelBorder}>
+                Cartera Asociada
+              </label>
+
+              <Down
+                className={`absolute right-2 top-[35%] ${
+                  selectCarteraMNP ? "rotate-180 text-[#09c]" : ""
+                }`}
+              />
+
+              {isPostingNMotNoPago ? null : <SCartera />}
+            </div>
+          </div>
+
+          {/* Buttoncs */}
+          <div className="relative flex w-full justify-end gap-5">
+            <button
+              type="button"
+              className={buttonSecondary}
+              onClick={closeModalNMotNoPago}
+              disabled={isPostingNMotNoPago}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className={buttonSubmit}
+              disabled={isPostingNMotNoPago}
+            >
+              {isPostingNMotNoPago
+                ? modoNMotPago === "new"
+                  ? "Creando..."
+                  : "Actualizando..."
+                : modoNMotPago === "new"
+                ? "Crear Accion"
+                : "Editar Accion"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 };

@@ -2,7 +2,11 @@ const { QueryTypes } = require("sequelize");
 const { db } = require("../../utils/database.util");
 
 const buscarIdPersonal = async (req, res, next) => {
+  console.log("Bienvenido al middleware buscarIdPersonal.");
+
   try {
+    console.log("Buscando personal por:", req.body.idUsuarioActualizacion);
+
     const dni = req.body.idUsuarioActualizacion;
 
     const personal = await db.query(
@@ -25,7 +29,8 @@ const buscarIdPersonal = async (req, res, next) => {
     }
 
     req.body.idUsuarioActualizacion = personal[0].IDPERSONAL;
-    next();
+
+    return next();
   } catch (error) {
     console.error("Error al buscar IDPERSONAL:", error);
     return res.status(500).json({

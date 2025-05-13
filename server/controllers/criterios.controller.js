@@ -450,7 +450,7 @@ const createAccion = async (req, res) => {
 
   if (
     !nombreAccion ||
-    !pesoAccion ||
+    !pesoAccion === undefined ||
     !fechaActualizacion ||
     !idUsuarioActualizacion ||
     !idCriterio
@@ -461,15 +461,17 @@ const createAccion = async (req, res) => {
     });
   }
 
+  const nombreAccionUpper = nombreAccion.toUpperCase();
+
   try {
     await db.query(
       `
         INSERT INTO calidad.ACCION_CRITERIO (NOMBRE_ACCION_CRITERIO, PESO_ACCION_CRITERIO, FECHA_ACTUALIZACION, USUARIO_ACTUALIZACION, ID_CRITERIO, ESTADO_ACCION)
-        VALUES (:nombreAccion, :pesoAccion, :fechaActualizacion, :idUsuarioActualizacion, :idCriterio, 1);
+        VALUES (:nombreAccionUpper, :pesoAccion, :fechaActualizacion, :idUsuarioActualizacion, :idCriterio, 1);
       `,
       {
         replacements: {
-          nombreAccion,
+          nombreAccionUpper,
           pesoAccion,
           fechaActualizacion,
           idUsuarioActualizacion,
@@ -492,7 +494,74 @@ const createAccion = async (req, res) => {
   }
 };
 
-const updateAccion = async (req, res) => {};
+const updateAccion = async (req, res) => {
+  const {
+    idAccion,
+    nombreAccion,
+    pesoAccion,
+    fechaActualizacion,
+    idUsuarioActualizacion,
+    idCriterio,
+  } = req.body;
+
+  console.log(
+    "===================== ACTUALIZANDO ACCION ====================="
+  );
+  console.log("req.body: ", req.body);
+
+  if (
+    !idAccion ||
+    !nombreAccion ||
+    pesoAccion === undefined ||
+    !fechaActualizacion ||
+    !idUsuarioActualizacion ||
+    !idCriterio
+  ) {
+    return res.status(400).json({
+      ok: false,
+      msg: "Todos los campos son obligatorios",
+    });
+  }
+
+  const nombreAccionUpper = nombreAccion.toUpperCase();
+
+  try {
+    await db.query(
+      `
+      UPDATE calidad.ACCION_CRITERIO
+      SET 
+        NOMBRE_ACCION_CRITERIO = :nombreAccionUpper,
+        PESO_ACCION_CRITERIO = :pesoAccion,
+        FECHA_ACTUALIZACION = :fechaActualizacion,
+        USUARIO_ACTUALIZACION = :idUsuarioActualizacion,
+        ID_CRITERIO = :idCriterio
+      WHERE ID_ACCION_CRITERIO = :idAccion;
+      `,
+      {
+        replacements: {
+          idAccion,
+          nombreAccionUpper,
+          pesoAccion,
+          fechaActualizacion,
+          idUsuarioActualizacion,
+          idCriterio,
+        },
+        type: QueryTypes.UPDATE,
+      }
+    );
+
+    return res.status(200).json({
+      ok: true,
+      msg: "Accion actualizada correctamente",
+    });
+  } catch (error) {
+    console.error("❌ Error al actualizar accion:", error);
+    return res.status(500).json({
+      ok: false,
+      msg: "Error al actualizar accion",
+    });
+  }
+};
 
 // ======================== MOTIVNOS NO PAGO ========================
 const getAllMotivosNoPago = async (_req, res) => {
@@ -569,7 +638,51 @@ const createMotivoNoPago = async (req, res) => {
   }
 };
 
-const updateMotivoNoPago = async (req, res) => {};
+const updateMotivoNoPago = async (req, res) => {
+  const { idMotivo, nombreMotivo, idCartera } = req.body;
+
+  console.log(
+    "===================== ACTUALIZANDO MOTIVO NO PAGO ====================="
+  );
+  console.log("req.body: ", req.body);
+
+  if (!idMotivo || !nombreMotivo || !idCartera) {
+    return res.status(400).json({
+      ok: false,
+      msg: "Todos los campos son obligatorios",
+    });
+  }
+
+  try {
+    await db.query(
+      `
+        UPDATE calidad.MOTIVO_NO_PAGO
+        SET NOMBRE_MOTIVO_NO_PAGO = :nombreMotivo,
+            ID_CARTERA = :idCartera
+        WHERE ID_MOTIVO_NO_PAGO = :idMotivo;
+      `,
+      {
+        replacements: {
+          idMotivo,
+          nombreMotivo,
+          idCartera,
+        },
+        type: QueryTypes.UPDATE,
+      }
+    );
+
+    res.status(200).json({
+      ok: true,
+      msg: "Motivo de no pago actualizado correctamente",
+    });
+  } catch (error) {
+    console.error("Error al actualizar motivo de no pago:", error);
+    res.status(500).json({
+      ok: false,
+      msg: "Error al actualizar motivo de no pago",
+    });
+  }
+};
 
 // ======================== TIPOS DE GESTION ========================
 const getAllTiposGestion = async (_req, res) => {
@@ -646,7 +759,58 @@ const createTipoGestion = async (req, res) => {
   }
 };
 
-const updateTipoGestion = async (req, res) => {};
+const updateTipoGestion = async (req, res) => {
+  const { idTipoGestion, nombreGestion, idCartera } = req.body;
+
+  console.log(
+    "===================== ACTUALIZANDO TIPO DE GESTION ====================="
+  );
+  console.log("req.body: ", req.body);
+
+  if (!idTipoGestion || !nombreGestion || !idCartera) {
+    return res.status(400).json({
+      ok: false,
+      msg: "Todos los campos son obligatorios",
+    });
+  }
+
+  try {
+    const [affectedRows] = await db.query(
+      `
+        UPDATE calidad.TIPO_GESTION
+        SET NOMBRE_TIPO_GESTION = :nombreGestion,
+            ID_CARTERA = :idCartera
+        WHERE ID_TIPO_GESTION = :idTipoGestion;
+      `,
+      {
+        replacements: {
+          idTipoGestion,
+          nombreGestion,
+          idCartera,
+        },
+        type: QueryTypes.UPDATE,
+      }
+    );
+
+    if (affectedRows === 0) {
+      return res.status(404).json({
+        ok: false,
+        msg: "No se encontró el tipo de gestión para actualizar",
+      });
+    }
+
+    res.status(200).json({
+      ok: true,
+      msg: "Tipo de gestión actualizado correctamente",
+    });
+  } catch (error) {
+    console.error("Error al actualizar tipo de gestion:", error);
+    res.status(500).json({
+      ok: false,
+      msg: "Error al actualizar tipo de gestion",
+    });
+  }
+};
 
 // ======================== TIPOS DE LLAMADA ========================
 const getAllTiposLlamada = async (_req, res) => {
@@ -719,7 +883,56 @@ const createTipoLlamada = async (req, res) => {
   }
 };
 
-const updateTipoLlamada = async (req, res) => {};
+const updateTipoLlamada = async (req, res) => {
+  const { idTipoLlamada, nombreLlamada } = req.body;
+
+  console.log(
+    "===================== ACTUALIZANDO TIPO DE LLAMADA ====================="
+  );
+  console.log("req.body: ", req.body);
+
+  if (!idTipoLlamada || !nombreLlamada) {
+    return res.status(400).json({
+      ok: false,
+      msg: "Todos los campos son obligatorios",
+    });
+  }
+
+  try {
+    const [affectedRows] = await db.query(
+      `
+        UPDATE calidad.TIPO_LLAMADA
+        SET NOMBRE_TIPO_LLAMADA = :nombreLlamada
+        WHERE ID_TIPO_LLAMADA = :idTipoLlamada;
+      `,
+      {
+        replacements: {
+          idTipoLlamada,
+          nombreLlamada,
+        },
+        type: QueryTypes.UPDATE,
+      }
+    );
+
+    if (affectedRows === 0) {
+      return res.status(404).json({
+        ok: false,
+        msg: "No se encontró el tipo de llamada para actualizar",
+      });
+    }
+
+    res.status(200).json({
+      ok: true,
+      msg: "Tipo de llamada actualizado correctamente",
+    });
+  } catch (error) {
+    console.error("Error al actualizar tipo de llamada:", error);
+    res.status(500).json({
+      ok: false,
+      msg: "Error al actualizar tipo de llamada",
+    });
+  }
+};
 
 module.exports = {
   getAllItems,

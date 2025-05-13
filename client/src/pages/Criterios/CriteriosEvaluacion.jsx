@@ -8,6 +8,8 @@ import { Toaster } from "sonner";
 import { MFormItem } from "./Pestanas/Items/Modal/MFormItem";
 import { MFormCriterio } from "./Pestanas/Criterios/Modal/MFormCriterio";
 import { MFormAcciones } from "./Pestanas/Acciones/Modal/MFormAcciones";
+import { MFormTipoGestion } from "./Pestanas/TiposGestion/Modal/MFormTipoGestion";
+import { MFormTLlamada } from "./Pestanas/TiposLlamadas/Modal/MFormTLlamada";
 
 export const CriteriosEvaluacion = () => {
   const navigate = useNavigate();
@@ -59,6 +61,8 @@ export const CriteriosEvaluacion = () => {
       <MFormItem />
       <MFormCriterio />
       <MFormAcciones />
+      <MFormTipoGestion />
+      <MFormTLlamada />
     </>
   );
 };

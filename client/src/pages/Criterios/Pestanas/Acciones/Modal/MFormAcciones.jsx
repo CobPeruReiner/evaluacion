@@ -25,6 +25,8 @@ export const MFormAcciones = () => {
     selectCarteraAcciones,
     filtrarCriterios,
     handleSelectCriterio,
+    submitFormNAcciones,
+    updateFormNAcciones,
   } = useContext(CriteriosContext);
 
   return (
@@ -40,7 +42,9 @@ export const MFormAcciones = () => {
         }`}
       >
         <form
-          // onSubmit={modoNAcciones === "new" ? submitformNAcciones : updateformNAcciones}
+          onSubmit={
+            modoNAcciones === "new" ? submitFormNAcciones : updateFormNAcciones
+          }
           autoComplete="off"
           className="scroll cont-form w-full h-full relative flex flex-col gap-5 border-none p-6 overflow-y-auto transition-all duration-300"
         >
@@ -94,7 +98,7 @@ export const MFormAcciones = () => {
                   if (/^\d{0,3}$/.test(valor)) {
                     const num = parseInt(valor, 10);
 
-                    if (!isNaN(num) && num >= 1 && num <= 100) {
+                    if (!isNaN(num) && num >= 0 && num <= 100) {
                       setFormNAcciones({ ...formNAcciones, pesoAccion: num });
                     } else if (valor === "") {
                       setFormNAcciones({ ...formNAcciones, pesoAccion: "" });
@@ -102,15 +106,18 @@ export const MFormAcciones = () => {
                   }
                 }}
                 onBlur={() => {
-                  if (!formNAcciones.pesoAccion) {
-                    toast.error("El peso debe estar entre 1% y 100%");
+                  if (
+                    formNAcciones.pesoAccion === "" ||
+                    formNAcciones.pesoAccion < 0
+                  ) {
+                    toast.error("El peso debe estar entre 0% y 100%");
                   }
                 }}
                 disabled={isPostingNAcciones}
                 required
               />
               <label htmlFor="pesoAccion" className={labelBorder}>
-                Peso del Ítem
+                Peso de la Accion
               </label>
 
               {/* Símbolo % */}
@@ -163,7 +170,13 @@ export const MFormAcciones = () => {
               className={buttonSubmit}
               disabled={isPostingNAcciones}
             >
-              {isPostingNAcciones ? "Guardando..." : "Guardar"}
+              {isPostingNAcciones
+                ? modoNAcciones === "new"
+                  ? "Creando..."
+                  : "Actualizando..."
+                : modoNAcciones === "new"
+                ? "Crear Accion"
+                : "Editar Accion"}
             </button>
           </div>
         </form>
