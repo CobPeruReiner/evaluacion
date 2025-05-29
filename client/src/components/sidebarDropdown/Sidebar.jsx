@@ -19,6 +19,8 @@ const Sidebar = () => {
   const user = useSelector((state) => state.user.user);
   const isAuth = useSelector((state) => state.user.isAuth);
 
+  // console.log("user: ", user);
+
   return (
     <>
       {/* Sidebar */}
@@ -46,33 +48,29 @@ const Sidebar = () => {
             {user && (
               <>
                 {/* CONSULTA GESTIONES */}
-                {user?.cargo !== "asesor" && (
-                  <>
-                    {isSidebarOpen && (
-                      <h3 className="text-xs font-semibold text-gray-400 px-4">
-                        Consultas
-                      </h3>
-                    )}
-                    <li>
-                      <Link
-                        to="/"
-                        className={`flex items-center text-xs ${
-                          isSidebarOpen ? "justify-start" : "justify-center"
-                        } space-x-2 py-2 px-3 rounded-md transition-all ${
-                          isActive("/")
-                            ? "bg-violet-100 text-violet-700"
-                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                        }`}
-                      >
-                        <MdOutlineMonitor size={24} />
-                        {isSidebarOpen && <span>Consulta de Gestiones</span>}
-                      </Link>
-                    </li>
-                  </>
+                {isSidebarOpen && (
+                  <h3 className="text-xs font-semibold text-gray-400 px-4">
+                    Consultas
+                  </h3>
                 )}
+                <li>
+                  <Link
+                    to="/"
+                    className={`flex items-center text-xs ${
+                      isSidebarOpen ? "justify-start" : "justify-center"
+                    } space-x-2 py-2 px-3 rounded-md transition-all ${
+                      isActive("/")
+                        ? "bg-[#e0f7fc] text-[#09c]"
+                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                    }`}
+                  >
+                    <MdOutlineMonitor size={24} />
+                    {isSidebarOpen && <span>Consulta de Gestiones</span>}
+                  </Link>
+                </li>
 
                 {/* Perfil Asesor */}
-                {user?.cargo === "asesor" && (
+                {(user?.CARGO === 17 || user?.CARGO === 20) && (
                   <>
                     {isSidebarOpen && (
                       <h3 className="text-xs font-semibold text-gray-400 px-4">
@@ -86,7 +84,7 @@ const Sidebar = () => {
                           isSidebarOpen ? "justify-start" : "justify-center"
                         } space-x-2 py-2 px-3 rounded-md transition-all ${
                           isActive("/perfilAsesor")
-                            ? "bg-violet-100 text-violet-700"
+                            ? "bg-[#e0f7fc] text-[#09c]"
                             : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                         }`}
                       >
@@ -101,7 +99,7 @@ const Sidebar = () => {
                           isSidebarOpen ? "justify-start" : "justify-center"
                         } space-x-2 py-2 px-3 rounded-md transition-all ${
                           isActive("/evaluacionesAsesor")
-                            ? "bg-violet-100 text-violet-700"
+                            ? "bg-[#e0f7fc] text-[#09c]"
                             : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                         }`}
                       >
@@ -113,7 +111,7 @@ const Sidebar = () => {
                 )}
 
                 {/* Registro Monitor */}
-                {user?.cargo === "monitor" && (
+                {user?.CARGO !== 16 && (
                   <>
                     {isSidebarOpen && (
                       <h3 className="text-xs font-semibold text-gray-400 px-4">
@@ -127,7 +125,7 @@ const Sidebar = () => {
                           isSidebarOpen ? "justify-start" : "justify-center"
                         } space-x-2 py-2 px-3 rounded-md transition-all ${
                           isActive("/tableMonitor")
-                            ? "bg-violet-100 text-violet-700"
+                            ? "bg-[#e0f7fc] text-[#09c]"
                             : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                         }`}
                       >
@@ -139,7 +137,9 @@ const Sidebar = () => {
                 )}
 
                 {/* Admin */}
-                {user?.cargo === "admin" && (
+                {(user?.CARGO === 203 ||
+                  user?.CARGO === 20 ||
+                  user?.CARGO === 17) && (
                   <>
                     {isSidebarOpen && (
                       <h3 className="text-xs font-semibold text-gray-400 px-4">
@@ -153,7 +153,7 @@ const Sidebar = () => {
                           isSidebarOpen ? "justify-start" : "justify-center"
                         } space-x-2 py-2 px-3 rounded-md transition-all ${
                           isActive("/table")
-                            ? "bg-violet-100 text-violet-700"
+                            ? "bg-[#e0f7fc] text-[#09c]"
                             : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                         }`}
                       >
@@ -161,51 +161,55 @@ const Sidebar = () => {
                         {isSidebarOpen && <span>Registro de Fichas</span>}
                       </Link>
                     </li>
-                    <li>
+                    {/* <li>
                       <Link
                         to="/users"
                         className={`flex items-center text-xs ${
                           isSidebarOpen ? "justify-start" : "justify-center"
                         } space-x-2 py-2 px-3 rounded-md transition-all ${
                           isActive("/users")
-                            ? "bg-violet-100 text-violet-700"
+                            ? "bg-[#e0f7fc] text-[#09c]"
                             : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                         }`}
                       >
                         <FiUsers size={24} />
                         {isSidebarOpen && <span>Lista de Usuarios</span>}
                       </Link>
-                    </li>
-                    <li>
+                    </li> */}
+                    {/* <li>
                       <Link
                         to="/signup"
                         className={`flex items-center text-xs ${
                           isSidebarOpen ? "justify-start" : "justify-center"
                         } space-x-2 py-2 px-3 rounded-md transition-all ${
                           isActive("/signup")
-                            ? "bg-violet-100 text-violet-700"
+                            ? "bg-[#e0f7fc] text-[#09c]"
                             : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                         }`}
                       >
                         <FiUserPlus size={24} />
                         {isSidebarOpen && <span>Crear Usuario</span>}
                       </Link>
-                    </li>
-                    <li>
-                      <Link
-                        to="/criterios"
-                        className={`flex items-center text-xs ${
-                          isSidebarOpen ? "justify-start" : "justify-center"
-                        } space-x-2 py-2 px-3 rounded-md transition-all ${
-                          isActive("/criterios")
-                            ? "bg-violet-100 text-violet-700"
-                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                        }`}
-                      >
-                        <MdOutlineMonitor size={24} />
-                        {isSidebarOpen && <span>Criterios de Evaluación</span>}
-                      </Link>
-                    </li>
+                    </li> */}
+                    {(user?.CARGO === 17 || user?.CARGO === 20) && (
+                      <li>
+                        <Link
+                          to="/criterios"
+                          className={`flex items-center text-xs ${
+                            isSidebarOpen ? "justify-start" : "justify-center"
+                          } space-x-2 py-2 px-3 rounded-md transition-all ${
+                            isActive("/criterios")
+                              ? "bg-[#e0f7fc] text-[#09c]"
+                              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                          }`}
+                        >
+                          <MdOutlineMonitor size={24} />
+                          {isSidebarOpen && (
+                            <span>Criterios de Evaluación</span>
+                          )}
+                        </Link>
+                      </li>
+                    )}
                   </>
                 )}
               </>
@@ -220,15 +224,15 @@ const Sidebar = () => {
           }`}
         >
           <div className="bg-gray-300 w-10 h-10 rounded-full flex items-center justify-center text-sm text-white">
-            {user?.nombres?.[0] || "U"}
+            {user?.NOMBRES?.[0] || "U"}
           </div>
 
           {isSidebarOpen ? (
             <div>
               <p className="text-sm font-semibold text-gray-800">
-                {user?.nombres || "Usuario"}
+                {user?.NOMBRES || "Usuario"}
               </p>
-              <p className="text-xs text-gray-500">{user?.cargo || "Admin"}</p>
+              <p className="text-xs text-gray-500">{user?.nombre || "Admin"}</p>
             </div>
           ) : null}
 

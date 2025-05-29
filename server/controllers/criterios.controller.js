@@ -8,7 +8,7 @@ const getAllItems = async (_req, res) => {
   try {
     const items = await db.query(
       `
-        SELECT tb1.ID_ITEM, tb1.NOMBRE_ITEM, tb1.PESO_ITEM, tb1.ID_CARTERA, tb2.NOMBRE_CARTERA, tb1.FECHA_ACTUALIZACION, tb1.USUARIO_ACTUALIZACION, CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION
+        SELECT tb1.ID_ITEM, tb1.NOMBRE_ITEM, tb1.PESO_ITEM, tb1.ID_CARTERA, tb2.NOMBRE_CARTERA, tb1.FECHA_ACTUALIZACION, tb1.USUARIO_ACTUALIZACION, CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION, tb1.ID_ESTADO
         FROM calidad.ITEM tb1
         LEFT JOIN calidad.CARTERA tb2
         ON tb1.ID_CARTERA = tb2.ID_CARTERA
@@ -85,14 +85,16 @@ const createItem = async (req, res) => {
           PESO_ITEM,
           FECHA_ACTUALIZACION,
           USUARIO_ACTUALIZACION,
-          ID_CARTERA
+          ID_CARTERA,
+          ID_ESTADO
         )
         VALUES (
           :nombreItem,
           :pesoItem,
           :fechaActualizacion,
           :usuarioActualizacion,
-          :idCartera
+          :idCartera,
+          1
         );
       `,
       {
@@ -128,6 +130,7 @@ const updateItem = async (req, res) => {
     fechaActualizacion,
     idUsuarioActualizacion,
     idCartera,
+    idEstado,
   } = req.body;
 
   console.log("===================== ACTUALIZANDO ITEM =====================");
@@ -140,7 +143,8 @@ const updateItem = async (req, res) => {
     pesoItem === undefined ||
     !fechaActualizacion ||
     !idUsuarioActualizacion ||
-    !idCartera
+    !idCartera ||
+    idEstado === undefined
   ) {
     return res.status(400).json({
       ok: false,
@@ -173,7 +177,8 @@ const updateItem = async (req, res) => {
             PESO_ITEM = :pesoItem,
             FECHA_ACTUALIZACION = :fechaActualizacion,
             USUARIO_ACTUALIZACION = :usuarioActualizacion,
-            ID_CARTERA = :idCartera
+            ID_CARTERA = :idCartera,
+            ID_ESTADO = :idEstado
         WHERE ID_ITEM = :idItem;
       `,
       {
@@ -184,6 +189,7 @@ const updateItem = async (req, res) => {
           fechaActualizacion,
           usuarioActualizacion: idUsuarioActualizacion,
           idCartera,
+          idEstado,
         },
         type: QueryTypes.UPDATE,
       }
@@ -213,7 +219,7 @@ const getAllCriterios = async (_req, res) => {
       `
         SELECT
           tb1.ID_CRITERIO, tb1.NOMBRE_CRITERIO, tb1.PESO_CRITERIO, tb1.ID_ITEM, tb2.NOMBRE_ITEM, tb1.FECHA_ACTUALIZACION,
-          tb1.USUARIO_ACTUALIZACION, CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION, tb4.NOMBRE_CARTERA
+          tb1.USUARIO_ACTUALIZACION, CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION, tb4.NOMBRE_CARTERA, tb1.ID_ESTADO
         FROM calidad.CRITERIO tb1
         LEFT JOIN calidad.ITEM tb2
         ON tb1.ID_ITEM = tb2.ID_ITEM
@@ -268,7 +274,7 @@ const createCriterio = async (req, res) => {
   try {
     // 1. Obtener peso total actual de los criterios del ítem
     const [suma] = await db.query(
-      `SELECT COALESCE(SUM(PESO_CRITERIO), 0) AS total FROM calidad.CRITERIO WHERE ID_ITEM = :idItem`,
+      `SELECT COALESCE(SUM(PESO_CRITERIO), 0) AS total FROM calidad.CRITERIO WHERE ID_ITEM = :idItem AND ID_ESTADO = 1`,
       {
         replacements: { idItem },
         type: QueryTypes.SELECT,
@@ -277,7 +283,7 @@ const createCriterio = async (req, res) => {
 
     // 2. Obtener peso del ítem
     const [item] = await db.query(
-      `SELECT PESO_ITEM FROM calidad.ITEM WHERE ID_ITEM = :idItem`,
+      `SELECT PESO_ITEM FROM calidad.ITEM WHERE ID_ITEM = :idItem AND ID_ESTADO = 1`,
       {
         replacements: { idItem },
         type: QueryTypes.SELECT,
@@ -291,7 +297,8 @@ const createCriterio = async (req, res) => {
       });
     }
 
-    const pesoRestante = item.PESO_ITEM - suma.total;
+    const pesoRestante =
+      Math.round((item.PESO_ITEM - suma.total) * 10000) / 10000;
 
     // 3. Validar que no se exceda
     if (pesoCriterio > pesoRestante) {
@@ -307,9 +314,9 @@ const createCriterio = async (req, res) => {
     await db.query(
       `
       INSERT INTO calidad.CRITERIO 
-      (NOMBRE_CRITERIO, PESO_CRITERIO, FECHA_ACTUALIZACION, USUARIO_ACTUALIZACION, ID_ITEM)
+      (NOMBRE_CRITERIO, PESO_CRITERIO, FECHA_ACTUALIZACION, USUARIO_ACTUALIZACION, ID_ITEM, ID_ESTADO)
       VALUES 
-      (:nombreCriterio, :pesoCriterio, :fechaActualizacion, :idUsuarioActualizacion, :idItem);
+      (:nombreCriterio, :pesoCriterio, :fechaActualizacion, :idUsuarioActualizacion, :idItem, 1);
       `,
       {
         replacements: {
@@ -343,6 +350,8 @@ const updateCriterio = async (req, res) => {
     pesoCriterio,
     fechaActualizacion,
     idUsuarioActualizacion,
+    idEstado,
+    idItem,
   } = req.body;
 
   console.log(
@@ -355,7 +364,9 @@ const updateCriterio = async (req, res) => {
     !nombreCriterio ||
     pesoCriterio === undefined ||
     !fechaActualizacion ||
-    !idUsuarioActualizacion
+    !idUsuarioActualizacion ||
+    idEstado === undefined ||
+    !idItem
   ) {
     return res.status(400).json({
       ok: false,
@@ -367,7 +378,12 @@ const updateCriterio = async (req, res) => {
     await db.query(
       `
       UPDATE calidad.CRITERIO
-      SET NOMBRE_CRITERIO = :nombreCriterio, PESO_CRITERIO = :pesoCriterio, FECHA_ACTUALIZACION = :fechaActualizacion, USUARIO_ACTUALIZACION = :idUsuarioActualizacion
+      SET NOMBRE_CRITERIO = :nombreCriterio,
+      PESO_CRITERIO = :pesoCriterio,
+      FECHA_ACTUALIZACION = :fechaActualizacion,
+      USUARIO_ACTUALIZACION = :idUsuarioActualizacion,
+      ID_ESTADO = :idEstado,
+      ID_ITEM = :idItem
       WHERE ID_CRITERIO = :idCriterio;
       `,
       {
@@ -377,6 +393,8 @@ const updateCriterio = async (req, res) => {
           pesoCriterio,
           fechaActualizacion,
           idUsuarioActualizacion,
+          idEstado,
+          idItem,
         },
         type: QueryTypes.UPDATE,
       }
@@ -407,7 +425,8 @@ const getAllAcciones = async (_req, res) => {
         SELECT
           tb1.ID_ACCION_CRITERIO, tb1.NOMBRE_ACCION_CRITERIO, tb1.ID_CRITERIO, tb1.PESO_ACCION_CRITERIO, tb2.NOMBRE_CRITERIO,
           tb1.FECHA_ACTUALIZACION, tb1.USUARIO_ACTUALIZACION, CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION,
-          tb4.NOMBRE_ITEM, tb5.NOMBRE_CARTERA
+          tb4.NOMBRE_ITEM, tb5.NOMBRE_CARTERA,
+          tb1.ESTADO_ACCION
         FROM calidad.ACCION_CRITERIO tb1
         LEFT JOIN calidad.CRITERIO tb2
         ON tb1.ID_CRITERIO = tb2.ID_CRITERIO
@@ -502,6 +521,7 @@ const updateAccion = async (req, res) => {
     fechaActualizacion,
     idUsuarioActualizacion,
     idCriterio,
+    idEstado,
   } = req.body;
 
   console.log(
@@ -515,7 +535,8 @@ const updateAccion = async (req, res) => {
     pesoAccion === undefined ||
     !fechaActualizacion ||
     !idUsuarioActualizacion ||
-    !idCriterio
+    !idCriterio ||
+    idEstado === undefined
   ) {
     return res.status(400).json({
       ok: false,
@@ -534,7 +555,8 @@ const updateAccion = async (req, res) => {
         PESO_ACCION_CRITERIO = :pesoAccion,
         FECHA_ACTUALIZACION = :fechaActualizacion,
         USUARIO_ACTUALIZACION = :idUsuarioActualizacion,
-        ID_CRITERIO = :idCriterio
+        ID_CRITERIO = :idCriterio,
+        ESTADO_ACCION = :idEstado
       WHERE ID_ACCION_CRITERIO = :idAccion;
       `,
       {
@@ -545,6 +567,7 @@ const updateAccion = async (req, res) => {
           fechaActualizacion,
           idUsuarioActualizacion,
           idCriterio,
+          idEstado,
         },
         type: QueryTypes.UPDATE,
       }
@@ -572,7 +595,7 @@ const getAllMotivosNoPago = async (_req, res) => {
   try {
     const motivos = await db.query(
       `
-        SELECT tb1.ID_MOTIVO_NO_PAGO, tb1.NOMBRE_MOTIVO_NO_PAGO, tb1.ID_CARTERA, tb2.NOMBRE_CARTERA
+        SELECT tb1.ID_MOTIVO_NO_PAGO, tb1.NOMBRE_MOTIVO_NO_PAGO, tb1.ID_CARTERA, tb2.NOMBRE_CARTERA, tb1.ID_ESTADO
         FROM calidad.MOTIVO_NO_PAGO tb1
         LEFT JOIN calidad.CARTERA tb2
         ON tb1.ID_CARTERA = tb2.ID_CARTERA;
@@ -613,8 +636,8 @@ const createMotivoNoPago = async (req, res) => {
   try {
     await db.query(
       `
-        INSERT INTO calidad.MOTIVO_NO_PAGO (NOMBRE_MOTIVO_NO_PAGO, ID_CARTERA)
-        VALUES (:nombreMotivo, :idCartera);
+        INSERT INTO calidad.MOTIVO_NO_PAGO (NOMBRE_MOTIVO_NO_PAGO, ID_CARTERA, ID_ESTADO)
+        VALUES (:nombreMotivo, :idCartera, 1);
       `,
       {
         replacements: {
@@ -639,14 +662,14 @@ const createMotivoNoPago = async (req, res) => {
 };
 
 const updateMotivoNoPago = async (req, res) => {
-  const { idMotivo, nombreMotivo, idCartera } = req.body;
+  const { idMotivo, nombreMotivo, idCartera, idEstado } = req.body;
 
   console.log(
     "===================== ACTUALIZANDO MOTIVO NO PAGO ====================="
   );
   console.log("req.body: ", req.body);
 
-  if (!idMotivo || !nombreMotivo || !idCartera) {
+  if (!idMotivo || !nombreMotivo || !idCartera || idEstado === undefined) {
     return res.status(400).json({
       ok: false,
       msg: "Todos los campos son obligatorios",
@@ -658,7 +681,8 @@ const updateMotivoNoPago = async (req, res) => {
       `
         UPDATE calidad.MOTIVO_NO_PAGO
         SET NOMBRE_MOTIVO_NO_PAGO = :nombreMotivo,
-            ID_CARTERA = :idCartera
+            ID_CARTERA = :idCartera,
+            ID_ESTADO = :idEstado
         WHERE ID_MOTIVO_NO_PAGO = :idMotivo;
       `,
       {
@@ -666,6 +690,7 @@ const updateMotivoNoPago = async (req, res) => {
           idMotivo,
           nombreMotivo,
           idCartera,
+          idEstado,
         },
         type: QueryTypes.UPDATE,
       }
@@ -693,7 +718,7 @@ const getAllTiposGestion = async (_req, res) => {
   try {
     const gestiones = await db.query(
       `
-        SELECT tb1.ID_TIPO_GESTION, tb1.NOMBRE_TIPO_GESTION, tb1.ID_CARTERA, tb2.NOMBRE_CARTERA
+        SELECT tb1.ID_TIPO_GESTION, tb1.NOMBRE_TIPO_GESTION, tb1.ID_CARTERA, tb2.NOMBRE_CARTERA, tb1.ID_ESTADO
         FROM calidad.TIPO_GESTION tb1
         LEFT JOIN calidad.CARTERA tb2
         ON tb1.ID_CARTERA = tb2.ID_CARTERA;
@@ -734,8 +759,8 @@ const createTipoGestion = async (req, res) => {
   try {
     await db.query(
       `
-        INSERT INTO calidad.TIPO_GESTION (NOMBRE_TIPO_GESTION, ID_CARTERA)
-        VALUES (:nombreGestion, :idCartera);
+        INSERT INTO calidad.TIPO_GESTION (NOMBRE_TIPO_GESTION, ID_CARTERA, ID_ESTADO)
+        VALUES (:nombreGestion, :idCartera, 1);
       `,
       {
         replacements: {
@@ -760,14 +785,19 @@ const createTipoGestion = async (req, res) => {
 };
 
 const updateTipoGestion = async (req, res) => {
-  const { idTipoGestion, nombreGestion, idCartera } = req.body;
+  const { idTipoGestion, nombreGestion, idCartera, idEstado } = req.body;
 
   console.log(
     "===================== ACTUALIZANDO TIPO DE GESTION ====================="
   );
   console.log("req.body: ", req.body);
 
-  if (!idTipoGestion || !nombreGestion || !idCartera) {
+  if (
+    !idTipoGestion ||
+    !nombreGestion ||
+    !idCartera ||
+    idEstado === undefined
+  ) {
     return res.status(400).json({
       ok: false,
       msg: "Todos los campos son obligatorios",
@@ -779,7 +809,8 @@ const updateTipoGestion = async (req, res) => {
       `
         UPDATE calidad.TIPO_GESTION
         SET NOMBRE_TIPO_GESTION = :nombreGestion,
-            ID_CARTERA = :idCartera
+            ID_CARTERA = :idCartera,
+            ID_ESTADO = :idEstado
         WHERE ID_TIPO_GESTION = :idTipoGestion;
       `,
       {
@@ -787,6 +818,7 @@ const updateTipoGestion = async (req, res) => {
           idTipoGestion,
           nombreGestion,
           idCartera,
+          idEstado,
         },
         type: QueryTypes.UPDATE,
       }
@@ -859,8 +891,8 @@ const createTipoLlamada = async (req, res) => {
   try {
     await db.query(
       `
-        INSERT INTO calidad.TIPO_LLAMADA (NOMBRE_TIPO_LLAMADA)
-        VALUES (:nombreLlamada);
+        INSERT INTO calidad.TIPO_LLAMADA (NOMBRE_TIPO_LLAMADA, ID_ESTADO)
+        VALUES (:nombreLlamada, 1);
       `,
       {
         replacements: {
@@ -884,14 +916,14 @@ const createTipoLlamada = async (req, res) => {
 };
 
 const updateTipoLlamada = async (req, res) => {
-  const { idTipoLlamada, nombreLlamada } = req.body;
+  const { idTipoLlamada, nombreLlamada, idEstado } = req.body;
 
   console.log(
     "===================== ACTUALIZANDO TIPO DE LLAMADA ====================="
   );
   console.log("req.body: ", req.body);
 
-  if (!idTipoLlamada || !nombreLlamada) {
+  if (!idTipoLlamada || !nombreLlamada || idEstado === undefined) {
     return res.status(400).json({
       ok: false,
       msg: "Todos los campos son obligatorios",
@@ -902,13 +934,15 @@ const updateTipoLlamada = async (req, res) => {
     const [affectedRows] = await db.query(
       `
         UPDATE calidad.TIPO_LLAMADA
-        SET NOMBRE_TIPO_LLAMADA = :nombreLlamada
+        SET NOMBRE_TIPO_LLAMADA = :nombreLlamada,
+            ID_ESTADO = :idEstado
         WHERE ID_TIPO_LLAMADA = :idTipoLlamada;
       `,
       {
         replacements: {
           idTipoLlamada,
           nombreLlamada,
+          idEstado,
         },
         type: QueryTypes.UPDATE,
       }

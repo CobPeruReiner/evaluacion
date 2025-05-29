@@ -13,6 +13,7 @@ const initItems = {
   fechaActualizacion: null,
   idUsuarioActualizacion: null,
   idCartera: null,
+  idEstado: 1,
 };
 
 const initCriterios = {
@@ -22,6 +23,7 @@ const initCriterios = {
   fechaActualizacion: null,
   idUsuarioActualizacion: null,
   idItem: null,
+  idEstado: 1,
 };
 
 const initAccioness = {
@@ -31,23 +33,27 @@ const initAccioness = {
   fechaActualizacion: null,
   idUsuarioActualizacion: null,
   idCriterio: null,
+  idEstado: 1,
 };
 
 const initMotPago = {
   idMotivo: null,
   nombreMotivo: "",
   idCartera: null,
+  idEstado: 1,
 };
 
 const initTipoGestion = {
   idTipoGestion: null,
   nombreGestion: "",
   idCartera: null,
+  idEstado: 1,
 };
 
 const initTipoLlamada = {
   idTipoLlamada: null,
   nombreLlamada: "",
+  idEstado: 1,
 };
 
 export const CriteriosProvider = ({ children }) => {
@@ -110,6 +116,7 @@ export const CriteriosProvider = ({ children }) => {
         pesoItem: pesoTransformado,
         idCartera: newData.ID_CARTERA,
         idCarteraOriginal: newData.ID_CARTERA,
+        idEstado: newData.ID_ESTADO,
       });
 
       setinputCarteraItemAsoc(`${newData.NOMBRE_CARTERA}`);
@@ -199,7 +206,7 @@ export const CriteriosProvider = ({ children }) => {
     const formNItemFinal = {
       ...formNItem,
       fechaActualizacion: today,
-      idUsuarioActualizacion: user.dni,
+      idUsuarioActualizacion: user.DOC,
       pesoItem: pesoTransformado,
     };
 
@@ -248,7 +255,7 @@ export const CriteriosProvider = ({ children }) => {
     const formNItemFinal = {
       ...formNItem,
       fechaActualizacion: today,
-      idUsuarioActualizacion: user.dni,
+      idUsuarioActualizacion: user.DOC,
       pesoItem: pesoTransformado,
     };
 
@@ -386,6 +393,7 @@ export const CriteriosProvider = ({ children }) => {
         pesoCriterio: pesoTransformado,
         idItem: newData.ID_ITEM,
         idItemOriginal: newData.ID_ITEM,
+        idEstado: newData.ID_ESTADO,
       });
 
       setInputItemAsoc(`${newData.NOMBRE_ITEM}`);
@@ -473,7 +481,7 @@ export const CriteriosProvider = ({ children }) => {
     const formNCriterioFinal = {
       ...formNCriterio,
       fechaActualizacion: today,
-      idUsuarioActualizacion: user.dni,
+      idUsuarioActualizacion: user.DOC,
       pesoCriterio: pesoTransformado,
     };
 
@@ -522,7 +530,7 @@ export const CriteriosProvider = ({ children }) => {
     const formNCriterioFinal = {
       ...formNCriterio,
       fechaActualizacion: today,
-      idUsuarioActualizacion: user.dni,
+      idUsuarioActualizacion: user.DOC,
       pesoCriterio: pesoTransformado,
     };
 
@@ -619,7 +627,7 @@ export const CriteriosProvider = ({ children }) => {
   const filteredCriteriosCriteriosBySearch = () => {
     const queryFiltered = searchCriterio.toLowerCase();
 
-    return criteriosItems.filter(
+    return criteriosCriterios.filter(
       (c) =>
         c.NOMBRE_CRITERIO?.toLowerCase().includes(queryFiltered) ||
         c.NOMBRE_ITEM?.toLowerCase().includes(queryFiltered) ||
@@ -664,6 +672,7 @@ export const CriteriosProvider = ({ children }) => {
         pesoAccion: pesoTransformado,
         idCriterio: newData.ID_CRITERIO,
         idCriterioOriginal: newData.ID_CRITERIO,
+        idEstado: newData.ESTADO_ACCION,
       });
 
       setinputCarteraAccionesAsoc(`${newData.NOMBRE_CRITERIO}`);
@@ -751,7 +760,7 @@ export const CriteriosProvider = ({ children }) => {
       ...formNAcciones,
       pesoAccion: pesoTransformado,
       fechaActualizacion: today,
-      idUsuarioActualizacion: user.dni,
+      idUsuarioActualizacion: user.DOC,
     };
 
     setIsPostingNAcciones(true);
@@ -797,7 +806,7 @@ export const CriteriosProvider = ({ children }) => {
       ...formNAcciones,
       pesoAccion: pesoTransformado,
       fechaActualizacion: today,
-      idUsuarioActualizacion: user.dni,
+      idUsuarioActualizacion: user.DOC,
     };
 
     setIsPostingNAcciones(true);
@@ -968,8 +977,11 @@ export const CriteriosProvider = ({ children }) => {
   useOutsideClick(refMNMotPago, () => setModalMNMotPago(false));
 
   const handleFormNMotPago = (e) => {
-    const { name, value } = e.target;
-    setFormNMotPago({ ...formNMotPago, [name]: value });
+    const { name, value, type, checked } = e.target;
+    setFormNMotPago({
+      ...formNMotPago,
+      [name]: type === "checkbox" ? (checked ? 1 : 0) : value,
+    });
   };
 
   const openModalNMotNoPago = (newModo = "new", newData = null) => {
@@ -983,6 +995,7 @@ export const CriteriosProvider = ({ children }) => {
         idMotivo: newData.ID_MOTIVO_NO_PAGO,
         nombreMotivo: newData.NOMBRE_MOTIVO_NO_PAGO,
         idCartera: newData.ID_CARTERA,
+        idEstado: newData.ID_ESTADO,
       });
 
       setInputCarteraMNP(`${newData.NOMBRE_CARTERA}`);
@@ -1193,6 +1206,7 @@ export const CriteriosProvider = ({ children }) => {
         idTipoGestion: data.ID_TIPO_GESTION,
         nombreGestion: data.NOMBRE_TIPO_GESTION,
         idCartera: data.ID_CARTERA,
+        idEstado: data.ID_ESTADO,
       });
 
       setInputCarteraTipoGestion(`${data.NOMBRE_CARTERA}`);
@@ -1206,8 +1220,12 @@ export const CriteriosProvider = ({ children }) => {
   };
 
   const handleFormTipoGestion = (e) => {
-    const { name, value } = e.target;
-    setFormTipoGestion({ ...formTipoGestion, [name]: value });
+    const { name, value, type, checked } = e.target;
+
+    setFormTipoGestion({
+      ...formTipoGestion,
+      [name]: type === "checkbox" ? (checked ? 1 : 0) : value,
+    });
   };
 
   const submitFormTipoGestion = async (e) => {
@@ -1320,7 +1338,7 @@ export const CriteriosProvider = ({ children }) => {
     const query = searchTipos.toLowerCase();
     return tiposGestion.filter(
       (t) =>
-        t.nombreGestion?.toLowerCase().includes(query) ||
+        t.NOMBRE_TIPO_GESTION?.toLowerCase().includes(query) ||
         t.NOMBRE_CARTERA?.toLowerCase().includes(query) // si estás trayendo cartera
     );
   };
@@ -1390,6 +1408,7 @@ export const CriteriosProvider = ({ children }) => {
       setFormTipoLlamada({
         idTipoLlamada: data.ID_TIPO_LLAMADA,
         nombreLlamada: data.NOMBRE_TIPO_LLAMADA,
+        idEstado: data.ID_ESTADO,
       });
     } else {
       setFormTipoLlamada(initTipoLlamada);
@@ -1399,8 +1418,12 @@ export const CriteriosProvider = ({ children }) => {
   };
 
   const handleFormTipoLlamada = (e) => {
-    const { name, value } = e.target;
-    setFormTipoLlamada({ ...formTipoLlamada, [name]: value });
+    const { name, value, type, checked } = e.target;
+
+    setFormTipoLlamada({
+      ...formTipoLlamada,
+      [name]: type === "checkbox" ? (checked ? 1 : 0) : value,
+    });
   };
 
   const submitFormTipoLlamada = async (e) => {

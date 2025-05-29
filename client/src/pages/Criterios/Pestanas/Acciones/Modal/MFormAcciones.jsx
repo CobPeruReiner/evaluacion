@@ -153,6 +153,30 @@ export const MFormAcciones = () => {
 
               {isPostingNAcciones ? null : <SCriterios />}
             </div>
+
+            {modoNAcciones === "edit" && (
+              <div className="container-estado-item flex gap-4 items-center bg-transparent">
+                <h6 className="text-sm leading-[1.625] font-bold tracking-[0.0075em] text-gray-500">
+                  Estado:
+                </h6>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-gray-700">
+                    {formNAcciones.idEstado ? "Activo" : "Inactivo"}
+                  </span>
+                  <label className="relative inline-flex items-center cursor-pointer w-12 h-6">
+                    <input
+                      type="checkbox"
+                      id="idEstado"
+                      name="idEstado"
+                      checked={formNAcciones.idEstado || false}
+                      onChange={handleInputChangeFormNAcciones}
+                      className="sr-only peer"
+                    />
+                    <div className="w-full h-full bg-rose-400 rounded-full peer-checked:bg-emerald-500 transition-colors duration-300 relative after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-transform after:duration-300 peer-checked:after:translate-x-6" />
+                  </label>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Buttoncs */}

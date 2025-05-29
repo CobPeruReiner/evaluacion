@@ -7,6 +7,7 @@ const { catchAsync } = require("../utils/catchAsync.util");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
+const md5 = require("md5");
 
 const createUser = catchAsync(async (req, res, next) => {
   const { apellidos, nombres, dni, cargo, usuario, password, supervisor } =
@@ -33,36 +34,58 @@ const createUser = catchAsync(async (req, res, next) => {
   });
 });
 
-const login = catchAsync(async (req, res, next) => {
+const login = async (req, res, next) => {
+  // const { usuario, password, code } = req.body;
   const { usuario, password } = req.body;
+  console.log(" =================INICIANDO SESION =================");
+  console.log("Credenciales: ", req.body);
 
-  const user = await User.findOne({
-    where: {
-      usuario,
-    },
-  });
-
-  if (!user) return next(new AppError("Invalid user", 400));
-
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-
-  if (!isPasswordValid) return next(new AppError("Invalid password", 400));
-
-  const token = await jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-    expiresIn: "10h",
-    // expiresIn: '5s',
-  });
-
-  console.log(
-    `Logeado: ${user.nombres} a las ${new Date().toLocaleString("es-PE")}`
+  // Consulta SQL para buscar el usuario en la tabla personal
+  const results = await dbWeb.query(
+    `SELECT tb1.*, tb2.nombre
+     FROM personal tb1
+     LEFT JOIN cargo tb2
+     ON tb1.CARGO = tb2.id
+     WHERE DOC = :usuario AND IDESTADO = 1`,
+    {
+      replacements: {
+        usuario,
+      },
+      type: QueryTypes.SELECT,
+    }
   );
+
+  if (results.length === 0) {
+    return next(new AppError("Invalid user", 400));
+  }
+
+  const user = results[0];
+
+  const isPasswordValid = user.PASSWORD === md5(password);
+
+  if (!isPasswordValid) {
+    console.log("Login fallido: ", usuario);
+    return next(new AppError("Invalid password", 400));
+  }
+
+  // console.log("Login exitoso: ", user);
+
+  const token = await jwt.sign(
+    { id: user.IDPERSONAL },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "10h",
+    }
+  );
+
+  console.log("Logeado: ", user.NOMBRES);
 
   res.status(200).json({
     status: "success",
     user,
     token,
   });
-});
+};
 
 const getAllUsers = catchAsync(async (req, res, next) => {
   const users = await User.findAll();
