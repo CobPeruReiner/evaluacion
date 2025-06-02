@@ -173,12 +173,22 @@ const getAllFichas = catchAsync(async (req, res, next) => {
 });
 
 const getFilteredlFichas = catchAsync(async (req, res, next) => {
+  console.log(" ======== FUNCTION FILTERED FICHAS ================");
+
   const { cliente, tramo, firstDate, secondDate, asesor } = req.query;
 
   const condiciones = [];
 
   // Condición para fechas, si están presentes
   if (firstDate && secondDate) {
+    console.log("Buscando por:", {
+      firstDate,
+      secondDate,
+      asesor,
+      cliente,
+      tramo,
+    });
+
     // Convertimos las fechas de formato "dd/mm/yyyy" a Date válido
     const startDate = parse(firstDate, "yyyy-MM-dd", new Date());
     const endDate = parse(secondDate, "yyyy-MM-dd", new Date());
@@ -200,7 +210,7 @@ const getFilteredlFichas = catchAsync(async (req, res, next) => {
     condiciones.push({ cartera: cliente });
   }
 
-  if (tramo) {
+  if (tramo && tramo !== "TODOS") {
     condiciones.push({ tramo });
   }
 
