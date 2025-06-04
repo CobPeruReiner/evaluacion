@@ -240,7 +240,7 @@ const getFichasByUser = catchAsync(async (req, res, next) => {
   const { monitor } = req.params;
 
   const fichas = await Ficha.findAll({
-    where: { nombre_monitor: monitor },
+    where: { agente_dni: monitor },
   });
 
   res.status(200).json({

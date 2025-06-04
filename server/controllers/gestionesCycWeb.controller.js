@@ -92,6 +92,9 @@ const getFilteredCycGestions = async (req, res, next) => {
   const efectosArray = req.query.efectosArray;
   const idCarteraSelected = req.query.idCarteraSelected;
 
+  console.log(" ======== FUNCTION FILTERED CYC GESTIONS ================");
+  console.log("Filtrando por: ", req.query);
+
   // const replacements = { filterDate1, filterDate2, cliente, cartera, idCarteraSelected };
   // const replacements = { filterDate1: `${filterDate1} 00:00:00`, filterDate2: `${filterDate2} 23:59:59`, cliente, cartera, idCarteraSelected };
   const replacements = {

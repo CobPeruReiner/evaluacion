@@ -139,7 +139,8 @@ const Sidebar = () => {
                 {/* Admin */}
                 {(user?.CARGO === 6 ||
                   user?.CARGO === 20 ||
-                  user?.CARGO === 17) && (
+                  user?.CARGO === 17 ||
+                  user?.CARGO === 15) && (
                   <>
                     {isSidebarOpen && (
                       <h3 className="text-xs font-semibold text-gray-400 px-4">

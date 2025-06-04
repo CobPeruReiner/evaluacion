@@ -614,8 +614,10 @@ export const FichaEvaluacionMonitor = () => {
     return Number(new Date(b.id)) - Number(new Date(a.id));
   };
 
+  // console.log("User: ", user);
+
   const showData = async () => {
-    const response = await fetch(`${API_URL}${user.usuario}`);
+    const response = await fetch(`${API_URL}${user.DOC}`);
     const data = await response.json();
     setDatosFicha(data.fichas.sort(sortReportesByDate));
     setSuggestions(data.fichas.sort(sortReportesByDate));
