@@ -249,10 +249,17 @@ const getFichasByUser = catchAsync(async (req, res, next) => {
   });
 });
 
-const getTypeOfFicha = catchAsync(async (req, res, next) => {
-  const cartera = req.query.cartera;
-  const fichas = await dbWeb.query(
-    `
+const getTypeOfFicha = async (req, res, next) => {
+  try {
+    console.log(" =========== OBTENIENDO TIPO DE FICHA ===========");
+    console.log(req.query);
+    console.log("📦 Valor recibido (raw):", req.query.cartera);
+    console.log("📦 Longitud:", req.query.cartera.length);
+    console.log("📦 Bytes:", Buffer.from(req.query.cartera));
+
+    const cartera = req.query.cartera;
+    const fichas = await dbWeb.query(
+      `
             SELECT c.id, c.cartera, tc.nombre AS 'tramo', c.tipo,
             CASE
                 when tipo IN (1,4) then 'ficha02'
@@ -264,17 +271,21 @@ const getTypeOfFicha = catchAsync(async (req, res, next) => {
             INNER JOIN tipo_cartera tc ON c.tipo = tc.id
             WHERE cartera = :cartera AND c.estado = 1;
         `,
-    {
-      replacements: { cartera },
-      type: QueryTypes.SELECT,
-    }
-  );
+      {
+        replacements: { cartera },
+        type: QueryTypes.SELECT,
+      }
+    );
 
-  res.status(200).json({
-    status: "success",
-    fichas,
-  });
-});
+    res.status(200).json({ status: "success", fichas });
+  } catch (err) {
+    console.error("❌ ERROR DETALLADO:");
+    console.error("Mensaje:", err.message);
+    console.error("SQL:", err.sql);
+    console.error("SQL Message:", err.original?.sqlMessage);
+    res.status(500).json({ status: "error", message: err.message });
+  }
+};
 
 const getAsesorEvaluaciones = catchAsync(async (req, res, next) => {
   const { dni, month } = req.query;

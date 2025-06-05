@@ -1,4 +1,6 @@
 const express = require("express");
+const multer = require("multer");
+const path = require("path");
 const {
   getAllItems,
   createItem,
@@ -18,6 +20,9 @@ const {
   getAllTiposLlamada,
   createTipoLlamada,
   updateTipoLlamada,
+  getAllEfectos,
+  obtenerResultadosPorFecha,
+  processZip,
 } = require("../controllers/criterios.controller");
 const {
   buscarIdPersonal,
@@ -25,6 +30,10 @@ const {
 const {
   validarPesoTotal,
 } = require("../middlewares/Criterios/ValidarPesoTotal");
+
+const upload = multer({
+  dest: path.join(__dirname, "..", "uploads"),
+});
 
 const criteriosEvaluacionRouter = express.Router();
 
@@ -93,5 +102,14 @@ criteriosEvaluacionRouter.put("/gestiones/update", updateTipoGestion);
 criteriosEvaluacionRouter.get("/llamadas", getAllTiposLlamada);
 criteriosEvaluacionRouter.post("/llamadas/create", createTipoLlamada);
 criteriosEvaluacionRouter.put("/llamadas/update", updateTipoLlamada);
+
+// EFECTOS
+criteriosEvaluacionRouter.get("/efectos", getAllEfectos);
+
+// PROCESAR AUDIOS
+criteriosEvaluacionRouter.post("/audios", upload.single("zip"), processZip);
+
+// AUDITORIA
+criteriosEvaluacionRouter.get("/auditoria", obtenerResultadosPorFecha);
 
 module.exports = { criteriosEvaluacionRouter };

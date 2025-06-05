@@ -29,7 +29,7 @@ const Sidebar = () => {
         onMouseLeave={sideBarInactive}
         className={`fixed top-0 left-0 ${
           isSidebarOpen ? "w-64" : "w-16"
-        } h-full bg-gray-50 flex flex-col border-r z-[1000] transition-all duration-300`}
+        } h-full bg-gray-50 flex flex-col border-r z-[201] transition-all duration-300`}
       >
         {/* Header */}
         <div className="flex items-center space-x-3 px-4 pt-6">
@@ -162,36 +162,6 @@ const Sidebar = () => {
                         {isSidebarOpen && <span>Registro de Fichas</span>}
                       </Link>
                     </li>
-                    {/* <li>
-                      <Link
-                        to="/users"
-                        className={`flex items-center text-xs ${
-                          isSidebarOpen ? "justify-start" : "justify-center"
-                        } space-x-2 py-2 px-3 rounded-md transition-all ${
-                          isActive("/users")
-                            ? "bg-[#e0f7fc] text-[#09c]"
-                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                        }`}
-                      >
-                        <FiUsers size={24} />
-                        {isSidebarOpen && <span>Lista de Usuarios</span>}
-                      </Link>
-                    </li> */}
-                    {/* <li>
-                      <Link
-                        to="/signup"
-                        className={`flex items-center text-xs ${
-                          isSidebarOpen ? "justify-start" : "justify-center"
-                        } space-x-2 py-2 px-3 rounded-md transition-all ${
-                          isActive("/signup")
-                            ? "bg-[#e0f7fc] text-[#09c]"
-                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                        }`}
-                      >
-                        <FiUserPlus size={24} />
-                        {isSidebarOpen && <span>Crear Usuario</span>}
-                      </Link>
-                    </li> */}
                     {(user?.CARGO === 17 || user?.CARGO === 20) && (
                       <li>
                         <Link
@@ -211,6 +181,49 @@ const Sidebar = () => {
                         </Link>
                       </li>
                     )}
+                  </>
+                )}
+
+                {/* Speech Analytics */}
+                {(user?.CARGO === 20 || user?.CARGO === 17) && (
+                  <>
+                    {isSidebarOpen && (
+                      <h3 className="text-xs font-semibold text-gray-400 px-4">
+                        Speech Analytics
+                      </h3>
+                    )}
+                    <li>
+                      <Link
+                        to="/speech/procesamiento"
+                        className={`flex items-center text-xs ${
+                          isSidebarOpen ? "justify-start" : "justify-center"
+                        } space-x-2 py-2 px-3 rounded-md transition-all ${
+                          isActive("/speech/procesamiento")
+                            ? "bg-[#e0f7fc] text-[#09c]"
+                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                        }`}
+                      >
+                        <MdOutlineMonitor size={24} />
+                        {isSidebarOpen && (
+                          <span>Procesamiento y Evaluación</span>
+                        )}
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/speech/auditoria"
+                        className={`flex items-center text-xs ${
+                          isSidebarOpen ? "justify-start" : "justify-center"
+                        } space-x-2 py-2 px-3 rounded-md transition-all ${
+                          isActive("/speech/auditoria")
+                            ? "bg-[#e0f7fc] text-[#09c]"
+                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                        }`}
+                      >
+                        <HiDocumentText size={24} />
+                        {isSidebarOpen && <span>Auditoría de Audios</span>}
+                      </Link>
+                    </li>
                   </>
                 )}
               </>

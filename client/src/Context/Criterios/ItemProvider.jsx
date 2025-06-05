@@ -5,6 +5,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import moment from "moment";
 import { useSelector } from "react-redux";
+import JSZip from "jszip";
 
 const initItems = {
   idItem: null,
@@ -1550,6 +1551,125 @@ export const CriteriosProvider = ({ children }) => {
 
   // ============================== TIPOS DE LLAMADA PAGINACION ==============================
 
+  // =============== PROCESAMIENTO DE AUDIOS ===============
+  // Audios
+  const [isPostingAudiosProcess, setIsPostingAudiosProcess] = useState(false);
+
+  const [archivos, setArchivos] = useState([]);
+  const [zipFile, setZipFile] = useState(null);
+  const inputRef = useRef(null);
+  const [mProcesados, setMProcesados] = useState(false);
+
+  const [loadingEfectosAudios, setLoadingEfectosAudios] = useState(false);
+  const [efectosAudios, setEfectosAudios] = useState([]);
+  const sEfectoRef = useRef(null);
+  const [selectEfecto, setSelectEfecto] = useState(false);
+  const [idEfectoAudios, setIdEfectoAudios] = useState(null);
+  const [inputEfecto, setInputEfecto] = useState("");
+
+  const handleZip = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setZipFile(file); // guardamos el archivo original
+
+    // Creamos la promesa a envolver
+    const procesarZip = async () => {
+      const zip = new JSZip();
+      const contenido = await zip.loadAsync(file);
+      const nuevosArchivos = [];
+
+      await Promise.all(
+        Object.keys(contenido.files).map(async (nombre) => {
+          const archivo = contenido.files[nombre];
+          if (
+            !archivo.dir &&
+            (nombre.endsWith(".mp3") || nombre.endsWith(".wav"))
+          ) {
+            const blob = await archivo.async("blob");
+
+            const [fechaHora] = nombre.split("_");
+            const fecha = moment(fechaHora, "YYYYMMDD-HHmmss").format(
+              "DD/MM/YYYY"
+            );
+
+            nuevosArchivos.push({
+              nombre,
+              fecha,
+              tamaño: `${(blob.size / 1024).toFixed(1)} KB`,
+            });
+          }
+        })
+      );
+
+      setArchivos(nuevosArchivos);
+      setMProcesados(true);
+    };
+
+    // Mostramos toast mientras se procesa
+    toast.promise(procesarZip(), {
+      loading: "Procesando ZIP...",
+      success: "Audios listos para cargar",
+      error: "Error al leer el archivo ZIP",
+    });
+  };
+
+  const closeModalProcesador = () => {
+    setArchivos([]);
+    setZipFile(null);
+    setMProcesados(false);
+  };
+
+  const sendAudiosProcess = async () => {
+    // Si no es .zip
+    if (zipFile === null) {
+      toast.error("No se ha seleccionado un archivo ZIP");
+      return;
+    }
+
+    setIsPostingAudiosProcess(true);
+
+    try {
+      const formData = new FormData();
+
+      formData.append("zip", zipFile);
+      formData.append("idEfecto", idEfectoAudios);
+
+      const { data } = await axios.post(
+        `${API_URL}/criteriosEvaluacion/audios`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (!data.ok) {
+        toast.error("Error al procesar audios");
+        throw new Error("Error al procesar audios");
+      }
+
+      if (Array.isArray(data)) {
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Error al procesar audios");
+    } finally {
+      setIsPostingAudiosProcess(false);
+    }
+  };
+
+  const openSEfectoAudios = () => setSelectEfecto(!selectEfecto);
+  useOutsideClick(sEfectoRef, () => setSelectEfecto(false));
+
+  const seleccionarEfectoAudios = (efecto) => {
+    const { ID_EFECTO, EFECTO } = efecto;
+    setInputEfecto(EFECTO);
+    setIdEfectoAudios(ID_EFECTO);
+    setSelectEfecto(false);
+  };
+
   // ====================== FUNCIONES PARA CARGAR DATOS ======================
   const loadItem = async () => {
     setLoadingItems(true);
@@ -1681,6 +1801,39 @@ export const CriteriosProvider = ({ children }) => {
     } finally {
       setLoadingTiposLlamada(false);
     }
+  };
+
+  let efectoTimeout; // Defínelo fuera del componente o en una ref si prefieres
+
+  const loadEfectosAudios = (e) => {
+    const value = e.target.value;
+    setInputEfecto(value);
+
+    if (!value.trim()) {
+      setEfectosAudios([]);
+      return;
+    }
+
+    setLoadingEfectosAudios(true);
+
+    clearTimeout(efectoTimeout);
+    efectoTimeout = setTimeout(async () => {
+      try {
+        const { data } = await axios.get(
+          `${API_URL}/criteriosEvaluacion/efectos?filtro=${encodeURIComponent(
+            value
+          )}`
+        );
+
+        if (data.ok) {
+          setEfectosAudios(data.efectos || []);
+        }
+      } catch (error) {
+        toast.error("Error al obtener efectos");
+      } finally {
+        setLoadingEfectosAudios(false);
+      }
+    }, 500);
   };
 
   // Cargamos las carteras del CyC
@@ -2013,6 +2166,25 @@ export const CriteriosProvider = ({ children }) => {
         changePerPageTipoLlamada,
         pageStartTipoLlamada,
         pageEndTipoLlamada,
+
+        // =============== PROCESAMIENTO DE AUDIOS ===============
+        isPostingAudiosProcess,
+        sendAudiosProcess,
+        inputRef,
+        archivos,
+        zipFile,
+        handleZip,
+        mProcesados,
+        closeModalProcesador,
+        loadingEfectosAudios,
+        efectosAudios,
+        sEfectoRef,
+        selectEfecto,
+        openSEfectoAudios,
+        seleccionarEfectoAudios,
+        idEfectoAudios,
+        inputEfecto,
+        loadEfectosAudios,
       }}
     >
       {children}

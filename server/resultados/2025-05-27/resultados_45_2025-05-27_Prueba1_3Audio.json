@@ -1,0 +1,17 @@
+{
+  "exitosos": [],
+  "fallidos": [
+    {
+      "archivo": "20250521-123423_918892646_C0015_570-all.wav",
+      "error": "2003 (HY000): Can't connect to MySQL server on 'localhost:3306' (10061)"
+    },
+    {
+      "archivo": "20250521-124056_931305543_C0015_572-all.wav",
+      "error": "2003 (HY000): Can't connect to MySQL server on 'localhost:3306' (10061)"
+    },
+    {
+      "archivo": "20250521-132247_993275915_C0015_640-all.wav",
+      "error": "2003 (HY000): Can't connect to MySQL server on 'localhost:3306' (10061)"
+    }
+  ]
+}

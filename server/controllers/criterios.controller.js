@@ -1,5 +1,15 @@
 const { QueryTypes } = require("sequelize");
 const { db } = require("../utils/database.util");
+const axios = require("axios");
+const FormData = require("form-data");
+const fs = require("fs");
+const path = require("path");
+const { obtenerNombreAgente } = require("../utils/obtener-nombre-agente");
+const { obtenerConexionPorColor } = require("../utils/conexiones-vicidial");
+const { obtenerColorPorIdCartera } = require("../utils/obtener-color");
+
+// const servidorPython = process.env.PATH_SERVAPLICACIONES || "localhost";
+const servidorPython = "localhost";
 
 // ======================== ITEMS ========================
 const getAllItems = async (_req, res) => {
@@ -968,6 +978,220 @@ const updateTipoLlamada = async (req, res) => {
   }
 };
 
+// ====================== EFECTOS =====================
+const getAllEfectos = async (req, res) => {
+  console.log("===================== OBTENIENDO EFECTOS =====================");
+
+  const filtro = req.query.filtro?.trim() || "";
+
+  try {
+    // Definimos cláusula WHERE condicional
+    const whereClause = filtro ? `AND tb1.EFECTO LIKE :filtro` : "";
+
+    const replacements = filtro ? { filtro: `%${filtro}%` } : {};
+
+    const efectos = await db.query(
+      `
+      SELECT tb1.ID_EFECTO, tb1.EFECTO, tb1.HOMOLO, tb1.DESCRIPCION, tb1.ID_ESTADO
+      FROM calidad.EFECTO tb1
+      WHERE tb1.ID_ESTADO = 1
+      ${whereClause}
+      ORDER BY tb1.EFECTO ASC
+      `,
+      {
+        type: QueryTypes.SELECT,
+        replacements,
+      }
+    );
+
+    res.status(200).json({
+      ok: true,
+      efectos,
+    });
+  } catch (error) {
+    console.error("❌ Error al obtener efectos:", error);
+    res.status(500).json({
+      ok: false,
+      msg: "Error al obtener efectos",
+    });
+  }
+};
+
+// PROCESAR ZIP
+const processZip = async (req, res) => {
+  console.log("📥 Petición recibida para procesar ZIP");
+
+  if (!req.file || path.extname(req.file.originalname) !== ".zip") {
+    console.warn("⚠️ Archivo inválido recibido");
+    return res
+      .status(400)
+      .json({ error: "Debes subir un archivo .zip válido." });
+  }
+
+  const zipPath = req.file.path;
+  const nombreZip = req.file.originalname;
+  const nombreBase = path.basename(nombreZip, ".zip");
+
+  // Se espera que el nombre venga como: idCartera_YYYY-MM-DD_algo.zip
+  const partesNombre = nombreBase.split("_");
+  const idCartera = partesNombre[0];
+  const fecha = partesNombre[1]; // formato esperado: YYYY-MM-DD
+
+  if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+    return res.status(400).json({
+      error:
+        "El nombre del archivo ZIP debe incluir una fecha en formato YYYY-MM-DD.",
+    });
+  }
+
+  const color = obtenerColorPorIdCartera(idCartera);
+  const dbConexion = obtenerConexionPorColor(color);
+
+  console.log(`📄 ZIP cargado: ${zipPath}`);
+  console.log(`🗓️ Fecha extraída: ${fecha}`);
+  console.log(`🎯 ID Cartera: ${idCartera}`);
+
+  const form = new FormData();
+  form.append("file", fs.createReadStream(zipPath));
+  form.append("id_cartera", idCartera);
+
+  try {
+    console.log("📡 Enviando ZIP al servidor Python...");
+
+    const response = await axios.post(
+      `http://${servidorPython}:8000/api/v1/procesar`,
+      form,
+      {
+        headers: form.getHeaders(),
+        maxBodyLength: Infinity,
+      }
+    );
+
+    console.log("✅ Respuesta recibida");
+
+    const outputDir = path.join(__dirname, "../audios");
+    if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
+
+    const data = response.data;
+    const exitosos = Array.isArray(data) ? data : data.exitosos || [];
+    const fallidos = data.fallidos || [];
+
+    const procesados = [];
+
+    for (const item of exitosos) {
+      const {
+        archivo,
+        audio_base64,
+        transcripcion,
+        metadatos,
+        error_diarizacion,
+        evaluacion,
+      } = item;
+
+      const { campaña, anexo } = metadatos;
+      let full_name = null;
+
+      if (campaña && anexo && dbConexion) {
+        full_name = await obtenerNombreAgente(dbConexion, campaña, anexo);
+      }
+
+      const audioPath = path.join(outputDir, archivo);
+      const buffer = Buffer.from(audio_base64, "base64");
+      fs.writeFileSync(audioPath, buffer);
+
+      procesados.push({
+        archivo,
+        transcripcion,
+        evaluacion,
+        metadatos: {
+          ...metadatos,
+          idCartera,
+          color,
+          full_name,
+        },
+        error_diarizacion,
+      });
+    }
+
+    // === GUARDAR ===
+    const carpetaFecha = path.join(__dirname, `../resultados/${fecha}`);
+    if (!fs.existsSync(carpetaFecha)) {
+      fs.mkdirSync(carpetaFecha, { recursive: true });
+    }
+
+    const resultadoPath = path.join(
+      carpetaFecha,
+      `resultados_${nombreBase}.json`
+    );
+    fs.writeFileSync(
+      resultadoPath,
+      JSON.stringify({ exitosos: procesados, fallidos }, null, 2),
+      "utf-8"
+    );
+
+    const rutaUltimo = path.join(carpetaFecha, "ultimo.json");
+    fs.writeFileSync(
+      rutaUltimo,
+      JSON.stringify({ exitosos: procesados, fallidos }, null, 2),
+      "utf-8"
+    );
+
+    fs.unlink(zipPath, () => {
+      console.log("🗑️ ZIP temporal eliminado");
+    });
+
+    res.status(200).json({
+      exitosos: procesados,
+      fallidos,
+    });
+  } catch (err) {
+    console.error("⛔ Error del servidor Python:", err.message);
+    res.status(500).json({
+      error: "Error en el servidor de transcripción",
+      detalle: err.message,
+    });
+  }
+};
+
+// SERVIR REVISIONES AUDITORIA
+const obtenerResultadosPorFecha = (req, res) => {
+  const { fecha } = req.query;
+
+  if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+    return res.status(400).json({
+      ok: false,
+      msg: "Debe proporcionar una fecha válida en formato YYYY-MM-DD",
+    });
+  }
+
+  const carpeta = path.join(__dirname, `../resultados/${fecha}`);
+
+  if (!fs.existsSync(carpeta)) {
+    return res.status(404).json({
+      ok: false,
+      msg: "No se encontraron evaluaciones para la fecha proporcionada",
+    });
+  }
+
+  const archivos = fs
+    .readdirSync(carpeta)
+    .filter((file) => file.endsWith(".json"));
+
+  const resultados = archivos.map((archivo) => {
+    const ruta = path.join(carpeta, archivo);
+    const contenido = fs.readFileSync(ruta, "utf-8");
+    return {
+      archivo,
+      data: JSON.parse(contenido),
+    };
+  });
+
+  res.status(200).json({
+    ok: true,
+    resultados,
+  });
+};
+
 module.exports = {
   getAllItems,
   createItem,
@@ -987,4 +1211,7 @@ module.exports = {
   getAllTiposLlamada,
   createTipoLlamada,
   updateTipoLlamada,
+  getAllEfectos,
+  processZip,
+  obtenerResultadosPorFecha,
 };
