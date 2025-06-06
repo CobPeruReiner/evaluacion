@@ -1129,13 +1129,6 @@ const processZip = async (req, res) => {
       "utf-8"
     );
 
-    const rutaUltimo = path.join(carpetaFecha, "ultimo.json");
-    fs.writeFileSync(
-      rutaUltimo,
-      JSON.stringify({ exitosos: procesados, fallidos }, null, 2),
-      "utf-8"
-    );
-
     fs.unlink(zipPath, () => {
       console.log("🗑️ ZIP temporal eliminado");
     });
