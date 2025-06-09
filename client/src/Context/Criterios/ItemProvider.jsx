@@ -1598,6 +1598,16 @@ export const CriteriosProvider = ({ children }) => {
   const [expandedAudio, setExpandedAudio] = useState(null);
   const [showDetail, setShowDetail] = useState({});
 
+  // PAGINADO
+  const [audiosPaginated, setAudiosPaginated] = useState([]);
+  const [audiosPerPage, setAudiosPerPage] = useState(10);
+  const refModalPageAudios = useRef(null);
+  const [modalPageAudios, setModalPageAudios] = useState(false);
+  const [curPageAudios, setCurPageAudios] = useState(1);
+  const [totalAudiosPages, setTotalAudiosPages] = useState(0);
+  const maxButtonsAudios = 5;
+  const [searchTelefono, setSearchTelefono] = useState("");
+
   // Guardar .zip y mostrar archivos dentro de este
   const handleZip = async (event) => {
     const file = event.target.files[0];
@@ -1817,6 +1827,7 @@ export const CriteriosProvider = ({ children }) => {
 
   const toggleAudio = (index) => {
     setExpandedAudio(expandedAudio === index ? null : index);
+    setShowDetail({});
   };
 
   const toggleDetail = (index) => {
@@ -1829,6 +1840,64 @@ export const CriteriosProvider = ({ children }) => {
   const resetAuditoriaUIState = () => {
     setExpandedAudio(null);
     setShowDetail({});
+  };
+
+  // =============== PAGINACION AUDIOS EVALUADOS ===============
+
+  const handleInputSearchTelefono = (e) => setSearchTelefono(e.target.value);
+
+  const pageStartAudios = Math.max(
+    1,
+    curPageAudios - Math.floor(maxButtonsAudios / 2)
+  );
+
+  const pageEndAudios = Math.min(
+    totalAudiosPages,
+    pageStartAudios + maxButtonsAudios - 1
+  );
+
+  const handleModalPageAudios = () => setModalPageAudios(!modalPageAudios);
+  useOutsideClick(refModalPageAudios, () => setModalPageAudios(false));
+
+  const changeAudiosPerPage = (newPerPage) => {
+    setAudiosPerPage(newPerPage);
+    setCurPageAudios(1);
+    setModalPageAudios(false);
+  };
+
+  const changeCurPageAudios = (newPage) => {
+    setCurPageAudios(newPage);
+  };
+
+  const calcTotalAudiosPages = (filtered) => {
+    const total =
+      filtered && filtered.length > 0
+        ? Math.ceil(filtered.length / audiosPerPage)
+        : 0;
+    setTotalAudiosPages(total);
+  };
+
+  const updateAudiosPaginated = (
+    data = [
+      ...(evaluacionDetail?.exitosos ?? []),
+      ...(evaluacionDetail?.fallidos ?? []),
+    ],
+    page = curPageAudios
+  ) => {
+    const startIndex = (page - 1) * audiosPerPage;
+    const endIndex = startIndex + audiosPerPage;
+    const paginated = data.slice(startIndex, endIndex);
+    setAudiosPaginated(paginated);
+  };
+
+  const filteredBySearch = (data) => {
+    const lowerCaseSearch = searchTelefono.toLowerCase();
+
+    return data.filter((item) => {
+      const partes = item.archivo.split("_");
+      const telefono = partes[1] || "";
+      return telefono.toLowerCase().includes(lowerCaseSearch);
+    });
   };
 
   // ====================== FUNCIONES PARA CARGAR DATOS ======================
@@ -2090,6 +2159,24 @@ export const CriteriosProvider = ({ children }) => {
     calcTotalTiposPages(filteredData);
     updateTiposPaginated(filteredData, curPageTipos);
   }, [tiposGestion, curPageTipos, tiposPerPage, searchTipos]);
+
+  useEffect(() => {
+    const allData = [
+      ...(evaluacionDetail?.exitosos ?? []),
+      ...(evaluacionDetail?.fallidos ?? []),
+    ];
+
+    const filteredData = searchTelefono.trim()
+      ? filteredBySearch(allData)
+      : allData;
+
+    if (curPageAudios > Math.ceil(filteredData.length / audiosPerPage)) {
+      setCurPageAudios(1);
+    }
+
+    calcTotalAudiosPages(filteredData);
+    updateAudiosPaginated(filteredData, curPageAudios);
+  }, [searchTelefono, evaluacionDetail, audiosPerPage, curPageAudios]);
 
   useEffect(() => {
     const filteredData = searchTipoLlamada.trim()
@@ -2387,6 +2474,24 @@ export const CriteriosProvider = ({ children }) => {
         showDetail,
         toggleDetail,
         resetAuditoriaUIState,
+        searchTelefono,
+        handleInputSearchTelefono,
+        // PAGINACION
+        audiosPaginated,
+        audiosPerPage,
+        refModalPageAudios,
+        modalPageAudios,
+        curPageAudios,
+        totalAudiosPages,
+        maxButtonsAudios,
+        pageStartAudios,
+        pageEndAudios,
+        handleModalPageAudios,
+        changeAudiosPerPage,
+        changeCurPageAudios,
+        calcTotalAudiosPages,
+        updateAudiosPaginated,
+        filteredBySearch,
       }}
     >
       {children}

@@ -11,6 +11,7 @@ import {
   Down,
   Hour,
   Phone,
+  Search,
   Up,
   User,
   View,
@@ -31,12 +32,15 @@ export const AuditoriaDetail = () => {
   const {
     loadingEvaluacionDetail,
     evaluacionDetail,
+    audiosPaginated,
     obtenerDetalleEvaluacion,
     expandedAudio,
     toggleAudio,
     showDetail,
     toggleDetail,
     resetAuditoriaUIState,
+    searchTelefono,
+    handleInputSearchTelefono,
   } = useContext(CriteriosContext);
 
   useEffect(() => {
@@ -50,32 +54,53 @@ export const AuditoriaDetail = () => {
     }
   }, []);
 
+  // console.log("Evaluaciones Detail:", evaluacionDetail);
+  // console.log("Evaluaciones Paginadas:", audiosPaginated);
+
   return (
     <>
       <Toaster position="top-right" richColors />
       <div className="sombra container-gestiones-cycweb relative bg-white flex flex-col py-10 px-5 gap-7 rounded-md transition-all duration-300">
-        <button
-          onClick={() => {
-            resetAuditoriaUIState();
-            navigate(-1);
-          }}
-          className="flex items-center text-blue-600 hover:text-blue-800 transition-all mb-4"
-        >
-          <BackPage size={20} className="mr-2" />
-          Volver
-        </button>
+        <div className="container-header flex flex-col md:flex-row justify-between gap-4 items-center">
+          <button
+            onClick={() => {
+              resetAuditoriaUIState();
+              navigate(-1);
+            }}
+            className="relative text-xl flex items-center text-[#09c] hover:bg-[#09c]/20 rounded-full px-2 py-1 transition-all duration-300"
+          >
+            <BackPage size={20} className="mr-2" />
+            Volver
+          </button>
+
+          <div className="relative text-lg">
+            <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+              <Search />
+            </div>
+            <input
+              type="search"
+              id="default-search"
+              className="block w-full px-9 py-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-[#09c] focus:border-[#09c] outline-none"
+              placeholder="Buscar evaluación..."
+              value={searchTelefono}
+              onChange={handleInputSearchTelefono}
+              autoComplete="off"
+            />
+          </div>
+        </div>
 
         {loadingEvaluacionDetail ? (
           <Loader />
         ) : (
-          <div>
-            <h2 className="text-xl font-bold mb-4 text-gray-800">
+          <div className="relative flex flex-col gap-5">
+            <h2 className="text-xl font-bold text-gray-800">
               🎧 Audios Exitosos
             </h2>
-            {evaluacionDetail?.exitosos?.map((item, index) => (
+            {/* {audiosPaginated?.exitosos?.map((item, index) => ( */}
+            {audiosPaginated?.map((item, index) => (
               <div
                 key={index}
-                className="border border-gray-200 shadow mb-4 rounded-lg overflow-hidden transition-all duration-300"
+                className="border border-gray-200 shadow rounded-lg overflow-hidden transition-all duration-300"
               >
                 {/* Header del acordeón */}
                 <button
@@ -93,7 +118,7 @@ export const AuditoriaDetail = () => {
 
                 {/* Cuerpo del acordeón */}
                 <div
-                  className={`transition-all duration-500 ease-in-out ${
+                  className={`flex flex-col gap-4 transition-all duration-500 ease-in-out ${
                     expandedAudio === index
                       ? "max-h-screen p-6 bg-gray-50 overflow-y-auto"
                       : "max-h-0 overflow-hidden"
@@ -101,7 +126,7 @@ export const AuditoriaDetail = () => {
                 >
                   {expandedAudio === index && (
                     <>
-                      <div className="grid grid-cols-2 gap-2 text-sm text-gray-700 mb-4">
+                      <div className="grid grid-cols-2 gap-2 text-sm text-gray-700">
                         <p className="relative flex items-center gap-4">
                           <span className="relative text-gray-500 font-medium text-base flex gap-4 items-center">
                             <Calendar className="relative text-2xl" /> Fecha:
@@ -148,7 +173,7 @@ export const AuditoriaDetail = () => {
                         </p>
                       </div>
 
-                      <div className="pt-2">
+                      <div className="relative">
                         <button
                           type="button"
                           onClick={() => toggleDetail(index)}
