@@ -71,6 +71,12 @@ function App() {
 
             {/* AUDITORIA */}
             <Route path="/speech/auditoria" element={<Views.Auditoria />} />
+
+            {/* DETALLE AUDITORIA */}
+            <Route
+              path="/speech/auditoria/detalle/:archivo"
+              element={<Views.AuditoriaDetail />}
+            />
           </Route>
         </Routes>
       </div>

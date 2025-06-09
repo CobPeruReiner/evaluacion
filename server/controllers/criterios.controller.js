@@ -1,5 +1,5 @@
 const { QueryTypes } = require("sequelize");
-const { db } = require("../utils/database.util");
+const { db, dbWeb } = require("../utils/database.util");
 const axios = require("axios");
 const FormData = require("form-data");
 const fs = require("fs");
@@ -1025,7 +1025,7 @@ const processZip = async (req, res) => {
     console.warn("⚠️ Archivo inválido recibido");
     return res
       .status(400)
-      .json({ error: "Debes subir un archivo .zip válido." });
+      .json({ ok: false, error: "Debes subir un archivo .zip válido." });
   }
 
   const zipPath = req.file.path;
@@ -1035,10 +1035,11 @@ const processZip = async (req, res) => {
   // Se espera que el nombre venga como: idCartera_YYYY-MM-DD_algo.zip
   const partesNombre = nombreBase.split("_");
   const idCartera = partesNombre[0];
-  const fecha = partesNombre[1]; // formato esperado: YYYY-MM-DD
+  const fecha = partesNombre[1];
 
   if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
     return res.status(400).json({
+      ok: false,
       error:
         "El nombre del archivo ZIP debe incluir una fecha en formato YYYY-MM-DD.",
     });
@@ -1052,8 +1053,14 @@ const processZip = async (req, res) => {
   console.log(`🎯 ID Cartera: ${idCartera}`);
 
   const form = new FormData();
+
+  // Datos a mandar a python process
   form.append("file", fs.createReadStream(zipPath));
   form.append("id_cartera", idCartera);
+
+  const usuario = req.body.usuario || null;
+
+  console.log("Archivos a evaluar enviados por:", usuario);
 
   try {
     console.log("📡 Enviando ZIP al servidor Python...");
@@ -1125,7 +1132,7 @@ const processZip = async (req, res) => {
     );
     fs.writeFileSync(
       resultadoPath,
-      JSON.stringify({ exitosos: procesados, fallidos }, null, 2),
+      JSON.stringify({ usuario, exitosos: procesados, fallidos }, null, 2),
       "utf-8"
     );
 
@@ -1134,12 +1141,14 @@ const processZip = async (req, res) => {
     });
 
     res.status(200).json({
+      ok: true,
       exitosos: procesados,
       fallidos,
     });
   } catch (err) {
     console.error("⛔ Error del servidor Python:", err.message);
     res.status(500).json({
+      ok: false,
       error: "Error en el servidor de transcripción",
       detalle: err.message,
     });
@@ -1147,42 +1156,170 @@ const processZip = async (req, res) => {
 };
 
 // SERVIR REVISIONES AUDITORIA
-const obtenerResultadosPorFecha = (req, res) => {
-  const { fecha } = req.query;
+const obtenerResultadosPorFechaCartera = (req, res) => {
+  const { fechaDesde, fechaHasta, cartera } = req.query;
 
-  if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+  if (
+    !fechaDesde ||
+    !fechaHasta ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(fechaDesde) ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(fechaHasta)
+  ) {
     return res.status(400).json({
       ok: false,
-      msg: "Debe proporcionar una fecha válida en formato YYYY-MM-DD",
+      msg: "Debe proporcionar un rango de fechas válido (YYYY-MM-DD)",
     });
   }
 
-  const carpeta = path.join(__dirname, `../resultados/${fecha}`);
+  const carpetaBase = path.join(__dirname, "../resultados");
 
-  if (!fs.existsSync(carpeta)) {
+  if (!fs.existsSync(carpetaBase)) {
     return res.status(404).json({
       ok: false,
-      msg: "No se encontraron evaluaciones para la fecha proporcionada",
+      msg: "No se encontró la carpeta de resultados",
     });
   }
 
-  const archivos = fs
-    .readdirSync(carpeta)
-    .filter((file) => file.endsWith(".json"));
+  // Listar carpetas de fechas
+  const carpetasFechas = fs
+    .readdirSync(carpetaBase)
+    .filter((nombre) => /^\d{4}-\d{2}-\d{2}$/.test(nombre))
+    .filter((fecha) => fecha >= fechaDesde && fecha <= fechaHasta);
 
-  const resultados = archivos.map((archivo) => {
-    const ruta = path.join(carpeta, archivo);
-    const contenido = fs.readFileSync(ruta, "utf-8");
-    return {
-      archivo,
-      data: JSON.parse(contenido),
-    };
+  let resultados = [];
+
+  carpetasFechas.forEach((fecha) => {
+    const carpetaPath = path.join(carpetaBase, fecha);
+
+    if (!fs.existsSync(carpetaPath)) return;
+
+    let archivos = fs
+      .readdirSync(carpetaPath)
+      .filter((file) => file.endsWith(".json"));
+
+    // Parsear carteras
+    let carteraIds = [];
+    if (cartera && cartera !== "Todos") {
+      carteraIds = cartera.split(",").map((id) => id.trim());
+    }
+
+    // Filtrar por carteras (si corresponde)
+    if (carteraIds.length > 0) {
+      archivos = archivos.filter((file) => {
+        return carteraIds.some((id) => {
+          const regex = new RegExp(`resultados_${id}_`);
+          return regex.test(file);
+        });
+      });
+    }
+
+    // Leer contenido de los archivos filtrados
+    const resultadosFecha = archivos.map((archivo) => {
+      const ruta = path.join(carpetaPath, archivo);
+      const contenido = fs.readFileSync(ruta, "utf-8");
+      return {
+        archivo,
+        data: JSON.parse(contenido),
+      };
+    });
+
+    resultados = resultados.concat(resultadosFecha);
   });
 
   res.status(200).json({
     ok: true,
     resultados,
   });
+};
+
+// CARTERAS
+const getAllCarteras = async (req, res) => {
+  try {
+    const query = `
+      SELECT id, cartera AS nombre FROM cartera WHERE estado = 1 ORDER BY cartera;
+    `;
+
+    const [results] = await dbWeb.query(query);
+
+    res.status(200).json({
+      ok: true,
+      carteras: results,
+    });
+  } catch (error) {
+    console.error("Error executing query:", error);
+    res.status(500).json({ ok: false, error: "Error ejecutando la consulta" });
+  }
+};
+
+// FECHAS
+const obtenerFechasDisponibles = (req, res) => {
+  const carpetaBase = path.join(__dirname, "../resultados");
+
+  if (!fs.existsSync(carpetaBase)) {
+    return res.status(404).json({
+      ok: false,
+      msg: "No se encontró la carpeta de resultados",
+    });
+  }
+
+  const carpetas = fs
+    .readdirSync(carpetaBase)
+    .filter((nombre) => /^\d{4}-\d{2}-\d{2}$/.test(nombre));
+
+  res.status(200).json({
+    ok: true,
+    fechas: carpetas,
+  });
+};
+
+// Obtener detalle evaluacion
+const obtenerDetalleEvaluacion = async (req, res) => {
+  const { archivo } = req.query;
+
+  if (!archivo) {
+    return res.status(400).json({
+      ok: false,
+      msg: "Debe proporcionar el nombre del archivo",
+    });
+  }
+
+  // console.log("Detalle recibido: ", archivo); // OK
+
+  try {
+    // Falta leer el archivo y enviarlo
+    const carpetaBase = path.join(__dirname, "../resultados");
+
+    // Buscar el archivo en cualquier subcarpeta (las carpetas son fechas)
+    let resultadoEncontrado = null;
+
+    const carpetasFechas = fs
+      .readdirSync(carpetaBase)
+      .filter((nombre) => /^\d{4}-\d{2}-\d{2}$/.test(nombre));
+
+    for (const fecha of carpetasFechas) {
+      const rutaArchivo = path.join(carpetaBase, fecha, archivo);
+      if (fs.existsSync(rutaArchivo)) {
+        const contenido = fs.readFileSync(rutaArchivo, "utf-8");
+        resultadoEncontrado = JSON.parse(contenido);
+        break;
+      }
+    }
+
+    if (!resultadoEncontrado) {
+      return res.status(404).json({
+        ok: false,
+        msg: "Archivo de resultados no encontrado",
+      });
+    }
+
+    res.status(200).json({
+      ok: true,
+      resultado: resultadoEncontrado,
+    });
+  } catch (error) {
+    console.log("Error trayendo detalle de evaluacion: ", error);
+    res.status(500).json({ ok: false, error: "Error trayendo detalle" });
+  }
 };
 
 module.exports = {
@@ -1206,5 +1343,8 @@ module.exports = {
   updateTipoLlamada,
   getAllEfectos,
   processZip,
-  obtenerResultadosPorFecha,
+  obtenerResultadosPorFechaCartera,
+  getAllCarteras,
+  obtenerFechasDisponibles,
+  obtenerDetalleEvaluacion,
 };

@@ -21,8 +21,11 @@ const {
   createTipoLlamada,
   updateTipoLlamada,
   getAllEfectos,
-  obtenerResultadosPorFecha,
+  obtenerResultadosPorFechaCartera,
   processZip,
+  getAllCarteras,
+  obtenerFechasDisponibles,
+  obtenerDetalleEvaluacion,
 } = require("../controllers/criterios.controller");
 const {
   buscarIdPersonal,
@@ -110,6 +113,10 @@ criteriosEvaluacionRouter.get("/efectos", getAllEfectos);
 criteriosEvaluacionRouter.post("/audios", upload.single("zip"), processZip);
 
 // AUDITORIA
-criteriosEvaluacionRouter.get("/auditoria", obtenerResultadosPorFecha);
+criteriosEvaluacionRouter.get("/auditoria", obtenerResultadosPorFechaCartera);
+criteriosEvaluacionRouter.get("/auditoria/detalle", obtenerDetalleEvaluacion);
+
+criteriosEvaluacionRouter.get("/getAll-cartera", getAllCarteras);
+criteriosEvaluacionRouter.get("/getAll-fechas", obtenerFechasDisponibles);
 
 module.exports = { criteriosEvaluacionRouter };

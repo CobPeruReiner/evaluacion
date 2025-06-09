@@ -14,6 +14,9 @@ const app = express();
 
 app.use(cors());
 console.log(__dirname);
+
+app.use("/audios", express.static(path.join(__dirname, "audios")));
+
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use(express.json({ limit: "5mb", extended: true }));

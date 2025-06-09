@@ -118,17 +118,123 @@ export function Down(props) {
       xmlns="http://www.w3.org/2000/svg"
       width="1em"
       height="1em"
-      viewBox="0 0 48 48"
+      viewBox="0 0 20 20"
       {...props}
     >
       <path
+        fill="currentColor"
+        d="M10.103 12.778L16.81 6.08a.69.69 0 0 1 .99.012a.726.726 0 0 1-.012 1.012l-7.203 7.193a.69.69 0 0 1-.985-.006L2.205 6.72a.727.727 0 0 1 0-1.01a.69.69 0 0 1 .99 0z"
+      />
+    </svg>
+  );
+}
+
+export function Up(props) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="1em"
+      height="1em"
+      viewBox="0 0 20 20"
+      {...props}
+    >
+      <path
+        fill="currentColor"
+        fillRule="evenodd"
+        d="M10.103 7.222q5.17 5.202 6.89 6.887c.198.185.539.56 1.046.07q.508-.49-.039-1.073l-7.444-7.43a.64.64 0 0 0-.455-.176a.7.7 0 0 0-.472.176l-7.453 7.635q-.362.582.03.98q.39.398.95.043z"
+      />
+    </svg>
+  );
+}
+
+export function Phone(props) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="1em"
+      height="1em"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <path
+        fill="currentColor"
+        d="M6 22V2h12v20zm6-1.961q.31 0 .54-.23t.23-.54t-.23-.54T12 18.5t-.54.23t-.23.54t.23.539t.54.23m-5-3.5h10V5.5H7z"
+      />
+    </svg>
+  );
+}
+
+export function Calendar(props) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="1em"
+      height="1em"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <path
+        fill="currentColor"
+        d="M21 20V6c0-1.103-.897-2-2-2h-2V2h-2v2H9V2H7v2H5c-1.103 0-2 .897-2 2v14c0 1.103.897 2 2 2h14c1.103 0 2-.897 2-2M9 18H7v-2h2zm0-4H7v-2h2zm4 4h-2v-2h2zm0-4h-2v-2h2zm4 4h-2v-2h2zm0-4h-2v-2h2zm2-5H5V7h14z"
+      />
+    </svg>
+  );
+}
+
+export function Hour(props) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="1em"
+      height="1em"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <path
+        fill="currentColor"
+        d="M17 3.34A10 10 0 1 1 2 12l.005-.324A10 10 0 0 1 17 3.34M11 7v5.022l.003.054l.02.135l.005.025a1 1 0 0 0 .056.165l.04.082l.062.099l.07.087l.075.074l.094.075l.08.052l.07.035l.132.051l.135.031l.082.01l.124.002l.113-.012l.108-.024l.106-.036l.108-.051l.065-.04l3.007-2.004a1 1 0 1 0-1.11-1.664L13 10.13V7a1 1 0 0 0-.883-.993L12 6a1 1 0 0 0-1 1"
+      />
+    </svg>
+  );
+}
+
+export function Campaign(props) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="1em"
+      height="1em"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <path
+        fill="currentColor"
+        d="M18 13v-2h4v2zm1.2 7L16 17.6l1.2-1.6l3.2 2.4zm-2-12L16 6.4L19.2 4l1.2 1.6zM5 19v-4H4q-.825 0-1.412-.587T2 13v-2q0-.825.588-1.412T4 9h4l5-3v12l-5-3H7v4zm9-3.65v-6.7q.675.6 1.088 1.463T15.5 12t-.413 1.888T14 15.35"
+      />
+    </svg>
+  );
+}
+
+export function User(props) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="1em"
+      height="1em"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <g
         fill="none"
         stroke="currentColor"
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeWidth="4"
-        d="M36 18L24 30L12 18"
-      />
+        strokeWidth="2"
+      >
+        <circle cx="12" cy="8" r="5" fill="currentColor" />
+        <path d="M20 21a8 8 0 1 0-16 0" />
+        <path fill="currentColor" d="M12 13a8 8 0 0 0-8 8h16a8 8 0 0 0-8-8" />
+      </g>
     </svg>
   );
 }
@@ -165,6 +271,28 @@ export function MdAudiotrack(props) {
       <path
         fill="currentColor"
         d="M12 3v9.28a4.4 4.4 0 0 0-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3z"
+      />
+    </svg>
+  );
+}
+
+export function BackPage(props) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="1em"
+      height="1em"
+      viewBox="0 0 48 48"
+      {...props}
+    >
+      <path
+        fill="currentColor"
+        fillRule="evenodd"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="4"
+        d="M44 40.836q-7.34-8.96-13.036-10.168t-10.846-.365V41L4 23.545L20.118 7v10.167q9.523.075 16.192 6.833q6.668 6.758 7.69 16.836Z"
+        clipRule="evenodd"
       />
     </svg>
   );

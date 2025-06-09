@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import moment from "moment";
 import { useSelector } from "react-redux";
 import JSZip from "jszip";
+import { useNavigate } from "react-router-dom";
 
 const initItems = {
   idItem: null,
@@ -62,6 +63,7 @@ export const CriteriosProvider = ({ children }) => {
 
   // Obtenemos el usuario
   const user = useSelector((state) => state.user.user);
+  const navigate = useNavigate();
 
   // Carteras
   const [carterasCyC, setCarterasCyC] = useState([]);
@@ -1552,14 +1554,18 @@ export const CriteriosProvider = ({ children }) => {
   // ============================== TIPOS DE LLAMADA PAGINACION ==============================
 
   // =============== PROCESAMIENTO DE AUDIOS ===============
+  const [resultadosAuditoria, setResultadosAuditoria] = useState([]);
+
   // Audios
   const [isPostingAudiosProcess, setIsPostingAudiosProcess] = useState(false);
 
+  // Almacenar .zip y mostrar audios
   const [archivos, setArchivos] = useState([]);
   const [zipFile, setZipFile] = useState(null);
   const inputRef = useRef(null);
   const [mProcesados, setMProcesados] = useState(false);
 
+  // Efectos
   const [loadingEfectosAudios, setLoadingEfectosAudios] = useState(false);
   const [efectosAudios, setEfectosAudios] = useState([]);
   const sEfectoRef = useRef(null);
@@ -1567,6 +1573,32 @@ export const CriteriosProvider = ({ children }) => {
   const [idEfectoAudios, setIdEfectoAudios] = useState(null);
   const [inputEfecto, setInputEfecto] = useState("");
 
+  // Formulario
+  const [formAuditoriaAudios, setFormAuditoriaAudios] = useState({
+    idCarteras: [],
+    fechaDesde: null,
+    fechaHasta: null,
+  });
+
+  // CARTERAS
+  const sCarterasRef = useRef(null);
+  const [sCarterasActive, setSCarterasActive] = useState(false);
+  const [carterasActive, setCarterasActive] = useState([]);
+  const [inputCarterasActive, setInputCarterasActive] = useState("Todos");
+
+  // Fechas
+  // const sFechasRef = useRef(null);
+  // const [sFechasActive, setSFechasActive] = useState(false);
+  // const [fechasActive, setFechasActive] = useState([]);
+  // const [inputFechasActive, setInputFechasActive] = useState("Todos");
+
+  // Detalle Evaluacion
+  const [loadingEvaluacionDetail, setLoadingEvaluacionDetail] = useState(false);
+  const [evaluacionDetail, setEvaluacionDetail] = useState([]);
+  const [expandedAudio, setExpandedAudio] = useState(null);
+  const [showDetail, setShowDetail] = useState({});
+
+  // Guardar .zip y mostrar archivos dentro de este
   const handleZip = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -1614,14 +1646,15 @@ export const CriteriosProvider = ({ children }) => {
     });
   };
 
+  // Cerrar modal
   const closeModalProcesador = () => {
     setArchivos([]);
     setZipFile(null);
     setMProcesados(false);
   };
 
+  // Procesar audios
   const sendAudiosProcess = async () => {
-    // Si no es .zip
     if (zipFile === null) {
       toast.error("No se ha seleccionado un archivo ZIP");
       return;
@@ -1634,6 +1667,7 @@ export const CriteriosProvider = ({ children }) => {
 
       formData.append("zip", zipFile);
       formData.append("idEfecto", idEfectoAudios);
+      formData.append("usuario", `${user?.NOMBRES} ${user?.APELLIDOS}`);
 
       const { data } = await axios.post(
         `${API_URL}/criteriosEvaluacion/audios`,
@@ -1646,12 +1680,13 @@ export const CriteriosProvider = ({ children }) => {
       );
 
       if (!data.ok) {
-        toast.error("Error al procesar audios");
-        throw new Error("Error al procesar audios");
+        toast.error(data.error || "Error al procesar audios");
+        throw new Error(data.error || "Error al procesar audios");
       }
 
-      if (Array.isArray(data)) {
-      }
+      toast.success(
+        `Audios procesados: ${data.exitosos.length} exitosos, ${data.fallidos.length} fallidos`
+      );
     } catch (error) {
       console.log(error);
       toast.error("Error al procesar audios");
@@ -1660,14 +1695,140 @@ export const CriteriosProvider = ({ children }) => {
     }
   };
 
+  // Mostrar efectos
   const openSEfectoAudios = () => setSelectEfecto(!selectEfecto);
   useOutsideClick(sEfectoRef, () => setSelectEfecto(false));
 
+  // Seleccionar efecto
   const seleccionarEfectoAudios = (efecto) => {
     const { ID_EFECTO, EFECTO } = efecto;
     setInputEfecto(EFECTO);
     setIdEfectoAudios(ID_EFECTO);
     setSelectEfecto(false);
+  };
+
+  const handleSelectCarteras = () => setSCarterasActive(!sCarterasActive);
+  useOutsideClick(sCarterasRef, () => setSCarterasActive(false));
+
+  // Seleccionar cartera
+  const seleccionarCartera = (cartera) => {
+    const { id } = cartera;
+
+    const isSelected = formAuditoriaAudios.idCarteras.includes(id);
+
+    const newSelected = isSelected
+      ? formAuditoriaAudios.idCarteras.filter((item) => item !== id)
+      : [...formAuditoriaAudios.idCarteras, id];
+
+    setFormAuditoriaAudios({
+      ...formAuditoriaAudios,
+      idCarteras: newSelected,
+    });
+  };
+
+  const removerCartera = (id) => {
+    const newSelected = formAuditoriaAudios.idCarteras.filter(
+      (item) => item !== id
+    );
+
+    setFormAuditoriaAudios({
+      ...formAuditoriaAudios,
+      idCarteras: newSelected,
+    });
+  };
+
+  // const handleSelectFechas = () => setSFechasActive(!sFechasActive);
+  // useOutsideClick(sFechasRef, () => setSFechasActive(false));
+
+  // Seleccionar fechas
+  // const seleccionarFechas = (fechas) => {
+  //   setInputFechasActive(fechas);
+  //   setFormAuditoriaAudios({ ...formAuditoriaAudios, fechaEvaluacion: fechas });
+  //   setSFechasActive(false);
+  // };
+
+  // Obtener resultados por rango de fecha y cartera
+  const obtenerResultadosAuditoria = async () => {
+    try {
+      // Rango de fechas
+      if (!formAuditoriaAudios.fechaDesde || !formAuditoriaAudios.fechaHasta) {
+        toast.error("Debe seleccionar un rango de fechas");
+        return;
+      }
+
+      // Fecha hasta menor a fecha desde
+      if (
+        moment(formAuditoriaAudios.fechaDesde).isAfter(
+          formAuditoriaAudios.fechaHasta
+        )
+      ) {
+        toast.error("La fecha hasta debe ser mayor a la fecha desde");
+        return;
+      }
+
+      // cartera param
+      const carteraParam =
+        formAuditoriaAudios.idCarteras.length > 0
+          ? formAuditoriaAudios.idCarteras.join(",")
+          : "Todos";
+
+      const url = `${API_URL}/criteriosEvaluacion/auditoria?fechaDesde=${formAuditoriaAudios.fechaDesde}&fechaHasta=${formAuditoriaAudios.fechaHasta}&cartera=${carteraParam}`;
+
+      const { data } = await axios.get(url);
+
+      if (data.ok) {
+        setResultadosAuditoria(data.resultados);
+        toast.success("Resultados cargados correctamente");
+      } else {
+        toast.error("Error al cargar resultados");
+      }
+    } catch (error) {
+      console.error("Error obteniendo resultados:", error);
+      toast.error("Error al obtener resultados");
+    }
+  };
+
+  // Obtener detalle de la evaluacion
+  const obtenerDetalleEvaluacion = async (detalle = null) => {
+    if (!detalle) {
+      return toast.error("Debe seleccionar una evaluacion");
+    }
+
+    setLoadingEvaluacionDetail(true);
+
+    // console.log("Detalle a enviar:", detalle);
+
+    try {
+      const { data } = await axios.get(
+        `${API_URL}/criteriosEvaluacion/auditoria/detalle?archivo=${detalle}`
+      );
+      if (data.ok) {
+        setEvaluacionDetail(data.resultado);
+      } else {
+        console.error("Error al cargar detalle");
+        toast.error("Error al cargar detalle");
+      }
+    } catch (err) {
+      console.error("Error:", err);
+    } finally {
+      setLoadingEvaluacionDetail(false);
+    }
+  };
+
+  const toggleAudio = (index) => {
+    setExpandedAudio(expandedAudio === index ? null : index);
+  };
+
+  const toggleDetail = (index) => {
+    setShowDetail((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
+
+  const resetAuditoriaUIState = () => {
+    setExpandedAudio(null);
+    setShowDetail({});
   };
 
   // ====================== FUNCIONES PARA CARGAR DATOS ======================
@@ -1803,7 +1964,7 @@ export const CriteriosProvider = ({ children }) => {
     }
   };
 
-  let efectoTimeout; // Defínelo fuera del componente o en una ref si prefieres
+  let efectoTimeout;
 
   const loadEfectosAudios = (e) => {
     const value = e.target.value;
@@ -1836,6 +1997,23 @@ export const CriteriosProvider = ({ children }) => {
     }, 500);
   };
 
+  // Cargar efectos
+  const loadCarterasActive = async () => {
+    try {
+      const { data } = await axios.get(
+        `${API_URL}/criteriosEvaluacion/getAll-cartera`
+      );
+      if (data.ok) {
+        // console.log("Data:", data);
+        return setCarterasActive(data.carteras);
+      }
+
+      toast.error("Error al cargar carteras");
+    } catch (error) {
+      console.error("Error obteniendo carteras:", error);
+    }
+  };
+
   // Cargamos las carteras del CyC
   useEffect(() => {
     loadCarterasCyC();
@@ -1845,6 +2023,7 @@ export const CriteriosProvider = ({ children }) => {
     loadMotNoPago();
     loadTiposGestion();
     loadTiposLlamada();
+    loadCarterasActive();
   }, []);
 
   useEffect(() => {
@@ -2185,6 +2364,29 @@ export const CriteriosProvider = ({ children }) => {
         idEfectoAudios,
         inputEfecto,
         loadEfectosAudios,
+
+        // ======================= AUDITORIA =======================
+        formAuditoriaAudios,
+        setFormAuditoriaAudios,
+        sCarterasRef,
+        carterasActive,
+        inputCarterasActive,
+        sCarterasActive,
+        handleSelectCarteras,
+        removerCartera,
+        seleccionarCartera,
+        // fechasActive,
+        // seleccionarFechas,
+        resultadosAuditoria,
+        obtenerResultadosAuditoria,
+        evaluacionDetail,
+        loadingEvaluacionDetail,
+        obtenerDetalleEvaluacion,
+        expandedAudio,
+        toggleAudio,
+        showDetail,
+        toggleDetail,
+        resetAuditoriaUIState,
       }}
     >
       {children}
