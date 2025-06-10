@@ -8,8 +8,8 @@ const { obtenerNombreAgente } = require("../utils/obtener-nombre-agente");
 const { obtenerConexionPorColor } = require("../utils/conexiones-vicidial");
 const { obtenerColorPorIdCartera } = require("../utils/obtener-color");
 
-// const servidorPython = process.env.PATH_SERVAPLICACIONES || "localhost";
-const servidorPython = "localhost";
+const servidorPython = process.env.PATH_SERVAPLICACIONES || "localhost";
+// const servidorPython = "localhost";
 
 // ======================== ITEMS ========================
 const getAllItems = async (_req, res) => {
