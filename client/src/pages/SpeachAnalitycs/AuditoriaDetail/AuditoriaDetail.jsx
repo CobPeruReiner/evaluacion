@@ -4,18 +4,7 @@ import { Loader } from "../../../components/Loader";
 import { useNavigate, useParams } from "react-router-dom";
 import { Toaster } from "sonner";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  BackPage,
-  Calendar,
-  Campaign,
-  Down,
-  Hour,
-  Phone,
-  Search,
-  Up,
-  User,
-  View,
-} from "../../../Icons/Iconos";
+import * as Icon from "../../../Icons/Iconos";
 import moment from "moment";
 
 export const AuditoriaDetail = () => {
@@ -69,13 +58,13 @@ export const AuditoriaDetail = () => {
             }}
             className="relative text-xl flex items-center text-[#09c] hover:bg-[#09c]/20 rounded-full px-2 py-1 transition-all duration-300"
           >
-            <BackPage size={20} className="mr-2" />
+            <Icon.BackPage size={20} className="mr-2" />
             Volver
           </button>
 
           <div className="relative text-lg">
             <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-              <Search />
+              <Icon.Search />
             </div>
             <input
               type="search"
@@ -110,9 +99,9 @@ export const AuditoriaDetail = () => {
                 >
                   <span className="truncate">{item.archivo}</span>
                   {expandedAudio === index ? (
-                    <Up size={20} />
+                    <Icon.Up size={20} />
                   ) : (
-                    <Down size={20} />
+                    <Icon.Down size={20} />
                   )}
                 </button>
 
@@ -129,7 +118,8 @@ export const AuditoriaDetail = () => {
                       <div className="grid grid-cols-2 gap-2 text-sm text-gray-700">
                         <p className="relative flex items-center gap-4">
                           <span className="relative text-gray-500 font-medium text-base flex gap-4 items-center">
-                            <Calendar className="relative text-2xl" /> Fecha:
+                            <Icon.Calendar className="relative text-2xl" />{" "}
+                            Fecha:
                           </span>
                           <span className="relative text-gray-900 text-base">
                             {moment(item.metadatos.fecha, "YYYYMMDD").format(
@@ -139,7 +129,7 @@ export const AuditoriaDetail = () => {
                         </p>
                         <p className="relative flex items-center gap-4">
                           <span className="relative text-gray-500 font-medium text-base flex gap-4 items-center">
-                            <Hour className="relative text-2xl" /> Hora:
+                            <Icon.Hour className="relative text-2xl" /> Hora:
                           </span>
                           <span className="relative text-gray-900 text-base">
                             {moment(item.metadatos.hora, "HHmmss").format(
@@ -149,7 +139,8 @@ export const AuditoriaDetail = () => {
                         </p>
                         <p className="relative flex items-center gap-4">
                           <span className="relative text-gray-500 font-medium text-base flex gap-4 items-center">
-                            <Phone className="relative text-2xl" /> Teléfono:
+                            <Icon.Phone className="relative text-2xl" />{" "}
+                            Teléfono:
                           </span>
                           <span className="relative text-gray-900 text-base">
                             {item.metadatos.telefono}
@@ -157,7 +148,8 @@ export const AuditoriaDetail = () => {
                         </p>
                         <p className="relative flex items-center gap-4">
                           <span className="relative text-gray-500 font-medium text-base flex gap-4 items-center">
-                            <Campaign className="relative text-2xl" /> Campaña:
+                            <Icon.Campaign className="relative text-2xl" />{" "}
+                            Campaña:
                           </span>
                           <span className="relative text-gray-900 text-base">
                             {item.metadatos.campaña}
@@ -165,7 +157,7 @@ export const AuditoriaDetail = () => {
                         </p>
                         <p className="relative flex items-center gap-4">
                           <span className="relative text-gray-500 font-medium text-base flex gap-4 items-center">
-                            <User className="relative text-2xl" /> Anexo:
+                            <Icon.User className="relative text-2xl" /> Anexo:
                           </span>
                           <span className="relative text-gray-900 text-base">
                             {item.metadatos.anexo}
@@ -179,7 +171,7 @@ export const AuditoriaDetail = () => {
                           onClick={() => toggleDetail(index)}
                           className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-full hover:bg-blue-200 transition-all duration-300"
                         >
-                          <View size={16} />
+                          <Icon.View size={16} />
                           {showDetail[index]
                             ? "Ocultar Detalle"
                             : "Ver Detalle"}
