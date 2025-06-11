@@ -27,23 +27,23 @@ services:
       - client-build:/app/public # Usa el volumen compartido para la carpeta public
     command: ["node", "server.js"]
 
-  # fastapi_backend: # Tu servicio para el servidor de Python (FastAPI)
-  #   build:
-  #     context: ./fastapi
-  #     args:
-  #       HF_AUTH_TOKEN_BUILD: "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"
-  #       DEVICE_BUILD: "cpu"
-  #       MODEL_SIZE_BUILD: "medium"
-  #   ports:
-  #     - "8000:8000"
-  #   environment:
-  #     DB_HOST: 192.168.1.39
-  #     DB_USER: raul
-  #     DB_PASS: loquecallamoslosadmin1
-  #     DB_NAME: calidad
-  #     HF_AUTH_TOKEN: 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
-  #   volumes:
-  #     - ./fastapi:/app # Monta el código local para facilitar el desarrollo
+  fastapi_backend: # Tu servicio para el servidor de Python (FastAPI)
+    build:
+      context: ./fastapi
+      args:
+        HF_AUTH_TOKEN_BUILD: "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"
+        DEVICE_BUILD: "cpu"
+        MODEL_SIZE_BUILD: "medium"
+    ports:
+      - "8000:8000"
+    environment:
+      DB_HOST: 192.168.1.39
+      DB_USER: raul
+      DB_PASS: loquecallamoslosadmin1
+      DB_NAME: calidad
+      HF_AUTH_TOKEN: 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
+    volumes:
+      - ./fastapi:/app # Monta el código local para facilitar el desarrollo
 
 volumes:
   client-build:
