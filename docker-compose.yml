@@ -42,8 +42,7 @@ services:
       DB_PASS: loquecallamoslosadmin1
       DB_NAME: calidad
       HF_AUTH_TOKEN: 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
-    volumes:
-      - ./fastapi:/app # Monta el código local para facilitar el desarrollo
+    volumes: []
 
 volumes:
   client-build:
