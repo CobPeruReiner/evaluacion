@@ -105,45 +105,32 @@ const validarPesoTotal = (tabla) => {
       // === ACCION_CRITERIO: Validar contra peso del CRITERIO ===
       if (tabla === "ACCION_CRITERIO") {
         const query = `
-          SELECT
-            COALESCE(SUM(A.PESO_ACCION_CRITERIO), 0) AS sumaTotal,
-            (
-              SELECT C.PESO_CRITERIO
-              FROM calidad.CRITERIO C
-              WHERE C.ID_CRITERIO = :idPadre
-            ) AS pesoCriterio,
-            (
-              SELECT A2.PESO_ACCION_CRITERIO
-              FROM calidad.ACCION_CRITERIO A2
-              WHERE A2.ID_ACCION_CRITERIO = :idElemento
-            ) AS pesoAnterior
-          FROM calidad.ACCION_CRITERIO A
-          WHERE A.ID_CRITERIO = :idPadre
+        SELECT
+          (
+            SELECT C.PESO_CRITERIO
+            FROM calidad.CRITERIO C
+            WHERE C.ID_CRITERIO = :idPadre
+          ) AS pesoCriterio
         `;
 
         const [resultado] = await db.query(query, {
-          replacements: { idPadre, idElemento },
+          replacements: { idPadre },
           type: QueryTypes.SELECT,
         });
 
-        const pesoAnterior = parseFloat(resultado.pesoAnterior || 0);
         const pesoMaximoPermitido = parseFloat(resultado.pesoCriterio || 0);
-        const sumaExistente = parseFloat(resultado.sumaTotal || 0);
-
-        const sumaRecalculada = cambiarDePadre
-          ? Math.round((sumaExistente + pesoNuevo) * 100) / 100
-          : Math.round((sumaExistente - pesoAnterior + pesoNuevo) * 100) / 100;
 
         console.log(
-          "💡 Validando contra peso del criterio:",
+          "💡 Validando peso individual de la acción contra el peso del criterio:",
           pesoMaximoPermitido
         );
-        console.log("📉 Suma recalculada con nuevo peso:", sumaRecalculada);
+        console.log("🧮 Peso de la acción que se intenta crear:", pesoNuevo);
 
-        if (sumaRecalculada > pesoMaximoPermitido) {
+        // Validar SOLO el peso individual de la acción (no la suma)
+        if (pesoNuevo > pesoMaximoPermitido) {
           return res.status(400).json({
             ok: false,
-            msg: `La suma de pesos de las acciones (${sumaRecalculada}) excede el peso del criterio (${pesoMaximoPermitido})`,
+            msg: `El peso de la acción (${pesoNuevo}) no puede ser mayor al peso del criterio (${pesoMaximoPermitido})`,
           });
         }
 

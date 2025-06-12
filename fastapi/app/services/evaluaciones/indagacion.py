@@ -15,28 +15,25 @@ from app.services.utils.texto import normalizar_texto
 logger = logging.getLogger(__name__)
 
 def evaluar_indagacion(segmentos: list, id_cartera: str, tipificaciones: dict = None) -> dict:
-    """
-    Evalúa los criterios de indagación y asesoramiento.
-
-    Args:
-        segmentos (list): Segmentos del asesor.
-        id_cartera (str): ID de la cartera.
-        tipificaciones (dict, optional): Datos adicionales para la evaluación.
-
-    Returns:
-        dict: Resultado de evaluación con cumplimiento y criterios.
-    """
     if not segmentos:
         return {"resultado": "Sin evaluación", "motivo": "No hay segmentos del asesor"}
 
     conn = obtener_conexion()
     try:
         id_item = obtener_id_item(conn, "INDAGACION Y ASESORAMIENTO", id_cartera)
+        
+        # Depuracion
+        logger.info(f"=================== INDAGACIÓN ===================")
+        logger.info(f"id_cartera: {id_cartera}")
+        logger.info(f"id_item: {id_item}")
+        
         if not id_item:
             return {"resultado": "Sin evaluación", "motivo": "Ítem no encontrado"}
 
         criterios = obtener_criterios_por_item(conn, id_item)
         texto = normalizar_texto(" ".join([s["text"] for s in segmentos]))
+        
+        logger.info(f"Criterios: {criterios}")
 
         resultados = {}
         cumplidos = 0

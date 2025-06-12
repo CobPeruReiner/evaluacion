@@ -1573,6 +1573,10 @@ export const CriteriosProvider = ({ children }) => {
   const [idEfectoAudios, setIdEfectoAudios] = useState(null);
   const [inputEfecto, setInputEfecto] = useState("");
 
+  // Procesamiento result
+  const [processResultSucces, setprocessResultSuccess] = useState([]);
+  const [processResultFailed, setProcessResultFailed] = useState([]);
+
   // Formulario
   const [formAuditoriaAudios, setFormAuditoriaAudios] = useState({
     idCarteras: [],
@@ -1697,6 +1701,9 @@ export const CriteriosProvider = ({ children }) => {
       toast.success(
         `Audios procesados: ${data.exitosos.length} exitosos, ${data.fallidos.length} fallidos`
       );
+
+      setprocessResultSuccess(data.exitosos);
+      setProcessResultFailed(data.fallidos);
     } catch (error) {
       console.log(error);
       toast.error("Error al procesar audios");
@@ -2451,6 +2458,8 @@ export const CriteriosProvider = ({ children }) => {
         idEfectoAudios,
         inputEfecto,
         loadEfectosAudios,
+        processResultSucces,
+        processResultFailed,
 
         // ======================= AUDITORIA =======================
         formAuditoriaAudios,

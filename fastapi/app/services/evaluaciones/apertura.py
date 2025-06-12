@@ -15,16 +15,6 @@ from app.services.utils.texto import normalizar_texto
 logger = logging.getLogger(__name__)
 
 def evaluar_apertura(segmentos: list, id_cartera: str) -> dict:
-    """
-    Evalúa los criterios de apertura a partir de los segmentos del asesor.
-
-    Args:
-        segmentos (list): Segmentos de la transcripción pertenecientes al asesor.
-        id_cartera (str): Identificador de la cartera.
-
-    Returns:
-        dict: Resultado de la evaluación.
-    """
     if not segmentos:
         return {"resultado": "Sin evaluación", "motivo": "No se encontraron segmentos"}
 
@@ -32,11 +22,19 @@ def evaluar_apertura(segmentos: list, id_cartera: str) -> dict:
 
     try:
         id_item = obtener_id_item(conn, "APERTURA", id_cartera)
+        
+        # Depuracion
+        logger.info(f"=================== APERTURA ===================")
+        logger.info(f"id_cartera: {id_cartera}")
+        logger.info(f"id_item: {id_item}")
+        
         if not id_item:
             return {"resultado": "Sin evaluación", "motivo": "No se encontró el ítem 'APERTURA'"}
 
         criterios = obtener_criterios_por_item(conn, id_item)
         texto_asesor = normalizar_texto(" ".join([s["text"] for s in segmentos]))
+        
+        logger.info(f"Criterios: {criterios}")
 
         resultado_criterios = {}
         cumplidos = 0

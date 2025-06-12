@@ -1076,7 +1076,8 @@ const processZip = async (req, res) => {
 
     console.log("✅ Respuesta recibida");
 
-    const outputDir = path.join(__dirname, "../audios");
+    // const outputDir = path.join(__dirname, "../audios");
+    const outputDir = path.join(__dirname, "server/audios");
     if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
 
     const data = response.data;
@@ -1121,7 +1122,9 @@ const processZip = async (req, res) => {
     }
 
     // === GUARDAR ===
-    const carpetaFecha = path.join(__dirname, `../resultados/${fecha}`);
+    // const carpetaFecha = path.join(__dirname, `../resultados/${fecha}`);
+    const carpetaFecha = path.join(__dirname, `server/resultados/${fecha}`);
+
     if (!fs.existsSync(carpetaFecha)) {
       fs.mkdirSync(carpetaFecha, { recursive: true });
     }
@@ -1171,7 +1174,8 @@ const obtenerResultadosPorFechaCartera = (req, res) => {
     });
   }
 
-  const carpetaBase = path.join(__dirname, "../resultados");
+  // const carpetaBase = path.join(__dirname, "../resultados");
+  const carpetaBase = path.join(__dirname, "server/resultados");
 
   if (!fs.existsSync(carpetaBase)) {
     return res.status(404).json({
@@ -1253,7 +1257,8 @@ const getAllCarteras = async (req, res) => {
 
 // FECHAS
 const obtenerFechasDisponibles = (req, res) => {
-  const carpetaBase = path.join(__dirname, "../resultados");
+  // const carpetaBase = path.join(__dirname, "../resultados");
+  const carpetaBase = path.join(__dirname, "server/resultados");
 
   if (!fs.existsSync(carpetaBase)) {
     return res.status(404).json({
@@ -1287,7 +1292,8 @@ const obtenerDetalleEvaluacion = async (req, res) => {
 
   try {
     // Falta leer el archivo y enviarlo
-    const carpetaBase = path.join(__dirname, "../resultados");
+    // const carpetaBase = path.join(__dirname, "../resultados");
+    const carpetaBase = path.join(__dirname, "server/resultados");
 
     // Buscar el archivo en cualquier subcarpeta (las carpetas son fechas)
     let resultadoEncontrado = null;

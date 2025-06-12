@@ -18,7 +18,7 @@ const campañasVicidial = {
       id: "C0025",
       nombre: "FALABELLA_CASTIGO",
       grupo: "GRUPO_FALABELLA_CAST",
-      idCartera: 25,
+      idCartera: 34,
     },
   ],
   AZUL: [
