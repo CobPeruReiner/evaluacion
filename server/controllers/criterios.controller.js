@@ -1122,8 +1122,8 @@ const processZip = async (req, res) => {
     }
 
     // === GUARDAR ===
-    // const carpetaFecha = path.join(__dirname, `../resultados/${fecha}`);
-    const carpetaFecha = path.join(__dirname, `server/resultados/${fecha}`);
+    const carpetaFecha = path.join(__dirname, `../resultados/${fecha}`);
+    // const carpetaFecha = path.join(__dirname, `server/resultados/${fecha}`);
 
     if (!fs.existsSync(carpetaFecha)) {
       fs.mkdirSync(carpetaFecha, { recursive: true });
