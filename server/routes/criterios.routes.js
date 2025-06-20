@@ -24,7 +24,7 @@ const {
   obtenerResultadosPorFechaCartera,
   processZip,
   getAllCarteras,
-  obtenerFechasDisponibles,
+  // obtenerFechasDisponibles,
   obtenerDetalleEvaluacion,
 } = require("../controllers/criterios.controller");
 const {
@@ -117,6 +117,6 @@ criteriosEvaluacionRouter.get("/auditoria", obtenerResultadosPorFechaCartera);
 criteriosEvaluacionRouter.get("/auditoria/detalle", obtenerDetalleEvaluacion);
 
 criteriosEvaluacionRouter.get("/getAll-cartera", getAllCarteras);
-criteriosEvaluacionRouter.get("/getAll-fechas", obtenerFechasDisponibles);
+// criteriosEvaluacionRouter.get("/getAll-fechas", obtenerFechasDisponibles);
 
 module.exports = { criteriosEvaluacionRouter };

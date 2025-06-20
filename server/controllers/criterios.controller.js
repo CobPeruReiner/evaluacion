@@ -1256,26 +1256,26 @@ const getAllCarteras = async (req, res) => {
 };
 
 // FECHAS
-const obtenerFechasDisponibles = (req, res) => {
-  // const carpetaBase = path.join(__dirname, "../resultados");
-  const carpetaBase = path.join(__dirname, "server/resultados");
+// const obtenerFechasDisponibles = (req, res) => {
+//   // const carpetaBase = path.join(__dirname, "../resultados");
+//   const carpetaBase = path.join(__dirname, "server/resultados");
 
-  if (!fs.existsSync(carpetaBase)) {
-    return res.status(404).json({
-      ok: false,
-      msg: "No se encontró la carpeta de resultados",
-    });
-  }
+//   if (!fs.existsSync(carpetaBase)) {
+//     return res.status(404).json({
+//       ok: false,
+//       msg: "No se encontró la carpeta de resultados",
+//     });
+//   }
 
-  const carpetas = fs
-    .readdirSync(carpetaBase)
-    .filter((nombre) => /^\d{4}-\d{2}-\d{2}$/.test(nombre));
+//   const carpetas = fs
+//     .readdirSync(carpetaBase)
+//     .filter((nombre) => /^\d{4}-\d{2}-\d{2}$/.test(nombre));
 
-  res.status(200).json({
-    ok: true,
-    fechas: carpetas,
-  });
-};
+//   res.status(200).json({
+//     ok: true,
+//     fechas: carpetas,
+//   });
+// };
 
 // Obtener detalle evaluacion
 const obtenerDetalleEvaluacion = async (req, res) => {
@@ -1351,6 +1351,6 @@ module.exports = {
   processZip,
   obtenerResultadosPorFechaCartera,
   getAllCarteras,
-  obtenerFechasDisponibles,
+  // obtenerFechasDisponibles,
   obtenerDetalleEvaluacion,
 };
