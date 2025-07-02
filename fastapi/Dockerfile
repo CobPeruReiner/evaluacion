@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
 
 # Copia el archivo de requisitos e instala las dependencias de Python.
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
 # --- Gestión de Modelos WhisperX y Token de Hugging Face ---
 ARG HF_AUTH_TOKEN_BUILD
