@@ -1124,7 +1124,8 @@ const processZip = async (req, res) => {
 
     // === GUARDAR ===
     // const carpetaFecha = path.resolve(__dirname, "resultados", fecha);
-    const carpetaFecha = "/app/server/resultados";
+    // const carpetaFecha = "/app/server/resultados";
+    const carpetaFecha = path.join("/app/server/resultados", fecha);
 
     if (!fs.existsSync(carpetaFecha)) {
       fs.mkdirSync(carpetaFecha, { recursive: true });
@@ -1162,6 +1163,8 @@ const processZip = async (req, res) => {
 // SERVIR REVISIONES AUDITORIA
 const obtenerResultadosPorFechaCartera = (req, res) => {
   const { fechaDesde, fechaHasta, cartera } = req.query;
+
+  console.log("Obteniendo resultados por: ", req.query);
 
   if (
     !fechaDesde ||
