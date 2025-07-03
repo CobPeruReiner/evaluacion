@@ -25,10 +25,8 @@ services:
       - ./server/.env.production
     volumes:
       - client-build:/app/public # Usa el volumen compartido para la carpeta public
-      # - ./server/resultados:/app/server/resultados
-      # - ./server/audios:/app/server/audios
-      - ./server/audios:/app/audios
-      - ./server/resultados:/app/resultados
+      - ./server/resultados:/app/server/resultados
+      - ./server/audios:/app/server/audios
     command: ["node", "server.js"]
 
   fastapi_backend: # Tu servicio para el servidor de Python (FastAPI)
