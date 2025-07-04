@@ -750,7 +750,8 @@ export const CriteriosProvider = ({ children }) => {
   const submitFormNAcciones = async (e) => {
     e.preventDefault();
 
-    const pesoOriginal = parseInt(formNAcciones.pesoAccion, 10);
+    // const pesoOriginal = parseInt(formNAcciones.pesoAccion, 10);
+    const pesoOriginal = parseFloat(formNAcciones.pesoAccion);
 
     if (isNaN(pesoOriginal) || pesoOriginal < 0 || pesoOriginal > 100) {
       toast.error("El peso debe ser un número entre 0 y 100");
@@ -796,7 +797,8 @@ export const CriteriosProvider = ({ children }) => {
   const updateFormNAcciones = async (e) => {
     e.preventDefault();
 
-    const pesoOriginal = parseInt(formNAcciones.pesoAccion, 10);
+    // const pesoOriginal = parseInt(formNAcciones.pesoAccion, 10);
+    const pesoOriginal = parseFloat(formNAcciones.pesoAccion);
 
     if (isNaN(pesoOriginal) || pesoOriginal < 0 || pesoOriginal > 100) {
       toast.error("El peso debe ser un número entre 0 y 100");

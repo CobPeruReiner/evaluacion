@@ -106,31 +106,37 @@ const validarPesoTotal = (tabla) => {
       if (tabla === "ACCION_CRITERIO") {
         const query = `
         SELECT
+          COALESCE(SUM(A.PESO_ACCION_CRITERIO), 0) AS sumaTotal,
           (
             SELECT C.PESO_CRITERIO
             FROM calidad.CRITERIO C
             WHERE C.ID_CRITERIO = :idPadre
-          ) AS pesoCriterio
+          ) AS pesoCriterio,
+          (
+            SELECT A2.PESO_ACCION_CRITERIO
+            FROM calidad.ACCION_CRITERIO A2
+            WHERE A2.ID_ACCION_CRITERIO = :idElemento
+          ) AS pesoAnterior
+           FROM calidad.ACCION_CRITERIO A
+           WHERE A.ID_CRITERIO = :idPadre
         `;
 
         const [resultado] = await db.query(query, {
-          replacements: { idPadre },
+          replacements: { idPadre, idElemento },
           type: QueryTypes.SELECT,
         });
 
+        const pesoAnterior = parseFloat(resultado.pesoAnterior || 0);
         const pesoMaximoPermitido = parseFloat(resultado.pesoCriterio || 0);
+        const sumaExistente = parseFloat(resultado.sumaTotal || 0);
 
-        console.log(
-          "💡 Validando peso individual de la acción contra el peso del criterio:",
-          pesoMaximoPermitido
-        );
-        console.log("🧮 Peso de la acción que se intenta crear:", pesoNuevo);
+        const sumaRecalculada =
+          Math.round((sumaExistente - pesoAnterior + pesoNuevo) * 1000) / 1000;
 
-        // Validar SOLO el peso individual de la acción (no la suma)
-        if (pesoNuevo > pesoMaximoPermitido) {
+        if (sumaRecalculada > pesoMaximoPermitido) {
           return res.status(400).json({
             ok: false,
-            msg: `El peso de la acción (${pesoNuevo}) no puede ser mayor al peso del criterio (${pesoMaximoPermitido})`,
+            msg: `La suma de pesos de las acciones (${sumaRecalculada}) excede el peso del criterio (${pesoMaximoPermitido})`,
           });
         }
 

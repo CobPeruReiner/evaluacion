@@ -95,11 +95,11 @@ export const MFormAcciones = () => {
                 onChange={(e) => {
                   const valor = e.target.value;
 
-                  if (/^\d{0,3}$/.test(valor)) {
-                    const num = parseInt(valor, 10);
+                  if (/^\d{0,3}(\.\d{0,3})?$/.test(valor)) {
+                    const num = parseFloat(valor);
 
                     if (!isNaN(num) && num >= 0 && num <= 100) {
-                      setFormNAcciones({ ...formNAcciones, pesoAccion: num });
+                      setFormNAcciones({ ...formNAcciones, pesoAccion: valor });
                     } else if (valor === "") {
                       setFormNAcciones({ ...formNAcciones, pesoAccion: "" });
                     }
