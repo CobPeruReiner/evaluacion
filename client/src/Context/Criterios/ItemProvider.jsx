@@ -468,7 +468,8 @@ export const CriteriosProvider = ({ children }) => {
   const submitFormNCriterio = async (e) => {
     e.preventDefault();
 
-    const pesoOriginal = parseInt(formNCriterio.pesoCriterio, 10);
+    // const pesoOriginal = parseInt(formNCriterio.pesoCriterio, 10);
+    const pesoOriginal = parseFloat(formNCriterio.pesoCriterio);
 
     if (isNaN(pesoOriginal) || pesoOriginal < 1 || pesoOriginal > 100) {
       toast.error("El peso debe ser un número entre 1 y 100");
@@ -476,7 +477,8 @@ export const CriteriosProvider = ({ children }) => {
     }
 
     // Transformar peso a decimal
-    const pesoTransformado = pesoOriginal / 100;
+    // const pesoTransformado = pesoOriginal / 100;
+    const pesoTransformado = +(pesoOriginal / 100).toFixed(3);
 
     // Datetime
     const today = moment().format("YYYY-MM-DD HH:mm:ss");
@@ -518,7 +520,8 @@ export const CriteriosProvider = ({ children }) => {
   const updateFormNCriterio = async (e) => {
     e.preventDefault();
 
-    const pesoOriginal = parseInt(formNCriterio.pesoCriterio, 10);
+    // const pesoOriginal = parseInt(formNCriterio.pesoCriterio, 10);
+    const pesoOriginal = parseFloat(formNCriterio.pesoCriterio);
 
     if (isNaN(pesoOriginal) || pesoOriginal < 1 || pesoOriginal > 100) {
       toast.error("El peso debe ser un número entre 1 y 100");
@@ -526,7 +529,8 @@ export const CriteriosProvider = ({ children }) => {
     }
 
     // Transformar peso a decimal
-    const pesoTransformado = pesoOriginal / 100;
+    // const pesoTransformado = pesoOriginal / 100;
+    const pesoTransformado = +(pesoOriginal / 100).toFixed(3);
 
     const today = moment().format("YYYY-MM-DD HH:mm:ss");
 

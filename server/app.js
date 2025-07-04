@@ -15,7 +15,6 @@ const app = express();
 app.use(cors());
 console.log(__dirname);
 
-// app.use("/audios", express.static(path.join(__dirname, "audios")));
 // app.use("/audios", express.static(path.join(__dirname, "server/audios")));
 app.use("/audios", express.static("/app/server/audios"));
 

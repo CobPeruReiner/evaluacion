@@ -21,10 +21,11 @@ const getAllItems = async (_req, res) => {
         SELECT tb1.ID_ITEM, tb1.NOMBRE_ITEM, tb1.PESO_ITEM, tb1.ID_CARTERA, tb2.NOMBRE_CARTERA, tb1.FECHA_ACTUALIZACION, tb1.USUARIO_ACTUALIZACION, CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION, tb1.ID_ESTADO
         FROM calidad.ITEM tb1
         LEFT JOIN calidad.CARTERA tb2
-        ON tb1.ID_CARTERA = tb2.ID_CARTERA
+        ON tb1.ID_CARTERA = tb2.ID_CARTERA AND tb1.ID_ESTADO = 1
         LEFT JOIN calidad.PERSONAL tb3
         ON tb1.USUARIO_ACTUALIZACION = tb3.IDPERSONAL
-        WHERE tb2.ESTADO = 1;
+        WHERE tb2.ESTADO = 1
+        ORDER BY tb1.FECHA_ACTUALIZACION DESC;
       `,
       {
         type: QueryTypes.SELECT,
@@ -228,15 +229,25 @@ const getAllCriterios = async (_req, res) => {
     const criterios = await db.query(
       `
         SELECT
-          tb1.ID_CRITERIO, tb1.NOMBRE_CRITERIO, tb1.PESO_CRITERIO, tb1.ID_ITEM, tb2.NOMBRE_ITEM, tb1.FECHA_ACTUALIZACION,
-          tb1.USUARIO_ACTUALIZACION, CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION, tb4.NOMBRE_CARTERA, tb1.ID_ESTADO
+          tb1.ID_CRITERIO,
+          tb1.NOMBRE_CRITERIO,
+          tb1.PESO_CRITERIO,
+          tb1.ID_ITEM,
+          tb2.NOMBRE_ITEM,
+          tb1.FECHA_ACTUALIZACION,
+          tb1.USUARIO_ACTUALIZACION,
+          CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION,
+          tb4.NOMBRE_CARTERA,
+          tb1.ID_ESTADO
         FROM calidad.CRITERIO tb1
-        LEFT JOIN calidad.ITEM tb2
-        ON tb1.ID_ITEM = tb2.ID_ITEM
+        INNER JOIN calidad.ITEM tb2
+          ON tb1.ID_ITEM = tb2.ID_ITEM AND tb2.ID_ESTADO = 1
         LEFT JOIN calidad.PERSONAL tb3
-        ON tb1.USUARIO_ACTUALIZACION = tb3.IDPERSONAL
+          ON tb1.USUARIO_ACTUALIZACION = tb3.IDPERSONAL
         LEFT JOIN calidad.CARTERA tb4
-        ON tb2.ID_CARTERA = tb4.ID_CARTERA AND tb4.ESTADO = 1;
+          ON tb2.ID_CARTERA = tb4.ID_CARTERA AND tb4.ESTADO = 1
+        WHERE tb1.ID_ESTADO = 1
+        ORDER BY tb1.FECHA_ACTUALIZACION DESC;
       `,
       {
         type: QueryTypes.SELECT,
@@ -433,19 +444,29 @@ const getAllAcciones = async (_req, res) => {
     const acciones = await db.query(
       `
         SELECT
-          tb1.ID_ACCION_CRITERIO, tb1.NOMBRE_ACCION_CRITERIO, tb1.ID_CRITERIO, tb1.PESO_ACCION_CRITERIO, tb2.NOMBRE_CRITERIO,
-          tb1.FECHA_ACTUALIZACION, tb1.USUARIO_ACTUALIZACION, CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION,
-          tb4.NOMBRE_ITEM, tb5.NOMBRE_CARTERA,
+          tb1.ID_ACCION_CRITERIO,
+          tb1.NOMBRE_ACCION_CRITERIO,
+          tb1.PESO_ACCION_CRITERIO,
+          tb1.ID_CRITERIO,
+          tb2.NOMBRE_CRITERIO,
+          tb1.FECHA_ACTUALIZACION,
+          tb1.USUARIO_ACTUALIZACION,
+          CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION,
+          tb4.ID_ITEM,
+          tb4.NOMBRE_ITEM,
+          tb5.NOMBRE_CARTERA,
           tb1.ESTADO_ACCION
         FROM calidad.ACCION_CRITERIO tb1
-        LEFT JOIN calidad.CRITERIO tb2
-        ON tb1.ID_CRITERIO = tb2.ID_CRITERIO
+        INNER JOIN calidad.CRITERIO tb2
+          ON tb1.ID_CRITERIO = tb2.ID_CRITERIO AND tb2.ID_ESTADO = 1
+        INNER JOIN calidad.ITEM tb4
+          ON tb2.ID_ITEM = tb4.ID_ITEM AND tb4.ID_ESTADO = 1
+        INNER JOIN calidad.CARTERA tb5
+          ON tb4.ID_CARTERA = tb5.ID_CARTERA AND tb5.ESTADO = 1
         LEFT JOIN calidad.PERSONAL tb3
-        ON tb1.USUARIO_ACTUALIZACION = tb3.IDPERSONAL
-        LEFT JOIN calidad.ITEM tb4
-        ON tb2.ID_ITEM = tb4.ID_ITEM
-        LEFT JOIN calidad.CARTERA tb5
-        ON tb4.ID_CARTERA = tb5.ID_CARTERA;
+          ON tb1.USUARIO_ACTUALIZACION = tb3.IDPERSONAL
+        WHERE tb1.ESTADO_ACCION = 1
+        ORDER BY tb1.FECHA_ACTUALIZACION DESC;
       `,
       {
         type: QueryTypes.SELECT,
@@ -1124,7 +1145,6 @@ const processZip = async (req, res) => {
 
     // === GUARDAR ===
     // const carpetaFecha = path.resolve(__dirname, "resultados", fecha);
-    // const carpetaFecha = "/app/server/resultados";
     const carpetaFecha = path.join("/app/server/resultados", fecha);
 
     if (!fs.existsSync(carpetaFecha)) {
@@ -1178,8 +1198,10 @@ const obtenerResultadosPorFechaCartera = (req, res) => {
     });
   }
 
-  // const carpetaBase = path.resolve(__dirname, "resultados");
+  // const carpetaBase = path.resolve(__dirname, "../resultados");
   const carpetaBase = "/app/server/resultados";
+
+  console.log("Carpta Base: ", carpetaBase);
 
   if (!fs.existsSync(carpetaBase)) {
     return res.status(404).json({
@@ -1193,6 +1215,8 @@ const obtenerResultadosPorFechaCartera = (req, res) => {
     .readdirSync(carpetaBase)
     .filter((nombre) => /^\d{4}-\d{2}-\d{2}$/.test(nombre))
     .filter((fecha) => fecha >= fechaDesde && fecha <= fechaHasta);
+
+  console.log("Carpetas encontradas: ", carpetasFechas);
 
   let resultados = [];
 
@@ -1210,6 +1234,8 @@ const obtenerResultadosPorFechaCartera = (req, res) => {
     if (cartera && cartera !== "Todos") {
       carteraIds = cartera.split(",").map((id) => id.trim());
     }
+
+    console.log("Cartera IDs: ", carteraIds);
 
     // Filtrar por carteras (si corresponde)
     if (carteraIds.length > 0) {

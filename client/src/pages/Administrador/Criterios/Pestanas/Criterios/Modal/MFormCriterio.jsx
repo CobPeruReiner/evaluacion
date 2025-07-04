@@ -92,17 +92,25 @@ export const MFormCriterio = () => {
                 className={inputBorder}
                 placeholder=" "
                 value={formNCriterio.pesoCriterio}
+                // onChange={(e) => {
+                //   const valor = e.target.value;
+
+                //   if (/^\d{0,3}$/.test(valor)) {
+                //     const num = parseInt(valor, 10);
+
+                //     if (!isNaN(num) && num >= 1 && num <= 100) {
+                //       setFormNCriterio({ ...formNCriterio, pesoCriterio: num });
+                //     } else if (valor === "") {
+                //       setFormNCriterio({ ...formNCriterio, pesoCriterio: "" });
+                //     }
+                //   }
+                // }}
+
                 onChange={(e) => {
                   const valor = e.target.value;
 
-                  if (/^\d{0,3}$/.test(valor)) {
-                    const num = parseInt(valor, 10);
-
-                    if (!isNaN(num) && num >= 1 && num <= 100) {
-                      setFormNCriterio({ ...formNCriterio, pesoCriterio: num });
-                    } else if (valor === "") {
-                      setFormNCriterio({ ...formNCriterio, pesoCriterio: "" });
-                    }
+                  if (/^\d{0,3}(\.\d{0,2})?$/.test(valor)) {
+                    setFormNCriterio({ ...formNCriterio, pesoCriterio: valor });
                   }
                 }}
                 onBlur={() => {

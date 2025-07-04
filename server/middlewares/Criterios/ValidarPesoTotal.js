@@ -150,7 +150,7 @@ const validarPesoTotal = (tabla) => {
         replacements.idElemento = idElemento;
       }
 
-      console.log("🧾 Query final:", query);
+      // console.log("🧾 Query final:", query);
       console.log("🔧 Replacements:", replacements);
 
       const [resultado] = await db.query(query, {
