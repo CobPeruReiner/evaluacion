@@ -5,8 +5,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Toaster } from "sonner";
 import { useDispatch, useSelector } from "react-redux";
 import * as Icon from "../../../Icons/Iconos";
-import moment from "moment";
 import { Pagination } from "./Components/Pagination/Pagination";
+import { Metadatos } from "./Components/Metadatos/Metadatos";
+import { Transcripcion } from "./Components/Transcripcion/Transcripcion";
+import { TranscripcionError } from "./Components/TranscripcionError/TranscripcionError";
+import { Audio } from "./Components/Audio/Audio";
+import { RenderComun } from "./Components/Render/Comun/RenderComun";
+import { RenderScotiabank } from "./Components/Render/RenderScotiabank";
 
 export const AuditoriaDetail = () => {
   const API_URL = `${import.meta.env.VITE_API_URL}`;
@@ -117,55 +122,7 @@ export const AuditoriaDetail = () => {
                   >
                     {expandedAudio === index && (
                       <>
-                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-700">
-                          <p className="relative flex items-center gap-4">
-                            <span className="relative text-gray-500 font-medium text-base flex gap-4 items-center">
-                              <Icon.Calendar className="relative text-2xl" />{" "}
-                              Fecha:
-                            </span>
-                            <span className="relative text-gray-900 text-base">
-                              {moment(item.metadatos.fecha, "YYYYMMDD").format(
-                                "DD/MM/YYYY"
-                              )}
-                            </span>
-                          </p>
-                          <p className="relative flex items-center gap-4">
-                            <span className="relative text-gray-500 font-medium text-base flex gap-4 items-center">
-                              <Icon.Hour className="relative text-2xl" /> Hora:
-                            </span>
-                            <span className="relative text-gray-900 text-base">
-                              {moment(item.metadatos.hora, "HHmmss").format(
-                                "HH:mm:ss"
-                              )}
-                            </span>
-                          </p>
-                          <p className="relative flex items-center gap-4">
-                            <span className="relative text-gray-500 font-medium text-base flex gap-4 items-center">
-                              <Icon.Phone className="relative text-2xl" />{" "}
-                              Teléfono:
-                            </span>
-                            <span className="relative text-gray-900 text-base">
-                              {item.metadatos.telefono}
-                            </span>
-                          </p>
-                          <p className="relative flex items-center gap-4">
-                            <span className="relative text-gray-500 font-medium text-base flex gap-4 items-center">
-                              <Icon.Campaign className="relative text-2xl" />{" "}
-                              Campaña:
-                            </span>
-                            <span className="relative text-gray-900 text-base">
-                              {item.metadatos.campaña}
-                            </span>
-                          </p>
-                          <p className="relative flex items-center gap-4">
-                            <span className="relative text-gray-500 font-medium text-base flex gap-4 items-center">
-                              <Icon.User className="relative text-2xl" /> Anexo:
-                            </span>
-                            <span className="relative text-gray-900 text-base">
-                              {item.metadatos.anexo}
-                            </span>
-                          </p>
-                        </div>
+                        <Metadatos item={item} />
 
                         <div className="relative">
                           <button
@@ -183,172 +140,20 @@ export const AuditoriaDetail = () => {
                         {showDetail[index] && (
                           <div className="mt-6 space-y-6">
                             {/* Reproductor de audio */}
-                            <div className="mt-4">
-                              <h4 className="font-semibold text-lg mb-2 text-gray-700 flex items-center">
-                                🎵 Audio
-                              </h4>
-                              <audio controls className="w-full rounded shadow">
-                                <source
-                                  src={`${API_URL}audios/${item.archivo}`}
-                                  type={`audio/${
-                                    item.archivo.endsWith(".mp3")
-                                      ? "mpeg"
-                                      : "wav"
-                                  }`}
-                                />
-                                Tu navegador no soporta audio.
-                              </audio>
-                            </div>
+                            <Audio item={item} API_URL={API_URL} />
 
-                            {/* Evaluación de APERTURA */}
-                            {item.evaluacion?.apertura && (
-                              <div className="p-4 bg-white border rounded-lg shadow-sm">
-                                <h4 className="font-semibold text-lg mb-3 text-blue-700 flex items-center">
-                                  📝 Apertura
-                                </h4>
-                                <div className="text-gray-700 mb-3 space-y-1">
-                                  <p>
-                                    <strong>Resultado:</strong>
-                                    <span
-                                      className={
-                                        item.evaluacion.apertura.resultado ===
-                                        "Aprobado"
-                                          ? "text-green-600"
-                                          : "text-red-600"
-                                      }
-                                    >
-                                      {item.evaluacion.apertura.resultado}
-                                    </span>
-                                  </p>
-                                  <p>
-                                    <strong>Cumplimiento:</strong>
-                                    {item.evaluacion.apertura.cumplimiento?.toFixed(
-                                      2
-                                    )}
-                                    %
-                                  </p>
-                                </div>
-                                <div className="bg-gray-50 border rounded p-3 space-y-2">
-                                  {Object.entries(
-                                    item.evaluacion.apertura.criterios || {}
-                                  ).map(([nombreCriterio, accion], i) => (
-                                    <div
-                                      key={i}
-                                      className="flex justify-between py-1 border-b last:border-b-0"
-                                    >
-                                      <span className="text-gray-600">
-                                        {nombreCriterio}
-                                      </span>
-                                      <span className="text-right font-medium">
-                                        {accion.NOMBRE_ACCION_CRITERIO ||
-                                          "No evaluado"}
-                                        <span className="text-xs text-gray-400 ml-2">
-                                          {accion.PESO_ACCION_CRITERIO}
-                                        </span>
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Evaluación de INDAGACIÓN */}
-                            {item.evaluacion?.indagacion && (
-                              <div className="p-4 bg-white border rounded-lg shadow-sm">
-                                <h4 className="font-semibold text-lg mb-3 text-purple-700 flex items-center">
-                                  📝 Indagación y Asesoramiento
-                                </h4>
-                                <div className="text-gray-700 mb-3 space-y-1">
-                                  <p>
-                                    <strong>Resultado:</strong>
-                                    <span
-                                      className={
-                                        item.evaluacion.indagacion.resultado ===
-                                        "Aprobado"
-                                          ? "text-green-600"
-                                          : "text-red-600"
-                                      }
-                                    >
-                                      {item.evaluacion.indagacion.resultado}
-                                    </span>
-                                  </p>
-                                  <p>
-                                    <strong>Cumplimiento:</strong>
-                                    {item.evaluacion.indagacion.cumplimiento?.toFixed(
-                                      2
-                                    )}
-                                    %
-                                  </p>
-                                </div>
-                                <div className="bg-gray-50 border rounded p-3 space-y-2">
-                                  {Object.entries(
-                                    item.evaluacion.indagacion.criterios || {}
-                                  ).map(([nombreCriterio, accion], i) => (
-                                    <div
-                                      key={i}
-                                      className="flex justify-between py-1 border-b last:border-b-0"
-                                    >
-                                      <span className="text-gray-600">
-                                        {nombreCriterio}
-                                      </span>
-                                      <span className="text-right font-medium">
-                                        {accion.NOMBRE_ACCION_CRITERIO ||
-                                          "No evaluado"}
-                                        <span className="text-xs text-gray-400 ml-2">
-                                          {accion.PESO_ACCION_CRITERIO}
-                                        </span>
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
+                            {/* RENDER CALIFICACION */}
+                            {item.evaluacion?.scotiabank_evaluacion ? (
+                              <RenderScotiabank item={item} />
+                            ) : (
+                              <RenderComun item={item} />
                             )}
 
                             {/* Diarizacion */}
-                            {item?.error_diarizacion && (
-                              <div className="text-sm text-red-600 bg-red-100 p-3 rounded border border-red-200">
-                                ⚠️ No se detectó conversación o no se pudo
-                                identificar a los hablantes.
-                              </div>
-                            )}
+                            <TranscripcionError item={item} />
 
                             {/* Transcripción */}
-                            <div className="space-y-2">
-                              {item?.transcripcion.map((seg, i) => {
-                                const esAsesor =
-                                  seg.speaker === "000" ||
-                                  seg.speaker === "002";
-                                const nombre = esAsesor
-                                  ? item.metadatos?.full_name || "Asesor"
-                                  : "Cliente";
-
-                                return (
-                                  <div
-                                    key={i}
-                                    className={`flex ${
-                                      esAsesor ? "justify-start" : "justify-end"
-                                    }`}
-                                  >
-                                    <div
-                                      className={`max-w-xs px-4 py-3 rounded-2xl shadow text-sm ${
-                                        esAsesor
-                                          ? "bg-blue-100 text-left"
-                                          : "bg-green-100 text-right"
-                                      }`}
-                                    >
-                                      <p className="font-semibold text-xs mb-1">
-                                        {nombre}
-                                      </p>
-                                      <p className="mb-1">{seg.text}</p>
-                                      <p className="text-[10px] text-gray-500 mt-1">
-                                        [{seg.start.toFixed(2)}s -
-                                        {seg.end.toFixed(2)}s]
-                                      </p>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
+                            <Transcripcion item={item} />
                           </div>
                         )}
                       </>
