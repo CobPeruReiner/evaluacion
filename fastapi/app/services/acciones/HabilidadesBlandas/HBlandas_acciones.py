@@ -11,20 +11,20 @@ def seleccionar_accion_amabilidad(texto: str, acciones: list, id_cartera: str) -
         "eso no me importa",
         "ese no es mi problema",
         "usted no entiende",
-        "debería saberlo",
-        "escúcheme bien",
+        "deberia saberlo",
+        "escucheme bien",
         "ya le dije",
         "le repito",
-        "¿está sordo?",
-        "se lo expliqué",
+        "esta sordo",
+        "se lo explique",
         "por favor entienda",
     ]
 
-    sarcasmo = ["claro, como usted diga", "ah sí, seguro", "¡qué raro!"]
+    sarcasmo = ["claro como usted diga", "ah si seguro", "que raro"]
 
     adjetivos = ["irresponsable", "desordenado", "retrasado", "mentiroso", "desubicado"]
 
-    alteracion = ["cálmese", "no me grite", "ya le dije", "no me interrumpa"]
+    alteracion = ["calmese", "no me grite", "ya le dije", "no me interrumpa"]
 
     if any(p in texto for p in sarcasmo):
         return mapa.get("RESPONDE CON SARCASMO")
@@ -44,13 +44,13 @@ def seleccionar_accion_comunicacion(
     texto = texto.lower()
     mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
 
-    muletillas = ["este", "eh", "o sea", "mmm", "ya", "okey", "¿me entiendes?"]
-    tecnicismos = ["gestión", "protocolo", "aplicativo", "flujo", "formulario web"]
-    tuteo = ["tu", "te dije", "tú tienes", "tu cuenta"]
+    muletillas = ["este", "eh", "o sea", "mmm", "ya", "okey", "me entiendes"]
+    tecnicismos = ["gestion", "protocolo", "aplicativo", "flujo", "formulario web"]
+    tuteo = ["tu", "te dije", "tu tienes", "tu cuenta"]
 
-    interrumpe = ["a ver", "escúcheme", "déjeme hablar", "espere"]
+    interrumpe = ["a ver", "escucheme", "dejeme hablar", "espere"]
 
-    inseguridad = ["no sé", "no estoy seguro", "creo que", "quizás", "de repente"]
+    inseguridad = ["no se", "no estoy seguro", "creo que", "quizas", "de repente"]
 
     if any(p in texto for p in tuteo):
         return mapa.get("TUTEA AL CLIENTE")
@@ -70,8 +70,8 @@ def seleccionar_accion_escucha(texto: str, acciones: list, id_cartera: str) -> d
     texto = texto.lower()
     mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
 
-    omite = ["como le dije", "eso ya lo expliqué", "eso no importa", "ya le respondí"]
-    repregunta = ["¿qué dijo?", "¿cómo?", "¿me repite?", "no entendí"]
+    omite = ["como le dije", "eso ya lo explique", "eso no importa", "ya le respondi"]
+    repregunta = ["que dijo", "como", "me repite", "no entendi"]
 
     if any(p in texto for p in omite):
         return mapa.get("OMITE INFORMACIÓN IMPORTANTE")

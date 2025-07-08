@@ -10,26 +10,23 @@ def seleccionar_accion_perseverancia(
     mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
     texto = texto.lower()
 
-    objeciones_rebatidas = sum(
-        [
-            bool(re.search(p, texto))
-            for p in [
-                r"entiendo.*pero",
-                r"comprendo.*sin embargo",
-                r"comprendo.*igual es necesario",
-                r"entiendo.*igual debemos",
-                r"sé que.*pero",
-                r"debe regularizar",
-                r"se recomienda el pago",
-            ]
-        ]
-    )
+    frases_rebate = [
+        "entiendo pero",
+        "comprendo sin embargo",
+        "comprendo igual es necesario",
+        "entiendo igual debemos",
+        "se que pero",
+        "debe regularizar",
+        "se recomienda el pago",
+    ]
+
+    objeciones_rebatidas = sum(1 for frase in frases_rebate if frase in texto)
 
     uso_negativo = any(
         p in texto
         for p in [
             "no se puede",
-            "no tengo solución",
+            "no tengo solucion",
             "no es posible",
             "no puedo ayudarle",
         ]
@@ -52,18 +49,19 @@ def seleccionar_accion_compromiso(texto: str, acciones: list, id_cartera: str) -
     texto = texto.lower()
 
     frases_compromiso = [
-        r"puede pagar hoy",
-        r"puede acercarse hoy",
-        r"podría cancelar hoy",
-        r"cancelar el día de hoy",
-        r"comprométase a pagar",
-        r"cuándo podría acercarse",
-        r"le esperamos hoy",
-        r"cancelar mañana",
-        r"se puede comprometer a",
+        "puede pagar hoy",
+        "puede acercarse hoy",
+        "podria cancelar hoy",
+        "cancelar el dia de hoy",
+        "comprometase a pagar",
+        "cuando podria acercarse",
+        "le esperamos hoy",
+        "cancelar manana",
+        "se puede comprometer a",
     ]
 
-    urgencia_correcta = any(re.search(p, texto) for p in frases_compromiso)
+    urgencia_correcta = any(f in texto for f in frases_compromiso)
+
     frases_negativas = [
         "usted vera",
         "cuando pueda",
@@ -86,7 +84,6 @@ def seleccionar_accion_compromiso(texto: str, acciones: list, id_cartera: str) -
     return _accion_no_cumple(acciones)
 
 
-# Función auxiliar para devolver acción por defecto negativa
 def _accion_no_cumple(acciones: list) -> dict:
     for a in acciones:
         nombre = a["NOMBRE_ACCION_CRITERIO"].strip().upper()

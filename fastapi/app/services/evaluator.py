@@ -1,6 +1,6 @@
 import logging
-from app.services.evaluadores.apertura import evaluar_apertura
-from app.services.evaluadores.indagacion import evaluar_indagacion
+from app.services.evaluadores.EApertura import evaluar_apertura
+from app.services.evaluadores.EIndagacion import evaluar_indagacion
 from app.services.evaluadores.Scotiabank.scotiabank_evaluator import (
     evaluar_fase_scotiabank,
 )

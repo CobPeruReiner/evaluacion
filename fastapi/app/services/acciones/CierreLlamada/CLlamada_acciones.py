@@ -8,40 +8,39 @@ def seleccionar_accion_reafirmar(texto: str, acciones: list, id_cartera: str) ->
     mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
     texto = texto.lower()
 
-    patrones_confirmacion = [
-        r"entonces.*paga",
-        r"queda.*para",
-        r"se compromete",
-        r"acuerda pagar",
-        r"cancelará",
-        r"cancelar[áé]",
-        r"va a pagar",
-        r"nos vemos el",
-        r"lo esperamos el",
-        r"queda en cancelar",
+    frases_confirmacion = [
+        "entonces paga",
+        "queda para",
+        "se compromete",
+        "acuerda pagar",
+        "cancelara",
+        "va a pagar",
+        "nos vemos el",
+        "lo esperamos el",
+        "queda en cancelar",
     ]
 
-    patrones_incompletos = [
-        r"paga el",
-        r"pago el",
-        r"me dijo que paga",
-        r"va a acercarse",
-        r"va a ir",
+    frases_incompletas = [
+        "paga el",
+        "pago el",
+        "me dijo que paga",
+        "va a acercarse",
+        "va a ir",
     ]
 
-    patrones_incorrectos = [
-        r"usted verá",
-        r"cuando pueda",
-        r"usted decide",
-        r"lo pensará",
-        r"depende de usted",
+    frases_incorrectas = [
+        "usted vera",
+        "cuando pueda",
+        "usted decide",
+        "lo pensara",
+        "depende de usted",
     ]
 
-    if any(re.search(p, texto) for p in patrones_confirmacion):
+    if any(f in texto for f in frases_confirmacion):
         return mapa.get("SI CUMPLE")
-    elif any(re.search(p, texto) for p in patrones_incompletos):
+    elif any(f in texto for f in frases_incompletas):
         return mapa.get("RECONFIRMA DE FORMA INCOMPLETA")
-    elif any(p in texto for p in patrones_incorrectos):
+    elif any(f in texto for f in frases_incorrectas):
         return mapa.get("RECONFIRMA DE FORMA INCORRECTA")
 
     return mapa.get("NO RECONFIRMA COMPROMISO DE PAGO")
