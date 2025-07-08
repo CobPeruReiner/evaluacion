@@ -180,6 +180,23 @@ def evaluar_fase_scotiabank(
                 "criterios": criterios_dict,
             }
 
+        total_cumplimiento = 0.0
+        total_items = 0
+
+        for item_data in resultados_por_item.values():
+            total_cumplimiento += item_data.get("cumplimiento", 0.0)
+            total_items += 1
+
+        cumplimiento_total = (
+            round(total_cumplimiento / total_items, 2) if total_items else 0.0
+        )
+        estado_global = obtener_resultado_ponderado(cumplimiento_total / 100)
+
+        resultados_por_item["resumen_final"] = {
+            "cumplimiento_total": cumplimiento_total,
+            "estado_global": estado_global,
+        }
+
         return resultados_por_item
 
     finally:
