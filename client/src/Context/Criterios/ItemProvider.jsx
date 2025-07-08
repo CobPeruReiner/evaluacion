@@ -1624,6 +1624,47 @@ export const CriteriosProvider = ({ children }) => {
   const maxButtonsAudios = 5;
   const [searchTelefono, setSearchTelefono] = useState("");
 
+  // Reproducir audio
+  const [audioInstance, setAudioInstance] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioEnReproduccion, setAudioEnReproduccion] = useState(null);
+
+  const reproducirAudio = (archivo, index) => {
+    // Si ya está sonando ese mismo audio, pausarlo
+    if (audioEnReproduccion === index && isPlaying) {
+      audioInstance.pause();
+      setIsPlaying(false);
+      return;
+    }
+
+    // Si hay otro audio sonando, detenerlo
+    if (audioInstance) {
+      audioInstance.pause();
+      audioInstance.currentTime = 0;
+    }
+
+    const nuevaRuta = `${import.meta.env.VITE_API_URL}audios/${archivo}`;
+    const audio = new Audio(nuevaRuta);
+
+    audio
+      .play()
+      .then(() => {
+        setAudioInstance(audio);
+        setAudioEnReproduccion(index);
+        setIsPlaying(true);
+
+        audio.onended = () => {
+          setIsPlaying(false);
+          setAudioInstance(null);
+          setAudioEnReproduccion(null);
+        };
+      })
+      .catch((err) => {
+        console.error("Error al reproducir audio:", err);
+        setIsPlaying(false);
+      });
+  };
+
   // Guardar .zip y mostrar archivos dentro de este
   const handleZip = async (event) => {
     const file = event.target.files[0];
@@ -1726,6 +1767,15 @@ export const CriteriosProvider = ({ children }) => {
     } finally {
       setIsPostingAudiosProcess(false);
     }
+  };
+
+  const openMVerCalificacion = () => {
+    if (processResultSucces.length === 0) {
+      toast.info("No se han procesado audios");
+      return;
+    }
+
+    setMVerCalificacion(true);
   };
 
   useOutsideClick(refMVerCalificacion, () => setMVerCalificacion(false));
@@ -2539,9 +2589,14 @@ export const CriteriosProvider = ({ children }) => {
         seleccionarAudio,
         mVerCalificacion,
         refMVerCalificacion,
+        openMVerCalificacion,
         closeMVerCalificacion,
         accionSeleccionada,
         seleccionarAccion,
+        audioInstance,
+        isPlaying,
+        audioEnReproduccion,
+        reproducirAudio,
       }}
     >
       {children}

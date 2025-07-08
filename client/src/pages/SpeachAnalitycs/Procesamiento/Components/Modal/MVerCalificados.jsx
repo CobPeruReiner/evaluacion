@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { CriteriosContext } from "../../../../../Context/Criterios/ItemContext";
 import { Loader } from "../../../../../components/Loader";
-import { Pause, Play } from "../../../../../Icons/Iconos";
+import { Close, Pause, Play } from "../../../../../Icons/Iconos";
 import moment from "moment";
 
 export const MVerCalificados = () => {
@@ -9,11 +9,15 @@ export const MVerCalificados = () => {
     processResultSucces,
     audioActivo,
     seleccionarAudio,
-    // refMVerCalificacion,
+    refMVerCalificacion,
     mVerCalificacion,
-    // closeMVerCalificacion,
+    closeMVerCalificacion,
     accionSeleccionada,
     seleccionarAccion,
+    audioInstance,
+    isPlaying,
+    audioEnReproduccion,
+    reproducirAudio,
   } = useContext(CriteriosContext);
 
   if (!processResultSucces) return null;
@@ -32,15 +36,29 @@ export const MVerCalificados = () => {
       }`}
     >
       <div
-        className={`w-[85%] h-[85%] max-h-[90vh] bg-white rounded-md border border-gray-200 shadow-lg flex flex-col transition-transform duration-500 ${
+        ref={refMVerCalificacion}
+        className={`w-[85%] h-[85%] max-h-[90vh] bg-white rounded-md border border-gray-200 shadow-lg flex flex-col gap-3 p-4 transition-transform duration-500 ${
           mVerCalificacion ? "translate-y-0" : "translate-y-[600%]"
         }`}
       >
-        <div className="flex w-full gap-4 p-4 overflow-hidden h-full">
+        <div className="header-modal-ver-calificados relative w-full text-left">
+          <h1 className="relative text-[#344767] text-xl font-bold">
+            Evaluados
+          </h1>
+
+          <Close
+            onClick={closeMVerCalificacion}
+            className="absolute right-0 top-0 text-xl cursor-pointer"
+          />
+        </div>
+
+        <hr />
+
+        <div className="flex w-full gap-4 overflow-hidden h-full">
           {processResultSucces.length > 0 ? (
             <>
               {/* Lista de audios */}
-              <div className="relative w-1/3 flex flex-col gap-4 bg-gray-50 rounded-lg shadow p-4 overflow-y-auto">
+              <div className="relative border border-solid border-gray-200 h-[98%] mt-2 w-1/3 flex flex-col gap-4 bg-transparent rounded-lg shadow p-4 overflow-y-auto">
                 <div className="text-sm flex justify-between">
                   <span>
                     <strong>Número de audios:</strong> {cantidadAudios}
@@ -67,7 +85,7 @@ export const MVerCalificados = () => {
                     <div
                       key={index}
                       onClick={() => seleccionarAudio(index)}
-                      className={`cursor-pointer p-3 rounded-md border hover:bg-gray-100 ${
+                      className={`cursor-pointer p-3 rounded-md border hover:bg-gray-100 transition-all duration-300 ${
                         audioActivo === index
                           ? "bg-gray-100 border-[#09c] text-[#09c]"
                           : "bg-white"
@@ -79,8 +97,18 @@ export const MVerCalificados = () => {
                       </div>
                       <div className="text-xs flex items-center justify-between space-x-2">
                         <span>{hora}</span>
-                        <button>
-                          <Play className="text-gray-500 hover:text-blue-500 cursor-pointer" />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            reproducirAudio(item.archivo, index);
+                          }}
+                        >
+                          {audioEnReproduccion === index && isPlaying ? (
+                            <Pause className="text-gray-500 hover:text-red-500 cursor-pointer" />
+                          ) : (
+                            <Play className="text-gray-500 hover:text-blue-500 cursor-pointer" />
+                          )}
                         </button>
                       </div>
                     </div>
@@ -123,11 +151,11 @@ export const MVerCalificados = () => {
               </div>
 
               {/* Transcripción */}
-              <div className="w-2/3 bg-gray-50 rounded-lg shadow p-4 flex flex-col overflow-hidden">
+              <div className="relative border border-solid border-gray-200 h-[98%] mt-2 w-2/3 bg-transparent rounded-lg shadow p-4 flex flex-col overflow-hidden">
                 {audioActivo !== null && (
                   <>
                     <div className="flex-1 overflow-y-auto pr-2 space-y-2">
-                      {processResultSucces[audioActivo].transcripcion.map(
+                      {processResultSucces[audioActivo]?.transcripcion?.map(
                         (seg, i) => {
                           const esAsesor =
                             seg.speaker === "000" || seg.speaker === "002";
@@ -162,6 +190,10 @@ export const MVerCalificados = () => {
                             </div>
                           );
                         }
+                      ) || (
+                        <p className="text-center text-gray-500">
+                          Sin transcripción
+                        </p>
                       )}
                     </div>
                   </>

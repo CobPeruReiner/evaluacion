@@ -7,17 +7,18 @@ import base64
 import time
 
 from fastapi import UploadFile
-from app.services.audio_converter import convertir_a_wav_mono_16k
-from app.services.transcription import (
+from app.services.helpers.audio_converter import convertir_a_wav_mono_16k
+from app.services.helpers.transcription import (
     transcribir_audio,
     alinear_segmentos,
     obtener_diarizacion,
-    asignar_hablantes
+    asignar_hablantes,
 )
-from app.services.roles_classifier import etiquetar_roles_v2
+from app.services.helpers.roles_classifier import etiquetar_roles_v2
 from app.services.evaluator import evaluar_llamada
 
 logger = logging.getLogger(__name__)
+
 
 async def procesar_archivo(file: UploadFile, version_roles: str, id_cartera: str):
     temp_dir = f"temp_{uuid.uuid4().hex[:6]}"
@@ -36,13 +37,12 @@ async def procesar_archivo(file: UploadFile, version_roles: str, id_cartera: str
         logger.info(f"📦 Archivo ZIP guardado: {zip_path}")
 
         # Extraer el ZIP
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
             zip_ref.extractall(temp_dir)
         logger.info(f"📂 Contenido extraído en: {temp_dir}")
 
         archivos_audio = [
-            f for f in os.listdir(temp_dir)
-            if f.lower().endswith((".wav", ".mp3"))
+            f for f in os.listdir(temp_dir) if f.lower().endswith((".wav", ".mp3"))
         ]
 
         if not archivos_audio:
@@ -60,8 +60,11 @@ async def procesar_archivo(file: UploadFile, version_roles: str, id_cartera: str
 
                 # Transcripción
                 result = transcribir_audio(ruta_audio)
-                segmentos = [seg for seg in result["segments"]
-                             if seg["text"].strip() and seg["text"].strip() not in ["...", "--"]]
+                segmentos = [
+                    seg
+                    for seg in result["segments"]
+                    if seg["text"].strip() and seg["text"].strip() not in ["...", "--"]
+                ]
 
                 if not segmentos:
                     raise Exception("No se detectaron segmentos útiles.")
@@ -79,7 +82,7 @@ async def procesar_archivo(file: UploadFile, version_roles: str, id_cartera: str
                         "start": seg["start"],
                         "end": seg["end"],
                         "speaker": seg.get("speaker", "Desconocido"),
-                        "text": seg["text"]
+                        "text": seg["text"],
                     }
                     for seg in result["segments"]
                     if "speaker" in seg
@@ -103,36 +106,39 @@ async def procesar_archivo(file: UploadFile, version_roles: str, id_cartera: str
                 partes = nombre_base.split("_")
                 if len(partes) == 4:
                     fecha_hora, telefono, campaña, anexo = partes
-                    fecha, hora = fecha_hora.split("-") if "-" in fecha_hora else ("", "")
+                    fecha, hora = (
+                        fecha_hora.split("-") if "-" in fecha_hora else ("", "")
+                    )
                 else:
                     fecha = hora = telefono = campaña = anexo = ""
 
-                resultados_exitosos.append({
-                    "archivo": archivo,
-                    "transcripcion": transcripcion,
-                    "audio_base64": audio_base64,
-                    "metadatos": {
-                        "fecha": fecha,
-                        "hora": hora,
-                        "telefono": telefono,
-                        "campaña": campaña,
-                        "anexo": anexo
-                    },
-                    "evaluacion": evaluacion
-                })
+                resultados_exitosos.append(
+                    {
+                        "archivo": archivo,
+                        "transcripcion": transcripcion,
+                        "audio_base64": audio_base64,
+                        "metadatos": {
+                            "fecha": fecha,
+                            "hora": hora,
+                            "telefono": telefono,
+                            "campaña": campaña,
+                            "anexo": anexo,
+                        },
+                        "evaluacion": evaluacion,
+                    }
+                )
 
                 duracion_audio = time.perf_counter() - tiempo_inicio_audio
                 logger.info(f"✅ Procesado {archivo} en {duracion_audio:.2f} seg")
 
             except Exception as e:
                 logger.error(f"⚠️ Error procesando {archivo}: {e}")
-                resultados_fallidos.append({
-                    "archivo": archivo,
-                    "error": str(e)
-                })
+                resultados_fallidos.append({"archivo": archivo, "error": str(e)})
 
         duracion_total = time.perf_counter() - tiempo_total_inicio
-        logger.info(f"🎯 Procesamiento total finalizado en {duracion_total:.2f} segundos")
+        logger.info(
+            f"🎯 Procesamiento total finalizado en {duracion_total:.2f} segundos"
+        )
 
         return {"exitosos": resultados_exitosos, "fallidos": resultados_fallidos}
 
