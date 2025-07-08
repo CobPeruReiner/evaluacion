@@ -6,6 +6,7 @@ import { Toaster } from "sonner";
 import { UploadFile } from "../../../Icons/Iconos";
 import { CriteriosContext } from "../../../Context/Criterios/ItemContext";
 import { MVerProcesados } from "./Components/Modal/MVerProcesados";
+import { MVerCalificados } from "./Components/Modal/MVerCalificados";
 
 export const Procesamiento = () => {
   const navigate = useNavigate();
@@ -61,6 +62,7 @@ export const Procesamiento = () => {
       </div>
 
       <MVerProcesados />
+      <MVerCalificados />
     </>
   );
 };

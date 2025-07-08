@@ -1582,6 +1582,12 @@ export const CriteriosProvider = ({ children }) => {
   // Procesamiento result
   const [processResultSucces, setprocessResultSuccess] = useState([]);
   const [processResultFailed, setProcessResultFailed] = useState([]);
+  const [audioActivo, setAudioActivo] = useState(null);
+
+  const refMVerCalificacion = useRef(null);
+  const [mVerCalificacion, setMVerCalificacion] = useState(false);
+
+  const [accionSeleccionada, setAccionSeleccionada] = useState("match");
 
   // Formulario
   const [formAuditoriaAudios, setFormAuditoriaAudios] = useState({
@@ -1710,12 +1716,34 @@ export const CriteriosProvider = ({ children }) => {
 
       setprocessResultSuccess(data.exitosos);
       setProcessResultFailed(data.fallidos);
+      setMVerCalificacion(true);
+      setArchivos([]);
+      setZipFile(null);
+      setMProcesados(false);
     } catch (error) {
       console.log(error);
       toast.error("Error al procesar audios");
     } finally {
       setIsPostingAudiosProcess(false);
     }
+  };
+
+  useOutsideClick(refMVerCalificacion, () => setMVerCalificacion(false));
+
+  const closeMVerCalificacion = () => {
+    setprocessResultSuccess([]);
+    setProcessResultFailed([]);
+    setMVerCalificacion(false);
+  };
+
+  const seleccionarAudio = (index) => {
+    setAudioActivo(index === audioActivo ? null : index);
+  };
+
+  const seleccionarAccion = (accion) => {
+    setAccionSeleccionada(accion);
+
+    // TODO: Cagar las fichas que hicieron match con lo grabado en BD
   };
 
   // Mostrar efectos
@@ -2507,6 +2535,13 @@ export const CriteriosProvider = ({ children }) => {
         calcTotalAudiosPages,
         updateAudiosPaginated,
         filteredBySearch,
+        audioActivo,
+        seleccionarAudio,
+        mVerCalificacion,
+        refMVerCalificacion,
+        closeMVerCalificacion,
+        accionSeleccionada,
+        seleccionarAccion,
       }}
     >
       {children}

@@ -1097,8 +1097,8 @@ const processZip = async (req, res) => {
 
     console.log("✅ Respuesta recibida");
 
-    // const outputDir = path.join(__dirname, "../audios");
-    const outputDir = "/app/server/audios";
+    const outputDir = path.join(__dirname, "../audios");
+    // const outputDir = "/app/server/audios";
 
     if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
 
@@ -1144,8 +1144,8 @@ const processZip = async (req, res) => {
     }
 
     // === GUARDAR ===
-    // const carpetaFecha = path.resolve(__dirname, "../resultados", fecha);
-    const carpetaFecha = path.join("/app/server/resultados", fecha);
+    const carpetaFecha = path.resolve(__dirname, "../resultados", fecha);
+    // const carpetaFecha = path.join("/app/server/resultados", fecha);
 
     if (!fs.existsSync(carpetaFecha)) {
       fs.mkdirSync(carpetaFecha, { recursive: true });
@@ -1198,8 +1198,8 @@ const obtenerResultadosPorFechaCartera = (req, res) => {
     });
   }
 
-  // const carpetaBase = path.resolve(__dirname, "../resultados");
-  const carpetaBase = "/app/server/resultados";
+  const carpetaBase = path.resolve(__dirname, "../resultados");
+  // const carpetaBase = "/app/server/resultados";
 
   console.log("Carpta Base: ", carpetaBase);
 
@@ -1299,8 +1299,8 @@ const obtenerDetalleEvaluacion = async (req, res) => {
 
   try {
     // Falta leer el archivo y enviarlo
-    // const carpetaBase = path.resolve(__dirname, "../resultados");
-    const carpetaBase = "/app/server/resultados";
+    const carpetaBase = path.resolve(__dirname, "../resultados");
+    // const carpetaBase = "/app/server/resultados";
 
     // Buscar el archivo en cualquier subcarpeta (las carpetas son fechas)
     let resultadoEncontrado = null;

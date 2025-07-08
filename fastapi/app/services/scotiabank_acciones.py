@@ -2,7 +2,7 @@
 
 import re
 import logging
-from app.services.utils.texto import normalizar_texto # Asegúrate de que esta utilidad exista y funcione
+from app.services.utils.texto import normalizar_texto
 
 logger = logging.getLogger(__name__)
 
