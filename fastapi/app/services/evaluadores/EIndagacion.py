@@ -36,13 +36,13 @@ def evaluar_indagacion(
         criterios = obtener_criterios_por_item(conn, id_item)
         texto = normalizar_texto(" ".join([s["text"] for s in segmentos]))
 
-        logger.info(f"Criterios: {criterios}")
-
         resultados = {}
-        cumplidos = 0
+        peso_total = 0
+        peso_ponderado = 0
 
         for criterio in criterios:
             nombre = criterio["NOMBRE_CRITERIO"].strip().upper()
+            peso_criterio = float(criterio.get("PESO_CRITERIO", 0))
             acciones = obtener_acciones_por_criterio(conn, criterio["ID_CRITERIO"])
 
             if "SITUACIÓN" in nombre:
@@ -58,20 +58,24 @@ def evaluar_indagacion(
             else:
                 continue
 
-            accion["PESO_ACCION_CRITERIO"] = float(
-                accion.get("PESO_ACCION_CRITERIO", 0)
-            )
-            resultados[nombre] = accion
+            if not accion:
+                continue
 
-            if accion["NOMBRE_ACCION_CRITERIO"].strip().upper() == "SÍ CUMPLE":
-                cumplidos += 1
+            peso_accion = float(accion.get("PESO_ACCION_CRITERIO", 0))
+            accion["PESO_ACCION_CRITERIO"] = peso_accion
+            accion["PESO_CRITERIO"] = peso_criterio
 
-        porcentaje = (cumplidos / len(resultados)) * 100 if resultados else 0
-        estado = "Aprobado" if porcentaje >= 60 else "Observado"
+            resultados[criterio["NOMBRE_CRITERIO"]] = accion
+
+            peso_total += peso_criterio
+            peso_ponderado += peso_criterio * peso_accion
+
+        cumplimiento = (peso_ponderado / peso_total) * 100 if peso_total else 0
+        estado = "Aprobado" if cumplimiento >= 60 else "Observado"
 
         return {
             "resultado": estado,
-            "cumplimiento": porcentaje,
+            "cumplimiento": round(cumplimiento, 2),
             "criterios": resultados,
         }
 

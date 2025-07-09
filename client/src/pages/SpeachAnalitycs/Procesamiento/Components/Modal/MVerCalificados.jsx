@@ -4,6 +4,11 @@ import { Loader } from "../../../../../components/Loader";
 import { Close, Pause, Play } from "../../../../../Icons/Iconos";
 import moment from "moment";
 
+const getEvaluacion = (item) =>
+  item?.metadatos?.idCartera == 70
+    ? item?.evaluacion?.scotiabank_evaluacion?.resumen_final
+    : item?.evaluacion?.resumen_final;
+
 export const MVerCalificados = () => {
   const {
     processResultSucces,
@@ -28,6 +33,8 @@ export const MVerCalificados = () => {
     : "Sin fecha";
 
   const cantidadAudios = processResultSucces.length;
+
+  // console.log("Process Result: ", processResultSucces);
 
   return (
     <div
@@ -57,8 +64,9 @@ export const MVerCalificados = () => {
         <div className="flex w-full gap-4 overflow-hidden h-full">
           {processResultSucces.length > 0 ? (
             <>
-              {/* Lista de audios */}
-              <div className="relative border border-solid border-gray-200 h-[98%] mt-2 w-1/3 flex flex-col gap-4 bg-transparent rounded-lg shadow p-4 overflow-y-auto">
+              {/* Left */}
+              <div className="relative border border-solid border-gray-200 h-[98%] mt-2 w-1/3 flex flex-col gap-4 bg-transparent rounded-lg shadow p-4">
+                {/* Encabezado */}
                 <div className="text-sm flex justify-between">
                   <span>
                     <strong>Número de audios:</strong> {cantidadAudios}
@@ -68,55 +76,59 @@ export const MVerCalificados = () => {
                   </span>
                 </div>
 
-                {processResultSucces.map((item, index) => {
-                  // Nombre asesor
-                  const full_name = item.metadatos?.full_name || "Asesor";
+                {/* Lista de audios */}
+                <div className="scroll flex-1 overflow-y-auto flex flex-col gap-4">
+                  {processResultSucces.map((item, index) => {
+                    // Nombre asesor
+                    const full_name = item.metadatos?.full_name || "Asesor";
 
-                  // Calificacion
-                  const calificacion = item?.evaluacion?.calificacion || 89;
+                    const calificacion =
+                      getEvaluacion(item)?.cumplimiento_total || 0;
+                    const estado = getEvaluacion(item)?.estado_global || "";
 
-                  // Fecha y hora
-                  const hora =
-                    item.metadatos?.hora?.slice(0, 2) +
-                      ":" +
-                      item.metadatos?.hora?.slice(2, 4) || "00:00";
+                    // Fecha y hora
+                    const hora =
+                      item.metadatos?.hora?.slice(0, 2) +
+                        ":" +
+                        item.metadatos?.hora?.slice(2, 4) || "00:00";
 
-                  return (
-                    <div
-                      key={index}
-                      onClick={() => seleccionarAudio(index)}
-                      className={`cursor-pointer p-3 rounded-md border hover:bg-gray-100 transition-all duration-300 ${
-                        audioActivo === index
-                          ? "bg-gray-100 border-[#09c] text-[#09c]"
-                          : "bg-white"
-                      }`}
-                    >
-                      <div className="font-semibold text-sm">{full_name}</div>
-                      <div className="text-xs text-gray-600">
-                        Calificación: {calificacion}
+                    return (
+                      <div
+                        key={index}
+                        onClick={() => seleccionarAudio(index)}
+                        className={`cursor-pointer p-3 rounded-md border hover:bg-gray-100 flex flex-col gap-1 transition-all duration-300 ${
+                          audioActivo === index
+                            ? "bg-gray-100 border-[#09c] text-[#09c]"
+                            : "bg-white"
+                        }`}
+                      >
+                        <div className="font-semibold text-sm">{full_name}</div>
+                        <div className="text-xs text-gray-600">
+                          Calificación: {calificacion} - {estado}
+                        </div>
+                        <div className="text-xs flex items-center justify-between space-x-2">
+                          <span>{hora}</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              reproducirAudio(item.archivo, index);
+                            }}
+                          >
+                            {audioEnReproduccion === index && isPlaying ? (
+                              <Pause className="text-gray-500 hover:text-red-500 cursor-pointer" />
+                            ) : (
+                              <Play className="text-gray-500 hover:text-blue-500 cursor-pointer" />
+                            )}
+                          </button>
+                        </div>
                       </div>
-                      <div className="text-xs flex items-center justify-between space-x-2">
-                        <span>{hora}</span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            reproducirAudio(item.archivo, index);
-                          }}
-                        >
-                          {audioEnReproduccion === index && isPlaying ? (
-                            <Pause className="text-gray-500 hover:text-red-500 cursor-pointer" />
-                          ) : (
-                            <Play className="text-gray-500 hover:text-blue-500 cursor-pointer" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
 
                 {/* Tabs */}
-                <div className="absolute left-0 right-0 bottom-0 flex gap-8 text-sm justify-center border-t">
+                <div className="relative flex gap-8 text-sm justify-center border-t">
                   <button
                     onClick={() => seleccionarAccion("match")}
                     className={`relative py-4 px-4 border-b-2 transition-all duration-300 ${

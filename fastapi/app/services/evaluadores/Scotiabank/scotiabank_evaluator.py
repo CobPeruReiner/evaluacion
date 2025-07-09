@@ -122,27 +122,14 @@ def evaluar_fase_scotiabank(
             criterios_dict = {}
             peso_total = 0.0
             peso_obtenido = 0.0
-            cumplidos = 0
 
             for criterio in criterios:
                 nombre_criterio = criterio["NOMBRE_CRITERIO"].strip().upper()
+                peso_criterio = float(criterio.get("PESO_CRITERIO", 0.0))
+                peso_total += peso_criterio
+
                 acciones = obtener_acciones_por_criterio(conn, criterio["ID_CRITERIO"])
 
-                accion_si_cumple = next(
-                    (
-                        a
-                        for a in acciones
-                        if a["NOMBRE_ACCION_CRITERIO"].strip().upper() == "SI CUMPLE"
-                    ),
-                    None,
-                )
-                if not accion_si_cumple:
-                    continue
-
-                peso_max = float(accion_si_cumple.get("PESO_ACCION_CRITERIO", 0.0))
-                peso_total += peso_max
-
-                # Evaluar criterio usando funciones ya existentes
                 accion_detectada = evaluar_criterio_scotiabank(
                     nombre_criterio, texto_asesor, acciones
                 )
@@ -151,27 +138,22 @@ def evaluar_fase_scotiabank(
                     peso_accion = float(
                         accion_detectada.get("PESO_ACCION_CRITERIO", 0.0)
                     )
-                    peso_obtenido += peso_accion
+                    peso_obtenido += peso_accion * peso_criterio
                     criterios_dict[nombre_criterio] = {
                         "NOMBRE_ACCION_CRITERIO": accion_detectada[
                             "NOMBRE_ACCION_CRITERIO"
                         ],
                         "PESO_ACCION_CRITERIO": peso_accion,
+                        "PESO_CRITERIO": peso_criterio,
                     }
-                    if (
-                        accion_detectada["NOMBRE_ACCION_CRITERIO"].strip().upper()
-                        == "SI CUMPLE"
-                    ):
-                        cumplidos += 1
                 else:
                     criterios_dict[nombre_criterio] = {
                         "NOMBRE_ACCION_CRITERIO": "NO EVALUADO",
                         "PESO_ACCION_CRITERIO": 0.0,
+                        "PESO_CRITERIO": peso_criterio,
                     }
 
-            porcentaje = (
-                (cumplidos / len(criterios_dict)) * 100 if criterios_dict else 0.0
-            )
+            porcentaje = (peso_obtenido / peso_total) * 100 if peso_total else 0.0
             resultado = "Aprobado" if porcentaje >= 60 else "Observado"
 
             resultados_por_item[item_nombre] = {
@@ -180,12 +162,11 @@ def evaluar_fase_scotiabank(
                 "criterios": criterios_dict,
             }
 
-        total_cumplimiento = 0.0
-        total_items = 0
-
-        for item_data in resultados_por_item.values():
-            total_cumplimiento += item_data.get("cumplimiento", 0.0)
-            total_items += 1
+        # Resumen global
+        total_cumplimiento = sum(
+            item["cumplimiento"] for item in resultados_por_item.values()
+        )
+        total_items = len(resultados_por_item)
 
         cumplimiento_total = (
             round(total_cumplimiento / total_items, 2) if total_items else 0.0

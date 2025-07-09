@@ -325,7 +325,7 @@ export function Pause(props) {
       {...props}
     >
       <g
-        class="icon-tabler"
+        className="icon-tabler"
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
