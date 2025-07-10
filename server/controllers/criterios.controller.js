@@ -449,11 +449,13 @@ const getAllAcciones = async (_req, res) => {
           tb1.PESO_ACCION_CRITERIO,
           tb1.ID_CRITERIO,
           tb2.NOMBRE_CRITERIO,
+          tb2.PESO_CRITERIO,
           tb1.FECHA_ACTUALIZACION,
           tb1.USUARIO_ACTUALIZACION,
           CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION,
           tb4.ID_ITEM,
           tb4.NOMBRE_ITEM,
+          tb4.PESO_ITEM,
           tb5.NOMBRE_CARTERA,
           tb1.ESTADO_ACCION
         FROM calidad.ACCION_CRITERIO tb1

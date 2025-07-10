@@ -7,6 +7,16 @@ def seleccionar_accion_amabilidad(texto: str, acciones: list, id_cartera: str) -
     texto = texto.lower()
     mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
 
+    palabras_positivas = [
+        "muy bien",
+        "ya listo",
+        "estimado",
+        "por favor",
+        "caballero",
+        "gracias por su tiempo",
+        "un ratito por favor",
+    ]
+
     palabras_negativas = [
         "eso no me importa",
         "ese no es mi problema",
@@ -45,12 +55,21 @@ def seleccionar_accion_comunicacion(
     mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
 
     muletillas = ["este", "eh", "o sea", "mmm", "ya", "okey", "me entiendes"]
+
     tecnicismos = ["gestion", "protocolo", "aplicativo", "flujo", "formulario web"]
+
     tuteo = ["tu", "te dije", "tu tienes", "tu cuenta"]
 
     interrumpe = ["a ver", "escucheme", "dejeme hablar", "espere"]
 
-    inseguridad = ["no se", "no estoy seguro", "creo que", "quizas", "de repente"]
+    inseguridad = [
+        "no se",
+        "no estoy seguro",
+        "creo que",
+        "quizas",
+        "de repente",
+        "lo verificamos",
+    ]
 
     if any(p in texto for p in tuteo):
         return mapa.get("TUTEA AL CLIENTE")

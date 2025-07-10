@@ -18,6 +18,8 @@ def seleccionar_accion_reafirmar(texto: str, acciones: list, id_cartera: str) ->
         "nos vemos el",
         "lo esperamos el",
         "queda en cancelar",
+        "va a cancelar",
+        "queda en pagar",
     ]
 
     frases_incompletas = [
@@ -26,6 +28,9 @@ def seleccionar_accion_reafirmar(texto: str, acciones: list, id_cartera: str) ->
         "me dijo que paga",
         "va a acercarse",
         "va a ir",
+        "una semanita más",
+        "de la semana que viene",
+        "el viernes",
     ]
 
     frases_incorrectas = [
@@ -34,6 +39,9 @@ def seleccionar_accion_reafirmar(texto: str, acciones: list, id_cartera: str) ->
         "usted decide",
         "lo pensara",
         "depende de usted",
+        "veremos",
+        "usted verá si paga",
+        "según cómo vaya",
     ]
 
     if any(f in texto for f in frases_confirmacion):
@@ -59,9 +67,23 @@ def seleccionar_accion_despedida(texto: str, acciones: list, id_cartera: str) ->
         "que tenga buen día",
         "hasta pronto",
         "nos vemos",
+        "muchas gracias",
+        "le vamos a enviar un mensaje",
+        "recibirá su carta",
+        "hasta el día",
     ]
 
-    despedidas_incompletas = ["bueno", "ok", "listo", "cuídese", "bye", "chau"]
+    despedidas_incompletas = [
+        "bueno",
+        "ok",
+        "listo",
+        "cuídese",
+        "bye",
+        "chau",
+        "bueno ya",
+        "ya está bien",
+        "entonces quedamos así",
+    ]
 
     if any(p in texto for p in despedidas_validas):
         return mapa.get("SI CUMPLE")

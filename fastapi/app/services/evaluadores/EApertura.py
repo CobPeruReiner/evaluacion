@@ -24,7 +24,6 @@ def evaluar_apertura(segmentos: list, id_cartera: str) -> dict:
     try:
         id_item = obtener_id_item(conn, "APERTURA", id_cartera)
 
-        # Depuracion
         logger.info(f"=================== APERTURA ===================")
         logger.info(f"id_cartera: {id_cartera}")
         logger.info(f"id_item: {id_item}")
@@ -40,7 +39,7 @@ def evaluar_apertura(segmentos: list, id_cartera: str) -> dict:
 
         resultado_criterios = {}
         peso_total = 0
-        peso_ponderado = 0
+        peso_obtenido = 0
 
         for criterio in criterios:
             nombre = criterio["NOMBRE_CRITERIO"].strip().upper()
@@ -63,17 +62,25 @@ def evaluar_apertura(segmentos: list, id_cartera: str) -> dict:
             else:
                 continue
 
-            if accion_detectada:
-                peso_accion = float(accion_detectada.get("PESO_ACCION_CRITERIO", 0))
-                accion_detectada["PESO_ACCION_CRITERIO"] = peso_accion
-                accion_detectada["PESO_CRITERIO"] = peso_criterio
+            peso_accion = (
+                float(accion_detectada.get("PESO_ACCION_CRITERIO", 0))
+                if accion_detectada
+                else 0.0
+            )
+            peso_total += peso_criterio
+            peso_obtenido += peso_accion
 
-                resultado_criterios[criterio["NOMBRE_CRITERIO"]] = accion_detectada
+            resultado_criterios[criterio["NOMBRE_CRITERIO"]] = {
+                "NOMBRE_ACCION_CRITERIO": (
+                    accion_detectada.get("NOMBRE_ACCION_CRITERIO")
+                    if accion_detectada
+                    else "NO DETECTADO"
+                ),
+                "PESO_ACCION_CRITERIO": peso_accion,
+                "PESO_CRITERIO": peso_criterio,
+            }
 
-                peso_total += peso_criterio
-                peso_ponderado += peso_criterio * peso_accion
-
-        cumplimiento = (peso_ponderado / peso_total) * 100 if peso_total else 0
+        cumplimiento = (peso_obtenido / peso_total) * 100 if peso_total else 0.0
         resultado = "Aprobado" if cumplimiento >= 60 else "Observado"
 
         return {

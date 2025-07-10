@@ -1,11 +1,19 @@
 import logging
 from app.services.utils.analisis_catigo import es_cartera_castigo
-from app.services.utils.analisis_texto import detectar_fecha_pago,detectar_antiguedad,detectar_monto,detectar_producto
+from app.services.utils.analisis_texto import (
+    detectar_fecha_pago,
+    detectar_antiguedad,
+    detectar_monto,
+    detectar_producto,
+)
 import re
 
 logger = logging.getLogger(__name__)
 
-def seleccionar_accion_info_producto(texto: str, acciones: list, id_cartera: str, tipificaciones: dict = None) -> dict:
+
+def seleccionar_accion_info_producto(
+    texto: str, acciones: list, id_cartera: str, tipificaciones: dict = None
+) -> dict:
     castigo = es_cartera_castigo(id_cartera)
     mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
 
@@ -36,7 +44,10 @@ def seleccionar_accion_info_producto(texto: str, acciones: list, id_cartera: str
 
     return mapa.get("NO BRINDA INFORMACIÓN DE LA SITUACIÓN")
 
-def seleccionar_accion_indagar_pago(texto: str, acciones: list, id_cartera: str, tipificaciones: dict = None) -> dict:
+
+def seleccionar_accion_indagar_pago(
+    texto: str, acciones: list, id_cartera: str, tipificaciones: dict = None
+) -> dict:
     castigo = es_cartera_castigo(id_cartera)
     mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
 
@@ -46,9 +57,19 @@ def seleccionar_accion_indagar_pago(texto: str, acciones: list, id_cartera: str,
         r"por\s+que\s+no\s+(ha\s+)?pagado",
         r"cual\s+es\s+el\s+motivo",
         r"cual\s+es\s+el\s+inconveniente",
-        r"por\s+que\s+no\s+deposit[oó]",
-        r"por\s+que\s+no\s+hizo\s+el\s+pago",
-        r"motivo\s+del\s+atraso"
+        r"por\s+que\s+no\s+deposito",
+        r"por\s+que\s+no\s+hizo",
+        r"motivo\s+del\s+atraso",
+        r"cual\s+es\s+la\s+razon",
+        r"por\s+que\s+no\s+se\s+ha\s+hecho",
+        r"por\s+que\s+no\s+se\s+ha\s+realizado",
+        r"por\s+que\s+se\s+atraso",
+        r"por\s+que\s+no\s+cancelo",
+        r"porque\s+no\s+cancelo",
+        r"hay\s+algun\s+inconveniente",
+        r"que\s+paso",
+        r"hubo\s+algun\s+problema",
+        r"motivo\s+de\s+no\s+pago",
     ]
 
     sustento_pats = [
@@ -58,6 +79,10 @@ def seleccionar_accion_indagar_pago(texto: str, acciones: list, id_cartera: str,
         r"puede\s+pagar\s+ahora",
         r"podria\s+hacer\s+un\s+abono",
         r"con\s+cuanto\s+podria\s+cancelar",
+        r"usted\s+tiene\s+dinero",
+        r"tiene\s+posibilidad\s+de\s+pago",
+        r"con\s+cuanto\s+cuenta",
+        r"esta\s+en\s+posibilidad\s+de\s+pagar",
     ]
 
     if tipificaciones and tipificaciones.get("motivo"):
@@ -77,24 +102,81 @@ def seleccionar_accion_indagar_pago(texto: str, acciones: list, id_cartera: str,
 
     return mapa.get("NO SONDEA CORRECTAMENTE")
 
+
 def seleccionar_accion_asesorar(texto: str, acciones: list, id_cartera: str) -> dict:
     mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
 
-    escalonadas = sum(1 for p in [
-        "primero", "luego", "despues", "finalmente", "otra opcion", "otra alternativa",
-        "podemos empezar con", "podriamos comenzar por", "cancelacion en cuotas", "cancelacion total"
-    ] if p in texto) >= 2
+    escalonadas = (
+        sum(
+            1
+            for p in [
+                "primero",
+                "luego",
+                "despues",
+                "finalmente",
+                "otra opcion",
+                "otra alternativa",
+                "podemos empezar con",
+                "podriamos comenzar por",
+                "cancelacion en cuotas",
+                "cancelacion total",
+            ]
+            if p in texto
+        )
+        >= 2
+    )
 
-    beneficio = any(p in texto for p in [
-        "beneficio", "ventaja", "conveniencia", "descuento", "perjuicio", "problema futuro",
-        "mayores intereses", "liquidar la deuda", "cancelar la deuda", "eliminar la deuda",
-        "quita la deuda", "carta de nueva deuda", "regularizar"
-    ])
+    beneficio = any(
+        p in texto
+        for p in [
+            "beneficio",
+            "ventaja",
+            "conveniencia",
+            "descuento",
+            "perjuicio",
+            "problema futuro",
+            "mayores intereses",
+            "liquidar la deuda",
+            "cancelar la deuda",
+            "eliminar la deuda",
+            "quita la deuda",
+            "carta de nueva deuda",
+            "regularizar",
+            "evitar intereses",
+            "evitar perjuicios",
+            "en ventanilla",
+            "desde aplicativo",
+            "link de pago",
+            "carta de no adeudo",
+            "cliente sin deuda",
+            "actualizamos sus datos",
+            "recibir su carta",
+        ]
+    )
 
-    canal_pago = any(p in texto for p in [
-        "puede pagar en", "oficinas", "agente", "banco", "caja", "horario", "codigo",
-        "canal", "pago presencial", "numero de operacion", "aplicativo"
-    ])
+    canal_pago = any(
+        p in texto
+        for p in [
+            "puede pagar en",
+            "oficinas",
+            "agente",
+            "banco",
+            "caja",
+            "horario",
+            "codigo",
+            "canal",
+            "pago presencial",
+            "numero de operacion",
+            "aplicativo",
+            "evitar intereses",
+            "evitar perjuicios",
+            "en ventanilla",
+            "desde aplicativo",
+            "link de pago",
+            "mensaje whatsapp",
+            "foto del pago",
+        ]
+    )
 
     if escalonadas and beneficio and canal_pago:
         return mapa.get("SÍ CUMPLE")
@@ -107,9 +189,13 @@ def seleccionar_accion_asesorar(texto: str, acciones: list, id_cartera: str) -> 
 
     return mapa.get("BRINDA ALTERNATIVAS INCORRECTAS")
 
+
 # Función auxiliar para fallback
 def _accion_no_cumple(acciones: list) -> dict:
     for accion in acciones:
-        if accion["NOMBRE_ACCION_CRITERIO"].strip().upper() in ["NO CUMPLE", "NO SE EVIDENCIA"]:
+        if accion["NOMBRE_ACCION_CRITERIO"].strip().upper() in [
+            "NO CUMPLE",
+            "NO SE EVIDENCIA",
+        ]:
             return accion
     return acciones[0]  # fallback por si nada coincide

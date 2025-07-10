@@ -109,10 +109,20 @@ def evaluar_fase_scotiabank(
         ]
 
         for item_nombre in item_nombres_scotiabank:
+            logger.info(
+                "=================================================================="
+            )
+            logger.info(f"Nombre item: {item_nombre}")
+
             id_item = obtener_id_item(conn, item_nombre, id_cartera)
             if not id_item:
                 logger.error(f"❌ Ítem '{item_nombre}' no encontrado.")
                 continue
+
+            logger.info(
+                "=================================================================="
+            )
+            logger.info(f"ID item encontrado: {id_item}")
 
             criterios = obtener_criterios_por_item(conn, id_item)
             if not criterios:
@@ -124,36 +134,40 @@ def evaluar_fase_scotiabank(
             peso_obtenido = 0.0
 
             for criterio in criterios:
-                nombre_criterio = criterio["NOMBRE_CRITERIO"].strip().upper()
-                peso_criterio = float(criterio.get("PESO_CRITERIO", 0.0))
-                peso_total += peso_criterio
+                id_criterio = criterio["ID_CRITERIO"]
+                nombre_criterio = criterio["NOMBRE_CRITERIO"]
+                peso_criterio = float(criterio["PESO_CRITERIO"])
 
-                acciones = obtener_acciones_por_criterio(conn, criterio["ID_CRITERIO"])
+                logger.info(
+                    "=================================================================="
+                )
+                logger.info(f"Peso del criterio: {peso_criterio}")
 
+                acciones = obtener_acciones_por_criterio(conn, id_criterio)
                 accion_detectada = evaluar_criterio_scotiabank(
                     nombre_criterio, texto_asesor, acciones
                 )
 
-                if accion_detectada:
-                    peso_accion = float(
-                        accion_detectada.get("PESO_ACCION_CRITERIO", 0.0)
-                    )
-                    peso_obtenido += peso_accion * peso_criterio
-                    criterios_dict[nombre_criterio] = {
-                        "NOMBRE_ACCION_CRITERIO": accion_detectada[
-                            "NOMBRE_ACCION_CRITERIO"
-                        ],
-                        "PESO_ACCION_CRITERIO": peso_accion,
-                        "PESO_CRITERIO": peso_criterio,
-                    }
-                else:
-                    criterios_dict[nombre_criterio] = {
-                        "NOMBRE_ACCION_CRITERIO": "NO EVALUADO",
-                        "PESO_ACCION_CRITERIO": 0.0,
-                        "PESO_CRITERIO": peso_criterio,
-                    }
+                peso_accion = (
+                    float(accion_detectada.get("PESO_ACCION_CRITERIO", 0.0))
+                    if accion_detectada
+                    else 0.0
+                )
+                peso_obtenido += peso_accion
+                peso_total += peso_criterio
 
-            porcentaje = (peso_obtenido / peso_total) * 100 if peso_total else 0.0
+                criterios_dict[nombre_criterio] = {
+                    "NOMBRE_ACCION_CRITERIO": (
+                        accion_detectada.get("NOMBRE_ACCION_CRITERIO")
+                        if accion_detectada
+                        else "NO DETECTADO"
+                    ),
+                    "PESO_ACCION_CRITERIO": peso_accion,
+                    "PESO_CRITERIO": peso_criterio,
+                }
+
+            # ✅ Calcular cumplimiento y resultado por ítem
+            porcentaje = (peso_obtenido / peso_total) * 100 if peso_total > 0 else 0.0
             resultado = "Aprobado" if porcentaje >= 60 else "Observado"
 
             resultados_por_item[item_nombre] = {
@@ -162,11 +176,15 @@ def evaluar_fase_scotiabank(
                 "criterios": criterios_dict,
             }
 
-        # Resumen global
+        # ✅ Resumen global
         total_cumplimiento = sum(
-            item["cumplimiento"] for item in resultados_por_item.values()
+            item["cumplimiento"]
+            for item in resultados_por_item.values()
+            if item != "resumen_final"
         )
-        total_items = len(resultados_por_item)
+        total_items = len(
+            [item for item in resultados_por_item.values() if item != "resumen_final"]
+        )
 
         cumplimiento_total = (
             round(total_cumplimiento / total_items, 2) if total_items else 0.0
