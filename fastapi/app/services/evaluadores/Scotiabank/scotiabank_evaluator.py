@@ -72,6 +72,8 @@ def evaluar_criterio_scotiabank(
 
 
 def obtener_resultado_ponderado(score: float) -> str:
+    logger.info("================ OBTENIENDO PONDERADO ================")
+
     """Define el resultado de la evaluación basada en el score ponderado."""
     if score >= 0.75:
         return "Excelente"
@@ -86,6 +88,10 @@ def obtener_resultado_ponderado(score: float) -> str:
 def evaluar_fase_scotiabank(
     transcripcion: list, id_cartera: str, tipificaciones: dict = None
 ) -> dict:
+    logger.info(
+        "========================== EVALUANDO SCOTIABANK =========================="
+    )
+
     segmentos_asesor = [s for s in transcripcion if s.get("speaker") == "000"]
 
     if not segmentos_asesor:
@@ -109,9 +115,7 @@ def evaluar_fase_scotiabank(
         ]
 
         for item_nombre in item_nombres_scotiabank:
-            logger.info(
-                "=================================================================="
-            )
+            logger.info("============== NOMBRE ITEM ==============")
             logger.info(f"Nombre item: {item_nombre}")
 
             id_item = obtener_id_item(conn, item_nombre, id_cartera)
@@ -119,9 +123,7 @@ def evaluar_fase_scotiabank(
                 logger.error(f"❌ Ítem '{item_nombre}' no encontrado.")
                 continue
 
-            logger.info(
-                "=================================================================="
-            )
+            logger.info("============== ID ITEM ==============")
             logger.info(f"ID item encontrado: {id_item}")
 
             criterios = obtener_criterios_por_item(conn, id_item)
@@ -138,9 +140,7 @@ def evaluar_fase_scotiabank(
                 nombre_criterio = criterio["NOMBRE_CRITERIO"]
                 peso_criterio = float(criterio["PESO_CRITERIO"])
 
-                logger.info(
-                    "=================================================================="
-                )
+                logger.info("============== PESO CRITERIO ==============")
                 logger.info(f"Peso del criterio: {peso_criterio}")
 
                 acciones = obtener_acciones_por_criterio(conn, id_criterio)
@@ -166,7 +166,6 @@ def evaluar_fase_scotiabank(
                     "PESO_CRITERIO": peso_criterio,
                 }
 
-            # ✅ Calcular cumplimiento y resultado por ítem
             porcentaje = (peso_obtenido / peso_total) * 100 if peso_total > 0 else 0.0
             resultado = "Aprobado" if porcentaje >= 60 else "Observado"
 
@@ -176,7 +175,6 @@ def evaluar_fase_scotiabank(
                 "criterios": criterios_dict,
             }
 
-        # ✅ Resumen global
         total_cumplimiento = sum(
             item["cumplimiento"]
             for item in resultados_por_item.values()

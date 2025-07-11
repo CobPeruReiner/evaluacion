@@ -5,10 +5,11 @@ from pydub import AudioSegment
 
 logger = logging.getLogger(__name__)
 
+
 def convertir_a_wav_mono_16k(ruta_origen: str, carpeta_destino: str) -> str:
     """
     Convierte un archivo de audio (MP3, WAV, etc.) a WAV, mono y 16kHz.
-    
+
     Args:
         ruta_origen (str): Ruta del archivo de audio original.
         carpeta_destino (str): Carpeta donde guardar el archivo convertido.
@@ -16,6 +17,10 @@ def convertir_a_wav_mono_16k(ruta_origen: str, carpeta_destino: str) -> str:
     Returns:
         str: Ruta del nuevo archivo convertido.
     """
+    logger.info(
+        "============================== CONVIRTIENDO AUDIO =============================="
+    )
+
     try:
         audio = AudioSegment.from_file(ruta_origen)
         audio = audio.set_channels(1).set_frame_rate(16000)

@@ -14,6 +14,11 @@ logger = logging.getLogger(__name__)
 def evaluar_llamada(
     transcripcion: list, id_cartera: str, tipificaciones: dict = None
 ) -> dict:
+
+    logger.info(
+        "===================================== EVALUANDO LLAMADA ====================================="
+    )
+
     logger.info("Cartera a evaluar: %s", id_cartera)
 
     # Filtramos solo segmentos del asesor (rol "000")

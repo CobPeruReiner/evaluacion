@@ -9,7 +9,8 @@ const { obtenerConexionPorColor } = require("../utils/conexiones-vicidial");
 const { obtenerColorPorIdCartera } = require("../utils/obtener-color");
 
 const servidorPython = process.env.PATH_SERVAPLICACIONES || "localhost";
-// const servidorPython = "localhost";
+// Entorno
+const esProduccion = process.env.NODE_ENV === "production";
 
 // ======================== ITEMS ========================
 const getAllItems = async (_req, res) => {
@@ -1100,7 +1101,12 @@ const processZip = async (req, res) => {
     console.log("✅ Respuesta recibida");
 
     // const outputDir = path.join(__dirname, "../audios");
-    const outputDir = "/app/server/audios";
+    // const outputDir = "/app/server/audios";
+
+    // Audios
+    const outputDir = esProduccion
+      ? "/app/server/audios"
+      : path.join(__dirname, "../audios");
 
     if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
 
@@ -1147,7 +1153,11 @@ const processZip = async (req, res) => {
 
     // === GUARDAR ===
     // const carpetaFecha = path.resolve(__dirname, "../resultados", fecha);
-    const carpetaFecha = path.join("/app/server/resultados", fecha);
+    // const carpetaFecha = path.join("/app/server/resultados", fecha);
+
+    const carpetaFecha = esProduccion
+      ? path.join("/app/server/resultados", fecha)
+      : path.resolve(__dirname, "../resultados", fecha);
 
     if (!fs.existsSync(carpetaFecha)) {
       fs.mkdirSync(carpetaFecha, { recursive: true });
@@ -1201,7 +1211,11 @@ const obtenerResultadosPorFechaCartera = (req, res) => {
   }
 
   // const carpetaBase = path.resolve(__dirname, "../resultados");
-  const carpetaBase = "/app/server/resultados";
+  // const carpetaBase = "/app/server/resultados";
+
+  const carpetaBase = esProduccion
+    ? path.join("/app/server/resultados")
+    : path.resolve(__dirname, "../resultados");
 
   console.log("Carpta Base: ", carpetaBase);
 
@@ -1302,7 +1316,11 @@ const obtenerDetalleEvaluacion = async (req, res) => {
   try {
     // Falta leer el archivo y enviarlo
     // const carpetaBase = path.resolve(__dirname, "../resultados");
-    const carpetaBase = "/app/server/resultados";
+    // const carpetaBase = "/app/server/resultados";
+
+    const carpetaBase = esProduccion
+      ? "/app/server/resultados"
+      : path.resolve(__dirname, "../resultados");
 
     // Buscar el archivo en cualquier subcarpeta (las carpetas son fechas)
     let resultadoEncontrado = null;

@@ -21,6 +21,11 @@ logger = logging.getLogger(__name__)
 
 
 async def procesar_archivo(file: UploadFile, version_roles: str, id_cartera: str):
+
+    logger.info(
+        "============================== PROCESANDO ARCHIVO =============================="
+    )
+
     temp_dir = f"temp_{uuid.uuid4().hex[:6]}"
     os.makedirs(temp_dir, exist_ok=True)
     zip_path = os.path.join(temp_dir, file.filename)

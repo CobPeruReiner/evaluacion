@@ -2,6 +2,8 @@ const express = require("express");
 var cors = require("cors");
 const path = require("path");
 
+require("dotenv").config({ path: "./config.env" });
+
 const { usersRouter } = require("./routes/users.routes");
 const { fichasRouter } = require("./routes/fichas.routes");
 const { baseRouter } = require("./routes/base.routes");
@@ -15,8 +17,16 @@ const app = express();
 app.use(cors());
 console.log(__dirname);
 
+const esProduccion = process.env.NODE_ENV === "production";
+
+const rutaAudios = esProduccion
+  ? "/app/server/audios"
+  : path.join(__dirname, "./audios");
+
 // app.use("/audios", express.static(path.join(__dirname, "./audios")));
-app.use("/audios", express.static("/app/server/audios"));
+// app.use("/audios", express.static("/app/server/audios"));
+
+app.use("/audios", express.static(rutaAudios));
 
 app.use(express.static(path.join(__dirname, "public")));
 

@@ -10,7 +10,7 @@ services:
       - ./client/.env.production
     command: npm run build
     volumes:
-      - client-build:/app/build # Comparte la carpeta build como un volumen
+      - client-build:/app/build
     depends_on:
       - server
 
@@ -21,15 +21,14 @@ services:
     ports:
       - "4001:4001"
     env_file:
-      # - ./server/config.env
       - ./server/.env.production
     volumes:
-      - client-build:/app/public # Usa el volumen compartido para la carpeta public
+      - client-build:/app/public
       - ./server/resultados:/app/server/resultados
       - ./server/audios:/app/server/audios
     command: ["node", "server.js"]
 
-  fastapi_backend: # Tu servicio para el servidor de Python (FastAPI)
+  fastapi_backend:
     build:
       context: ./fastapi
       args:
