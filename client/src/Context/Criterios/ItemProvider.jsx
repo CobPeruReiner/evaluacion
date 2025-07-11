@@ -1611,8 +1611,11 @@ export const CriteriosProvider = ({ children }) => {
   // Detalle Evaluacion
   const [loadingEvaluacionDetail, setLoadingEvaluacionDetail] = useState(false);
   const [evaluacionDetail, setEvaluacionDetail] = useState([]);
+
+  const calificacionRef = useRef(null);
   const [expandedAudio, setExpandedAudio] = useState(null);
   const [showDetail, setShowDetail] = useState({});
+  const [expandedBloques, setExpandedBloques] = useState({});
 
   // PAGINADO
   const [audiosPaginated, setAudiosPaginated] = useState([]);
@@ -1931,7 +1934,20 @@ export const CriteriosProvider = ({ children }) => {
   const resetAuditoriaUIState = () => {
     setExpandedAudio(null);
     setShowDetail({});
+    setExpandedBloques({});
   };
+
+  const toggleBloque = (audioIndex, bloqueKey) => {
+    setExpandedBloques((prev) => ({
+      ...prev,
+      [audioIndex]: {
+        ...prev[audioIndex],
+        [bloqueKey]: !prev[audioIndex]?.[bloqueKey],
+      },
+    }));
+  };
+
+  useOutsideClick(calificacionRef, resetAuditoriaUIState);
 
   // =============== PAGINACION AUDIOS EVALUADOS ===============
 
@@ -2597,6 +2613,9 @@ export const CriteriosProvider = ({ children }) => {
         isPlaying,
         audioEnReproduccion,
         reproducirAudio,
+        calificacionRef,
+        expandedBloques,
+        toggleBloque,
       }}
     >
       {children}

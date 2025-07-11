@@ -42,6 +42,11 @@ def evaluar_llamada(
             f"⚙️ Iniciando evaluación general para cartera {id_cartera} (Apertura, Indagación)..."
         )
 
+        logger.info(
+            "============================= TEXTO ASESOR ============================="
+        )
+        logger.info(f"Texto asesor: {segmentos_asesor}")
+
         resultados["apertura"] = evaluar_apertura(segmentos_asesor, id_cartera)
         resultados["indagacion"] = evaluar_indagacion(
             segmentos_asesor, id_cartera, tipificaciones

@@ -36,6 +36,15 @@ def seleccionar_accion_amabilidad(texto: str, acciones: list, id_cartera: str) -
 
     alteracion = ["calmese", "no me grite", "ya le dije", "no me interrumpa"]
 
+    s_sarcasmo = any(p in texto for p in sarcasmo)
+    s_adjetivos = any(p in texto for p in adjetivos)
+    s_alteracion = any(p in texto for p in alteracion)
+    s_negativas = any(p in texto for p in palabras_negativas)
+
+    logger.info(
+        f"[AMABILIDAD] sarcasmo={s_sarcasmo}, adjetivos={s_adjetivos}, alteracion={s_alteracion}, no_empatico={s_negativas}"
+    )
+
     if any(p in texto for p in sarcasmo):
         return mapa.get("RESPONDE CON SARCASMO")
     if any(p in texto for p in adjetivos):
@@ -71,6 +80,15 @@ def seleccionar_accion_comunicacion(
         "lo verificamos",
     ]
 
+    s_tuteo = any(p in texto for p in tuteo)
+    s_interrumpe = any(p in texto for p in interrumpe)
+    s_inseguridad = any(p in texto for p in inseguridad)
+    s_muletillas = any(p in texto for p in muletillas + tecnicismos)
+
+    logger.info(
+        f"[COMUNICACION] tuteo={s_tuteo}, interrumpe={s_interrumpe}, inseguridad={s_inseguridad}, muletillas/tecnicismos={s_muletillas}"
+    )
+
     if any(p in texto for p in tuteo):
         return mapa.get("TUTEA AL CLIENTE")
     if any(p in texto for p in interrumpe):
@@ -91,6 +109,11 @@ def seleccionar_accion_escucha(texto: str, acciones: list, id_cartera: str) -> d
 
     omite = ["como le dije", "eso ya lo explique", "eso no importa", "ya le respondi"]
     repregunta = ["que dijo", "como", "me repite", "no entendi"]
+
+    s_omite = any(p in texto for p in omite)
+    s_repregunta = any(p in texto for p in repregunta)
+
+    logger.info(f"[ESCUCHA] omite={s_omite}, repregunta={s_repregunta}")
 
     if any(p in texto for p in omite):
         return mapa.get("OMITE INFORMACIÓN IMPORTANTE")

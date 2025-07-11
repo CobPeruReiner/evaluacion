@@ -1,6 +1,6 @@
 export const Transcripcion = ({ item }) => {
   return (
-    <div className="space-y-2">
+    <div className="relative flex flex-col gap-4 transition-all duration-300">
       {item?.transcripcion.map((seg, i) => {
         const esAsesor = seg.speaker === "000" || seg.speaker === "002";
         const nombre = esAsesor

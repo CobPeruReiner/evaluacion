@@ -1,62 +1,109 @@
+import { useContext } from "react";
+import { CriteriosContext } from "../../../../../Context/Criterios/ItemContext";
+
 const getResultadoColor = (resultado) => {
   switch (resultado) {
     case "Excelente":
     case "Bueno":
-      return "text-green-600";
+      return "bg-green-100 text-green-700";
+    case "Aprobado":
+      return "bg-green-100 text-green-700";
     case "Deficiente/Trabajable":
-      return "text-yellow-600";
+      return "bg-yellow-100 text-yellow-700";
     case "Deficiente":
     default:
-      return "text-red-600";
+      return "bg-red-100 text-red-700";
   }
 };
 
-export const RenderScotiabank = ({ item }) => {
-  const evaluacion = item?.evaluacion?.scotiabank_evaluacion;
+export const RenderScotiabank = ({ item, itemIndex }) => {
+  const { expandedBloques, toggleBloque } = useContext(CriteriosContext);
 
+  const evaluacion = item?.evaluacion?.scotiabank_evaluacion;
   if (!evaluacion) return null;
 
+  const { resumen_final, ...bloques } = evaluacion;
+
   return (
-    <div className="p-4 bg-white border rounded-lg shadow-sm space-y-6">
-      <h4 className="font-semibold text-lg text-red-700 flex items-center">
+    <div className="relative flex flex-col gap-5 p-6 bg-white border rounded-2xl shadow-md transition-all duration-300">
+      <h4 className="font-bold text-xl text-red-700 flex items-center gap-2">
         🏦 Evaluación Scotiabank
       </h4>
 
-      {Object.entries(evaluacion).map(([itemNombre, detalle], idx) => (
-        <div key={idx} className="bg-gray-50 border rounded p-3 space-y-2">
-          <h5 className="text-md font-bold text-blue-700">{itemNombre}</h5>
+      {Object.entries(bloques).map(([itemNombre, detalle], idx) => {
+        const isOpen = expandedBloques[itemIndex]?.[itemNombre];
+        return (
+          <div
+            key={idx}
+            className="border border-gray-200 rounded-xl shadow-sm"
+          >
+            {/* Header */}
+            <button
+              type="button"
+              onClick={() => toggleBloque(itemIndex, itemNombre)}
+              className="w-full px-5 py-3 flex justify-between items-center bg-white hover:bg-gray-100 rounded-t-xl"
+            >
+              <h5 className="text-blue-700 font-semibold text-md uppercase tracking-wide">
+                {itemNombre}
+              </h5>
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-semibold ${getResultadoColor(
+                  detalle.resultado
+                )}`}
+              >
+                {detalle.resultado}
+              </span>
+            </button>
 
-          <p>
-            <strong>Resultado:</strong>{" "}
-            <span className={getResultadoColor(detalle.resultado)}>
-              {detalle.resultado}
+            {/* Contenido del bloque */}
+            <div
+              className={`overflow-hidden transition-all duration-300 ${
+                isOpen ? "max-h-screen p-5 space-y-4 bg-white" : "max-h-0"
+              }`}
+            >
+              <div className="text-sm text-gray-500">
+                <strong className="text-gray-700">Cumplimiento:</strong>{" "}
+                {detalle.cumplimiento?.toFixed(2)}%
+              </div>
+
+              <div className="space-y-2">
+                {Object.entries(detalle.criterios || {}).map(
+                  ([criterio, accion], i) => (
+                    <div
+                      key={i}
+                      className="flex justify-between items-center border border-gray-100 bg-gray-50 rounded-md px-3 py-2"
+                    >
+                      <span className="text-gray-700 text-sm">{criterio}</span>
+                      <span className="text-sm font-semibold text-gray-800">
+                        {accion.NOMBRE_ACCION_CRITERIO}
+                        <span className="text-xs text-gray-400 ml-2">
+                          ({accion.PESO_ACCION_CRITERIO})
+                        </span>
+                      </span>
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      {resumen_final && (
+        <div className="bg-gray-50 border-t pt-4">
+          <h5 className="font-bold text-md text-gray-700">📊 Resumen Final</h5>
+          <p className="text-sm text-gray-600">
+            <strong>Cumplimiento Total:</strong>{" "}
+            {resumen_final.cumplimiento_total?.toFixed(2)}%
+          </p>
+          <p className="text-sm text-gray-600">
+            <strong>Estado Global:</strong>{" "}
+            <span className={getResultadoColor(resumen_final.estado_global)}>
+              {resumen_final.estado_global}
             </span>
           </p>
-
-          <p>
-            <strong>Cumplimiento:</strong> {detalle.cumplimiento?.toFixed(2)}%
-          </p>
-
-          <div className="pt-2 space-y-1">
-            {Object.entries(detalle.criterios || {}).map(
-              ([criterio, accion], i) => (
-                <div
-                  key={i}
-                  className="flex justify-between py-1 border-b last:border-b-0"
-                >
-                  <span className="text-gray-600">{criterio}</span>
-                  <span className="text-right font-medium">
-                    {accion.NOMBRE_ACCION_CRITERIO}
-                    <span className="text-xs text-gray-400 ml-2">
-                      {accion.PESO_ACCION_CRITERIO}
-                    </span>
-                  </span>
-                </div>
-              )
-            )}
-          </div>
         </div>
-      ))}
+      )}
     </div>
   );
 };

@@ -8,9 +8,10 @@ def obtener_id_item(conn, nombre_item: str, id_cartera: str) -> int:
     try:
         cursor.execute(
             """
-            SELECT *
+            SELECT
+                ID_ITEM
             FROM ITEM 
-            WHERE NOMBRE_ITEM = %s AND ID_CARTERA = %s
+            WHERE NOMBRE_ITEM = %s AND ID_CARTERA = %s AND ID_ESTADO = 1
         """,
             (nombre_item, id_cartera),
         )
@@ -25,9 +26,13 @@ def obtener_criterios_por_item(conn, id_item: int) -> list:
     try:
         cursor.execute(
             """
-            SELECT *
+            SELECT
+                ID_CRITERIO,
+                NOMBRE_CRITERIO,
+                PESO_CRITERIO,
+                ID_ITEM
             FROM CRITERIO 
-            WHERE ID_ITEM = %s
+            WHERE ID_ITEM = %s AND ID_ESTADO = 1
         """,
             (id_item,),
         )
@@ -41,9 +46,14 @@ def obtener_acciones_por_criterio(conn, id_criterio: int) -> list:
     try:
         cursor.execute(
             """
-            SELECT *
+            SELECT
+                ID_ACCION_CRITERIO,
+                NOMBRE_ACCION_CRITERIO,
+                PESO_ACCION_CRITERIO,
+                ID_CRITERIO,
+                ESTADO_ACCION
             FROM ACCION_CRITERIO 
-            WHERE ID_CRITERIO = %s
+            WHERE ID_CRITERIO = %s AND ESTADO_ACCION = 1
         """,
             (id_criterio,),
         )

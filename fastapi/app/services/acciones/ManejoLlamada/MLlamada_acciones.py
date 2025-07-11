@@ -32,6 +32,10 @@ def seleccionar_accion_perseverancia(
         ]
     )
 
+    logger.info(
+        f"[PERSEVERANCIA] objeciones_rebatidas={objeciones_rebatidas}, argumentos_negativos={uso_negativo}"
+    )
+
     if objeciones_rebatidas >= 3 and not uso_negativo:
         return mapa.get("SÍ CUMPLE")
     if uso_negativo:
@@ -71,6 +75,10 @@ def seleccionar_accion_compromiso(texto: str, acciones: list, id_cartera: str) -
     ]
 
     usa_negativo = any(p in texto for p in frases_negativas)
+
+    logger.info(
+        f"[COMPROMISO] urgencia_correcta={urgencia_correcta}, argumentos_negativos={usa_negativo}"
+    )
 
     if urgencia_correcta and not usa_negativo:
         return mapa.get("SÍ CUMPLE")

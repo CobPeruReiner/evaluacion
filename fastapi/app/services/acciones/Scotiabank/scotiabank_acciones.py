@@ -139,6 +139,16 @@ def seleccionar_accion_gestion_objeciones(texto: str, acciones: list) -> dict:
         "consideremos",
         "podemos ajustar",
         "qué le parece si",
+        "entiendo lo que dice",
+        "comprendo su situacion",
+        "dejeme explicarle",
+        "se que es complicado",
+        "vamos a revisar juntos",
+        "permitame decirle",
+        "podemos conversarlo",
+        "miremos opciones",
+        "podemos verlo",
+        "analicemos juntos",
     ]
     return _seleccionar_accion(texto, acciones, palabras_clave)
 

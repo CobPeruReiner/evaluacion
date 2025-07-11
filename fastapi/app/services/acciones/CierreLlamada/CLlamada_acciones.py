@@ -44,6 +44,14 @@ def seleccionar_accion_reafirmar(texto: str, acciones: list, id_cartera: str) ->
         "según cómo vaya",
     ]
 
+    cumple = any(f in texto for f in frases_confirmacion)
+    incompleto = any(f in texto for f in frases_incompletas)
+    incorrecto = any(f in texto for f in frases_incorrectas)
+
+    logger.info(
+        f"[REAFIRMAR] cumple={cumple}, incompleto={incompleto}, incorrecto={incorrecto}"
+    )
+
     if any(f in texto for f in frases_confirmacion):
         return mapa.get("SI CUMPLE")
     elif any(f in texto for f in frases_incompletas):
@@ -84,6 +92,11 @@ def seleccionar_accion_despedida(texto: str, acciones: list, id_cartera: str) ->
         "ya está bien",
         "entonces quedamos así",
     ]
+
+    cumple = any(p in texto for p in despedidas_validas)
+    incompleta = any(p in texto for p in despedidas_incompletas)
+
+    logger.info(f"[DESPEDIDA] cumple={cumple}, incompleta={incompleta}")
 
     if any(p in texto for p in despedidas_validas):
         return mapa.get("SI CUMPLE")

@@ -22,6 +22,10 @@ def seleccionar_accion_info_producto(
     producto_encontrado = detectar_producto(texto)
     fecha_encontrada = detectar_fecha_pago(texto)
 
+    logger.info(
+        f"[INFO_PRODUCTO] producto={producto_encontrado}, monto={monto_encontrado}, dias={dias_encontrado}, fecha={fecha_encontrada}"
+    )
+
     if tipificaciones and tipificaciones.get("seguimiento"):
         return mapa.get("NO APLICA")
 
@@ -90,6 +94,10 @@ def seleccionar_accion_indagar_pago(
 
     enc_motivo = any(re.search(p, texto) for p in motivo_pats)
     enc_sustento = any(re.search(p, texto) for p in sustento_pats)
+
+    logger.info(
+        f"[INDAGAR_PAGO] motivo={enc_motivo}, sustento={enc_sustento}, castigo={castigo}"
+    )
 
     if enc_motivo and enc_sustento:
         return mapa.get("SÍ CUMPLE")
@@ -176,6 +184,10 @@ def seleccionar_accion_asesorar(texto: str, acciones: list, id_cartera: str) -> 
             "mensaje whatsapp",
             "foto del pago",
         ]
+    )
+
+    logger.info(
+        f"[ASESORAR] escalonadas={escalonadas}, beneficio={beneficio}, canal_pago={canal_pago}"
     )
 
     if escalonadas and beneficio and canal_pago:

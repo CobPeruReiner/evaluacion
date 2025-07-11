@@ -26,7 +26,7 @@ export const AuditoriaDetail = () => {
 
   const {
     loadingEvaluacionDetail,
-    evaluacionDetail,
+    calificacionRef,
     audiosPaginated,
     obtenerDetalleEvaluacion,
     expandedAudio,
@@ -95,6 +95,7 @@ export const AuditoriaDetail = () => {
               {/* {audiosPaginated?.exitosos?.map((item, index) => ( */}
               {audiosPaginated?.map((item, index) => (
                 <div
+                  ref={calificacionRef}
                   key={index}
                   className="border border-gray-200 shadow rounded-lg overflow-hidden transition-all duration-300"
                 >
@@ -138,13 +139,13 @@ export const AuditoriaDetail = () => {
                         </div>
 
                         {showDetail[index] && (
-                          <div className="mt-6 space-y-6">
+                          <div className="relative flex flex-col gap-5 transition-all duration-300">
                             {/* Reproductor de audio */}
                             <Audio item={item} API_URL={API_URL} />
 
                             {/* RENDER CALIFICACION */}
                             {item.evaluacion?.scotiabank_evaluacion ? (
-                              <RenderScotiabank item={item} />
+                              <RenderScotiabank item={item} itemIndex={index} />
                             ) : (
                               <RenderComun item={item} />
                             )}
