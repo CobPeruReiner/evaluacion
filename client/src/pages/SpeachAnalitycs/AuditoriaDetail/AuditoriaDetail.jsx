@@ -95,7 +95,7 @@ export const AuditoriaDetail = () => {
               {/* {audiosPaginated?.exitosos?.map((item, index) => ( */}
               {audiosPaginated?.map((item, index) => (
                 <div
-                  ref={calificacionRef}
+                  // ref={calificacionRef}
                   key={index}
                   className="border border-gray-200 shadow rounded-lg overflow-hidden transition-all duration-300"
                 >
@@ -115,6 +115,7 @@ export const AuditoriaDetail = () => {
 
                   {/* Cuerpo del acordeón */}
                   <div
+                    // ref={calificacionRef}
                     className={`flex flex-col gap-4 transition-all duration-500 ease-in-out ${
                       expandedAudio === index
                         ? "max-h-screen p-6 bg-gray-50 overflow-y-auto"
@@ -128,7 +129,10 @@ export const AuditoriaDetail = () => {
                         <div className="relative">
                           <button
                             type="button"
-                            onClick={() => toggleDetail(index)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleDetail(index);
+                            }}
                             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-full hover:bg-blue-200 transition-all duration-300"
                           >
                             <Icon.View size={16} />

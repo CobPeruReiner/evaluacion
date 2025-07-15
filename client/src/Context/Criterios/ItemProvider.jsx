@@ -1920,11 +1920,15 @@ export const CriteriosProvider = ({ children }) => {
   };
 
   const toggleAudio = (index) => {
+    console.log("Abriendo toggle audio");
+
     setExpandedAudio(expandedAudio === index ? null : index);
     setShowDetail({});
   };
 
   const toggleDetail = (index) => {
+    console.log("Abriendo toggle detail");
+
     setShowDetail((prev) => ({
       ...prev,
       [index]: !prev[index],
