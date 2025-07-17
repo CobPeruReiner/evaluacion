@@ -102,13 +102,13 @@ export const AuditoriaDetail = () => {
                   <button
                     type="button"
                     onClick={() => toggleAudio(index)}
-                    className="flex justify-between items-center w-full px-6 py-4 bg-white hover:bg-gray-100 font-semibold text-gray-800 text-lg transition-all duration-300"
+                    className="flex justify-between items-center w-full px-6 py-4 bg-white hover:bg-gray-100 font-semibold text-xs text-gray-800 transition-all duration-300"
                   >
                     <span className="truncate">{item.archivo}</span>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-gray-600">
                       📞 Teléfono: {item?.metadatos?.telefono}
                     </span>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-gray-600">
                       ⏱️ Duración de la Llamada:{" "}
                       {duraciones[index] || "Cargando..."}
                     </span>
