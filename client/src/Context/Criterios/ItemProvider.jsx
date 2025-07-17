@@ -1632,6 +1632,15 @@ export const CriteriosProvider = ({ children }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioEnReproduccion, setAudioEnReproduccion] = useState(null);
 
+  const [duraciones, setDuraciones] = useState({});
+
+  const setDuracionAudio = (index, duracion) => {
+    setDuraciones((prev) => ({
+      ...prev,
+      [index]: duracion,
+    }));
+  };
+
   const reproducirAudio = (archivo, index) => {
     // Si ya está sonando ese mismo audio, pausarlo
     if (audioEnReproduccion === index && isPlaying) {
@@ -1841,16 +1850,6 @@ export const CriteriosProvider = ({ children }) => {
     });
   };
 
-  // const handleSelectFechas = () => setSFechasActive(!sFechasActive);
-  // useOutsideClick(sFechasRef, () => setSFechasActive(false));
-
-  // Seleccionar fechas
-  // const seleccionarFechas = (fechas) => {
-  //   setInputFechasActive(fechas);
-  //   setFormAuditoriaAudios({ ...formAuditoriaAudios, fechaEvaluacion: fechas });
-  //   setSFechasActive(false);
-  // };
-
   // Obtener resultados por rango de fecha y cartera
   const obtenerResultadosAuditoria = async () => {
     try {
@@ -1920,7 +1919,7 @@ export const CriteriosProvider = ({ children }) => {
   };
 
   const toggleAudio = (index) => {
-    console.log("Abriendo toggle audio");
+    // console.log("Abriendo toggle audio");
 
     setExpandedAudio(expandedAudio === index ? null : index);
     setShowDetail({});
@@ -2620,6 +2619,8 @@ export const CriteriosProvider = ({ children }) => {
         calificacionRef,
         expandedBloques,
         toggleBloque,
+        duraciones,
+        setDuracionAudio,
       }}
     >
       {children}

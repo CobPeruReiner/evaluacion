@@ -36,6 +36,7 @@ export const AuditoriaDetail = () => {
     resetAuditoriaUIState,
     searchTelefono,
     handleInputSearchTelefono,
+    duraciones,
   } = useContext(CriteriosContext);
 
   useEffect(() => {
@@ -92,10 +93,8 @@ export const AuditoriaDetail = () => {
               <h2 className="text-xl font-bold text-gray-800">
                 🎧 Audios Exitosos
               </h2>
-              {/* {audiosPaginated?.exitosos?.map((item, index) => ( */}
               {audiosPaginated?.map((item, index) => (
                 <div
-                  // ref={calificacionRef}
                   key={index}
                   className="border border-gray-200 shadow rounded-lg overflow-hidden transition-all duration-300"
                 >
@@ -106,6 +105,14 @@ export const AuditoriaDetail = () => {
                     className="flex justify-between items-center w-full px-6 py-4 bg-white hover:bg-gray-100 font-semibold text-gray-800 text-lg transition-all duration-300"
                   >
                     <span className="truncate">{item.archivo}</span>
+                    <span className="text-sm text-gray-600">
+                      📞 Teléfono: {item?.metadatos?.telefono}
+                    </span>
+                    <span className="text-sm text-gray-600">
+                      ⏱️ Duración de la Llamada:{" "}
+                      {duraciones[index] || "Cargando..."}
+                    </span>
+
                     {expandedAudio === index ? (
                       <Icon.Up size={20} />
                     ) : (
@@ -115,7 +122,6 @@ export const AuditoriaDetail = () => {
 
                   {/* Cuerpo del acordeón */}
                   <div
-                    // ref={calificacionRef}
                     className={`flex flex-col gap-4 transition-all duration-500 ease-in-out ${
                       expandedAudio === index
                         ? "max-h-screen p-6 bg-gray-50 overflow-y-auto"
@@ -145,7 +151,11 @@ export const AuditoriaDetail = () => {
                         {showDetail[index] && (
                           <div className="relative flex flex-col gap-5 transition-all duration-300">
                             {/* Reproductor de audio */}
-                            <Audio item={item} API_URL={API_URL} />
+                            <Audio
+                              item={item}
+                              API_URL={API_URL}
+                              index={index}
+                            />
 
                             {/* RENDER CALIFICACION */}
                             {item.evaluacion?.scotiabank_evaluacion ? (
