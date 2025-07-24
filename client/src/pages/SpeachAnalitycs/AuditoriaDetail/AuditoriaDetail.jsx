@@ -106,11 +106,14 @@ export const AuditoriaDetail = () => {
                   >
                     <span className="truncate">{item.archivo}</span>
                     <span className="text-gray-600">
-                      📞 Teléfono: {item?.metadatos?.telefono}
+                      📞 Teléfono: {item?.metadatos?.telefono || "N/A"}
                     </span>
                     <span className="text-gray-600">
                       ⏱️ Duración de la Llamada:{" "}
                       {duraciones[index] || "Cargando..."}
+                    </span>
+                    <span className="text-gray-600">
+                      🧑‍💻 Nombre Asesor: {item?.metadatos?.full_name || "N/A"}
                     </span>
 
                     {expandedAudio === index ? (
@@ -124,55 +127,49 @@ export const AuditoriaDetail = () => {
                   <div
                     className={`flex flex-col gap-4 transition-all duration-500 ease-in-out ${
                       expandedAudio === index
-                        ? "max-h-screen p-6 bg-gray-50 overflow-y-auto"
-                        : "max-h-0 overflow-hidden"
+                        ? "max-h-screen p-6 bg-gray-50 overflow-y-auto visible"
+                        : "max-h-0 overflow-hidden invisible"
                     }`}
                   >
-                    {expandedAudio === index && (
-                      <>
-                        <Metadatos item={item} />
+                    <Metadatos item={item} />
 
-                        <div className="relative">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleDetail(index);
-                            }}
-                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-full hover:bg-blue-200 transition-all duration-300"
-                          >
-                            <Icon.View size={16} />
-                            {showDetail[index]
-                              ? "Ocultar Detalle"
-                              : "Ver Detalle"}
-                          </button>
-                        </div>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleDetail(index);
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-full hover:bg-blue-200 transition-all duration-300"
+                      >
+                        <Icon.View size={16} />
+                        {showDetail[index] ? "Ocultar Detalle" : "Ver Detalle"}
+                      </button>
+                    </div>
 
-                        {showDetail[index] && (
-                          <div className="relative flex flex-col gap-5 transition-all duration-300">
-                            {/* Reproductor de audio */}
-                            <Audio
-                              item={item}
-                              API_URL={API_URL}
-                              index={index}
-                            />
+                    <div
+                      className={`relative flex flex-col gap-5 transition-all duration-300 ${
+                        showDetail[index]
+                          ? "opacity-100 max-h-screen"
+                          : "opacity-0 max-h-0"
+                      }`}
+                    >
+                      {/* Reproductor de audio */}
+                      <Audio item={item} API_URL={API_URL} index={index} />
 
-                            {/* RENDER CALIFICACION */}
-                            {item.evaluacion?.scotiabank_evaluacion ? (
-                              <RenderScotiabank item={item} itemIndex={index} />
-                            ) : (
-                              <RenderComun item={item} />
-                            )}
+                      {/* RENDER CALIFICACION */}
+                      {item.evaluacion?.scotiabank_evaluacion ? (
+                        <RenderScotiabank item={item} itemIndex={index} />
+                      ) : (
+                        <RenderComun item={item} itemIndex={index} />
+                      )}
 
-                            {/* Diarizacion */}
-                            <TranscripcionError item={item} />
+                      {/* Diarizacion */}
+                      <TranscripcionError item={item} />
 
-                            {/* Transcripción */}
-                            <Transcripcion item={item} />
-                          </div>
-                        )}
-                      </>
-                    )}
+                      {/* Transcripción */}
+                      <Transcripcion item={item} />
+                    </div>
                   </div>
                 </div>
               ))}

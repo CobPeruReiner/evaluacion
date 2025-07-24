@@ -58,7 +58,9 @@ export const RenderScotiabank = ({ item, itemIndex }) => {
             {/* Contenido del bloque */}
             <div
               className={`overflow-hidden transition-all duration-300 ${
-                isOpen ? "max-h-screen p-5 space-y-4 bg-white" : "max-h-0"
+                isOpen
+                  ? "max-h-screen opacity-100 p-5 space-y-4 bg-white"
+                  : "max-h-0 opacity-0 pointer-events-none"
               }`}
             >
               <div className="text-sm text-gray-500">
