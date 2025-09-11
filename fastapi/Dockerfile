@@ -1,38 +1,32 @@
 # Usa una imagen oficial de Python ligera y reciente
 FROM python:3.11-slim-bookworm
 
-# Establece el directorio de trabajo dentro del contenedor
+# Ajustes útiles
+ENV PIP_NO_CACHE_DIR=1 \
+  PYTHONDONTWRITEBYTECODE=1 \
+  PYTHONUNBUFFERED=1 \
+  MPLBACKEND=Agg
+
 WORKDIR /app
 
-# Instala dependencias del sistema necesarias para procesamiento de audio.
-RUN apt-get update && apt-get install -y \
+# Dependencias del sistema necesarias para audio
+RUN apt-get update && apt-get install -y --no-install-recommends \
   ffmpeg \
   libsndfile1 \
   && rm -rf /var/lib/apt/lists/*
 
-# Copia el archivo de requisitos e instala las dependencias de Python.
+# Instala dependencias de Python primero (mejor cache)
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-# --- Gestión de Modelos WhisperX y Token de Hugging Face ---
-ARG HF_AUTH_TOKEN_BUILD
-ARG DEVICE_BUILD="cpu"
-ARG MODEL_SIZE_BUILD="medium"
-
-# Establece los argumentos de construcción como variables de entorno temporales para el proceso de construcción.
-ENV HF_AUTH_TOKEN=${HF_AUTH_TOKEN_BUILD}
-ENV DEVICE=${DEVICE_BUILD}
-ENV MODEL_SIZE=${MODEL_SIZE_BUILD}
-
-# Descarga los modelos de WhisperX durante la construcción de la imagen.
-RUN python -c "import os, whisperx; whisperx.load_model(os.getenv('MODEL_SIZE'), device=os.getenv('DEVICE'), compute_type='int8'); whisperx.load_align_model(language_code='es', device=os.getenv('DEVICE'));"
-
-# Copia el resto del código de tu aplicación al contenedor.
+# Copia el código de la app
 COPY . .
 
-# Expone el puerto en el que se ejecutará la aplicación FastAPI.
+# EntryPoint que precalienta modelos en runtime (no en build)
+COPY docker-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 EXPOSE 8000
 
-# Comando para iniciar la aplicación FastAPI usando Uvicorn.
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-# CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "app.main:app", "--bind", "0.0.0.0:8000", "--workers", "2"]
