@@ -33,7 +33,7 @@ export const Auditoria = () => {
     if (!isAuth) {
       dispatch(checkToken(navigate));
     }
-    if (user && user?.CARGO !== 17 && user?.CARGO !== 20) {
+    if (user && user?.CARGO !== 17 && user?.CARGO !== 20 && user?.CARGO !== 7) {
       navigate("/");
     }
   }, [isAuth, dispatch, user, navigate]);
