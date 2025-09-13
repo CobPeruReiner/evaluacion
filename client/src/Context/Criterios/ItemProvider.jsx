@@ -110,7 +110,8 @@ export const CriteriosProvider = ({ children }) => {
     setModoNItem(newModo);
 
     if (newModo === "edit") {
-      const pesoTransformado = newData.PESO_ITEM * 100;
+      // const pesoTransformado = newData.PESO_ITEM * 100;
+      const pesoTransformado = Math.round(Number(newData.PESO_ITEM) * 100);
 
       setFormNItem({
         ...formNItem,
@@ -387,13 +388,14 @@ export const CriteriosProvider = ({ children }) => {
     setModoNCriterio(newModo);
 
     if (newModo === "edit") {
-      const pesoTransformado = newData.PESO_CRITERIO * 100;
+      // const pesoTransformado = newData.PESO_CRITERIO * 100;
+      const pesoTransformado = Number(newData.PESO_CRITERIO) * 100;
 
       setFormNCriterio({
         ...formNCriterio,
         idCriterio: newData.ID_CRITERIO,
         nombreCriterio: newData.NOMBRE_CRITERIO,
-        pesoCriterio: pesoTransformado,
+        pesoCriterio: parseFloat(pesoTransformado.toFixed(2)),
         idItem: newData.ID_ITEM,
         idItemOriginal: newData.ID_ITEM,
         idEstado: newData.ID_ESTADO,
@@ -645,6 +647,11 @@ export const CriteriosProvider = ({ children }) => {
 
   // =========================== CriteriosPaginacion ===========================
 
+  function formatPercent(value, { decimals = 0 } = {}) {
+    if (value == null) return "-";
+    return (Number(value) * 100).toFixed(decimals);
+  }
+
   // ================================= ACCIONES =================================
   const refMNAcciones = useRef(null);
   const [modalNAcciones, setModalNAcciones] = useState(false);
@@ -670,13 +677,14 @@ export const CriteriosProvider = ({ children }) => {
     setModoNAcciones(newModo);
 
     if (newModo === "edit") {
-      const pesoTransformado = newData.PESO_ACCION_CRITERIO * 100;
+      // const pesoTransformado = newData.PESO_ACCION_CRITERIO * 100;
+      const pesoTransformado = Number(newData.PESO_ACCION_CRITERIO) * 100;
 
       setFormNAcciones({
         ...formNAcciones,
         idAccion: newData.ID_ACCION_CRITERIO,
         nombreAccion: newData.NOMBRE_ACCION_CRITERIO,
-        pesoAccion: pesoTransformado,
+        pesoAccion: parseFloat(pesoTransformado.toFixed(2)),
         idCriterio: newData.ID_CRITERIO,
         idCriterioOriginal: newData.ID_CRITERIO,
         idEstado: newData.ESTADO_ACCION,
@@ -2621,6 +2629,8 @@ export const CriteriosProvider = ({ children }) => {
         toggleBloque,
         duraciones,
         setDuracionAudio,
+
+        formatPercent,
       }}
     >
       {children}

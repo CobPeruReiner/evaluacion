@@ -3,7 +3,7 @@ import moment from "moment";
 import { CriteriosContext } from "../../../../../../Context/Criterios/ItemContext";
 
 export const TAcciones = () => {
-  const { accionesPaginated, openModalNAcciones } =
+  const { accionesPaginated, openModalNAcciones, formatPercent } =
     useContext(CriteriosContext);
 
   return (
@@ -47,11 +47,14 @@ export const TAcciones = () => {
               <td className="py-3 px-6">{accion.NOMBRE_CRITERIO}</td>
               <td className="py-3 px-6">{accion.NOMBRE_ITEM}</td>
               <td className="py-3 px-6">{accion.NOMBRE_CARTERA}</td>
-              <td className="py-3 px-6">
+              {/* <td className="py-3 px-6">
                 {accion.PESO_ACCION_CRITERIO
                   ? accion.PESO_ACCION_CRITERIO * 100
                   : "-"}{" "}
                 %
+              </td> */}
+              <td className="py-3 px-6">
+                {formatPercent(accion.PESO_ACCION_CRITERIO, { decimals: 2 })}%
               </td>
               <td className="py-3 px-6">
                 {accion.FECHA_ACTUALIZACION

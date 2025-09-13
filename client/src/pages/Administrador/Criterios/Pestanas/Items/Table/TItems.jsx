@@ -40,7 +40,10 @@ export const TItems = () => {
             >
               <td className="py-3 px-6">{item.ID_ITEM}</td>
               <td className="py-3 px-6">{item.NOMBRE_ITEM}</td>
-              <td className="py-3 px-6">{item.PESO_ITEM * 100}%</td>
+              {/* <td className="py-3 px-6">{item.PESO_ITEM * 100}%</td> */}
+              <td className="py-3 px-6">
+                {Math.round(Number(item.PESO_ITEM) * 100)}%
+              </td>
               <td className="py-3 px-6">{item.NOMBRE_CARTERA}</td>
               <td className="py-3 px-6">
                 {moment(item.FECHA_ACTUALIZACION)
