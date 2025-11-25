@@ -1,7 +1,7 @@
 # app/services/evaluaciones/scotiabank_evaluator.py
 
 import logging
-from app.db.session import obtener_conexion
+from app.db.session import SyS_Calidad
 from app.services.db_queries.indagacion import (
     obtener_id_item,
     obtener_criterios_por_item,
@@ -100,7 +100,7 @@ def evaluar_fase_scotiabank(
         )
         return {}
 
-    conn = obtener_conexion()
+    conn = SyS_Calidad()
     try:
         texto_asesor = normalizar_texto(" ".join([s["text"] for s in segmentos_asesor]))
         resultados_por_item = {}

@@ -31,7 +31,7 @@ def seleccionar_accion_info_producto(
 
     if castigo:
         if monto_encontrado and dias_encontrado:
-            return mapa.get("SÍ CUMPLE")
+            return mapa.get("SI CUMPLE")
         if monto_encontrado or dias_encontrado:
             return mapa.get("BRINDA INFORMACIÓN INCOMPLETA")
         if fecha_encontrada:
@@ -40,7 +40,7 @@ def seleccionar_accion_info_producto(
 
     if producto_encontrado:
         if monto_encontrado and dias_encontrado:
-            return mapa.get("SÍ CUMPLE")
+            return mapa.get("SI CUMPLE")
         if monto_encontrado or dias_encontrado:
             return mapa.get("BRINDA INFORMACIÓN INCOMPLETA")
         if fecha_encontrada:
@@ -100,7 +100,7 @@ def seleccionar_accion_indagar_pago(
     )
 
     if enc_motivo and enc_sustento:
-        return mapa.get("SÍ CUMPLE")
+        return mapa.get("SI CUMPLE")
     if enc_motivo and not enc_sustento:
         return mapa.get("NO SONDEA PROCEDENCIA DEL DINERO")
     if not enc_motivo and enc_sustento:
@@ -191,7 +191,7 @@ def seleccionar_accion_asesorar(texto: str, acciones: list, id_cartera: str) -> 
     )
 
     if escalonadas and beneficio and canal_pago:
-        return mapa.get("SÍ CUMPLE")
+        return mapa.get("SI CUMPLE")
     if escalonadas and not (beneficio and canal_pago):
         return mapa.get("NO NEGOCIA ESCALONADAMENTE")
     if not escalonadas and not beneficio and not canal_pago:

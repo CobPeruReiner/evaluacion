@@ -37,7 +37,7 @@ def seleccionar_accion_perseverancia(
     )
 
     if objeciones_rebatidas >= 3 and not uso_negativo:
-        return mapa.get("SÍ CUMPLE")
+        return mapa.get("SI CUMPLE")
     if uso_negativo:
         return mapa.get("UTILIZA ARGUMENTOS NEGATIVOS")
     if 1 <= objeciones_rebatidas < 3:
@@ -81,7 +81,7 @@ def seleccionar_accion_compromiso(texto: str, acciones: list, id_cartera: str) -
     )
 
     if urgencia_correcta and not usa_negativo:
-        return mapa.get("SÍ CUMPLE")
+        return mapa.get("SI CUMPLE")
     if urgencia_correcta and usa_negativo:
         return mapa.get("NO IMPONE URGENCIA DE PAGO DE MANERA CORRECTA")
     if not urgencia_correcta and usa_negativo:

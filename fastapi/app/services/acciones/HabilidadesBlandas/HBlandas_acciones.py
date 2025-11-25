@@ -120,4 +120,4 @@ def seleccionar_accion_escucha(texto: str, acciones: list, id_cartera: str) -> d
     if any(p in texto for p in repregunta):
         return mapa.get("REPREGUNTA INFORMACION CLARA")
 
-    return mapa.get("SÍ CUMPLE")
+    return mapa.get("SI CUMPLE")

@@ -1,5 +1,5 @@
 import logging
-from app.db.session import obtener_conexion
+from app.db.session import SyS_Calidad
 from app.services.db_queries.indagacion import (
     obtener_id_item,
     obtener_criterios_por_item,
@@ -21,7 +21,7 @@ def evaluar_habilidades_blandas(
     if not segmentos:
         return {"resultado": "Sin evaluación", "motivo": "No hay segmentos del asesor"}
 
-    conn = obtener_conexion()
+    conn = SyS_Calidad()
     try:
         id_item = obtener_id_item(conn, "HABILIDADES BLANDAS", id_cartera)
 

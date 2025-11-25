@@ -29,7 +29,7 @@ def seleccionar_accion_saludo(texto: str, acciones: list, id_cartera: str) -> di
     logger.info(f"[SALUDO] castigo={castigo}, saludo_valido={encontrado}")
 
     if any(p in texto for p in saludos):
-        return mapa["SÍ CUMPLE"]
+        return mapa["SI CUMPLE"]
 
     if not castigo and any(p in texto for p in ["hola", "qué tal"]):
         return mapa["SALUDA DE MANERA INCORRECTA"]
@@ -91,7 +91,7 @@ def seleccionar_accion_contacto(texto: str, acciones: list, id_cartera: str) -> 
         if f == "se encuentra":
             first = palabras[0] if palabras else ""
             if len(first) >= 3:
-                return mapa["SÍ CUMPLE"]
+                return mapa["SI CUMPLE"]
             else:
                 continue
 
@@ -105,22 +105,66 @@ def seleccionar_accion_contacto(texto: str, acciones: list, id_cartera: str) -> 
 
         if f == "con" and castigo:
             if len(nombre_potencial) >= 1:
-                return mapa["SÍ CUMPLE"]
+                return mapa["SI CUMPLE"]
             continue
 
         if len(nombre_potencial) >= 2:
-            return mapa["SÍ CUMPLE"]
+            return mapa["SI CUMPLE"]
         if len(nombre_potencial) == 1:
             return mapa["PREGUNTA POR EL CLIENTE DE FORMA INCOMPLETA"]
 
     return mapa["NO CONFIRMA AL TITULAR/ENCARGADO"]
 
 
+# def seleccionar_accion_identificacion(texto: str, acciones: list) -> dict:
+#     mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
+
+#     tiene_presentacion = any(
+#         p in texto
+#         for p in [
+#             "le saluda",
+#             "soy",
+#             "habla",
+#             "que llamo",
+#             "les saluda",
+#             "mi nombre es",
+#             "le saludo",
+#             "les saludo",
+#             "de parte de",
+#             "te saluda",
+#             "le acaba de saludar",
+#             "le acabo de saludar",
+#             "le hace presente que nos hemos comunicado",
+#         ]
+#     )
+
+#     tiene_empresa = any(
+#         p in texto
+#         for p in ["de cobranzas", "represento a", "por encargo de", "de parte de"]
+#     )
+
+#     logger.info(
+#         f"[IDENTIFICACIÓN] presentacion={tiene_presentacion}, empresa={tiene_empresa}"
+#     )
+
+#     if tiene_presentacion and tiene_empresa:
+#         return mapa["SI CUMPLE"]
+#     elif tiene_presentacion:
+#         return mapa["SE IDENTIFICA DE MANERA INCOMPLETA"]
+#     elif "cobranzas" in texto or "por encargo de" in texto:
+#         return mapa["SE IDENTIFICA DE MANERA INCORRECTA"]
+
+#     return mapa["NO SE IDENTIFICA"]
+
+
 def seleccionar_accion_identificacion(texto: str, acciones: list) -> dict:
     mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
 
+    t = (texto or "").lower()
+
+    # Heurística de detección
     tiene_presentacion = any(
-        p in texto
+        p in t
         for p in [
             "le saluda",
             "soy",
@@ -139,8 +183,13 @@ def seleccionar_accion_identificacion(texto: str, acciones: list) -> dict:
     )
 
     tiene_empresa = any(
-        p in texto
-        for p in ["de cobranzas", "represento a", "por encargo de", "de parte de"]
+        p in t
+        for p in [
+            "de cobranzas",
+            "represento a",
+            "por encargo de",
+            "de parte de",
+        ]
     )
 
     logger.info(
@@ -148,10 +197,42 @@ def seleccionar_accion_identificacion(texto: str, acciones: list) -> dict:
     )
 
     if tiene_presentacion and tiene_empresa:
-        return mapa["SÍ CUMPLE"]
+        estado_interno = "SI CUMPLE"
     elif tiene_presentacion:
-        return mapa["SE IDENTIFICA DE MANERA INCOMPLETA"]
-    elif "cobranzas" in texto or "por encargo de" in texto:
-        return mapa["SE IDENTIFICA DE MANERA INCORRECTA"]
+        estado_interno = "SE IDENTIFICA DE MANERA INCOMPLETA"
+    elif "cobranzas" in t or "por encargo de" in t:
+        estado_interno = "SE IDENTIFICA DE MANERA INCORRECTA"
+    else:
+        estado_interno = "NO SE IDENTIFICA"
 
-    return mapa["NO SE IDENTIFICA"]
+    preferencias = {
+        "SI CUMPLE": ["SI CUMPLE"],
+        "SE IDENTIFICA DE MANERA INCOMPLETA": [
+            "SE IDENTIFICA DE MANERA INCOMPLETA",
+            "NO CUMPLE",
+        ],
+        "SE IDENTIFICA DE MANERA INCORRECTA": [
+            "SE IDENTIFICA DE MANERA INCORRECTA",
+            "NO CUMPLE",
+        ],
+        "NO SE IDENTIFICA": [
+            "NO SE IDENTIFICA",
+            "NO CUMPLE",
+        ],
+    }
+
+    for etiqueta in preferencias[estado_interno]:
+        if etiqueta in mapa:
+            return mapa[etiqueta]
+
+    if "NO CUMPLE" in mapa:
+        logger.warning(
+            "Ninguna etiqueta específica disponible; usando 'NO CUMPLE' como fallback. "
+            f"Estado interno: {estado_interno}. Disponibles: {list(mapa.keys())}"
+        )
+        return mapa["NO CUMPLE"]
+
+    raise ValueError(
+        f"Catálogo de acciones no contempla el estado '{estado_interno}'. "
+        f"Etiquetas disponibles: {list(mapa.keys())}"
+    )

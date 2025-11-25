@@ -97,7 +97,7 @@ async def procesar_archivo(file: UploadFile, version_roles: str, id_cartera: str
                 if version_roles == "v2":
                     transcripcion = etiquetar_roles_v2(transcripcion)
                 else:
-                    transcripcion = etiquetar_roles_v2(transcripcion)  # mismo por ahora
+                    transcripcion = etiquetar_roles_v2(transcripcion)
 
                 # Evaluación
                 evaluacion = evaluar_llamada(transcripcion, id_cartera)

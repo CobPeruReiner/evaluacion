@@ -1,5 +1,5 @@
 import logging
-from app.db.session import obtener_conexion
+from app.db.session import SyS_Calidad
 from app.services.db_queries.apertura import (
     obtener_id_item,
     obtener_criterios_por_item,
@@ -19,7 +19,7 @@ def evaluar_apertura(segmentos: list, id_cartera: str) -> dict:
     if not segmentos:
         return {"resultado": "Sin evaluación", "motivo": "No se encontraron segmentos"}
 
-    conn = obtener_conexion()
+    conn = SyS_Calidad()
 
     try:
         id_item = obtener_id_item(conn, "APERTURA", id_cartera)
