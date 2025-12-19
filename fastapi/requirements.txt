@@ -1,12 +1,16 @@
+numpy<2
+torch==2.1.2
+transformers==4.36.2
+whisperx==3.1.1
+
 fastapi
 uvicorn[standard]
-pydub
-mysql-connector-python
-python-dotenv
 python-multipart==0.0.9
+python-dotenv
 
-whisperx==3.1.1
-torch==2.1.2
+pydub
+
+mysql-connector-python
 
 gunicorn
 matplotlib
