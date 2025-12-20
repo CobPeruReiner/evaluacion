@@ -9,15 +9,26 @@ ENV PIP_NO_CACHE_DIR=1 \
 
 WORKDIR /app
 
-# Dependencias del sistema necesarias para audio
+# Dependencias del sistema necesarias para audio + PyAV
 RUN apt-get update && apt-get install -y --no-install-recommends \
   ffmpeg \
   libsndfile1 \
+  pkg-config \
+  libavcodec-dev \
+  libavdevice-dev \
+  libavfilter-dev \
+  libavformat-dev \
+  libavutil-dev \
+  libswresample-dev \
+  libswscale-dev \
+  gcc \
+  g++ \
+  make \
   && rm -rf /var/lib/apt/lists/*
 
 # Instala dependencias de Python primero (mejor cache)
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Copia el código de la app
 COPY . .
