@@ -1,5 +1,5 @@
 # Usa una imagen oficial de Python ligera y reciente
-FROM python:3.11-slim-bookworm
+FROM python:3.10-slim-bookworm
 
 # Ajustes útiles
 ENV PIP_NO_CACHE_DIR=1 \
