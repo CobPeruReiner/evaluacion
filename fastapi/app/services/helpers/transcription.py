@@ -14,7 +14,21 @@ MODEL_SIZE = "medium"
 
 # Carga de modelos (una sola vez)
 logger.info("🧠 Cargando modelo de transcripción...")
-model = whisperx.load_model(MODEL_SIZE, device=DEVICE, compute_type="int8")
+
+asr_options = {
+    "max_new_tokens": 128,
+    "clip_timestamps": False,
+    "hallucination_silence_threshold": 0.1,
+}
+
+model = whisperx.load_model(
+    MODEL_SIZE,
+    device=DEVICE,
+    compute_type="int8",
+    asr_options=asr_options,
+)
+
+# model = whisperx.load_model(MODEL_SIZE, device=DEVICE, compute_type="int8")
 
 logger.info("🧠 Cargando modelo de alineación...")
 model_a, metadata = whisperx.load_align_model(language_code="es", device=DEVICE)
@@ -33,7 +47,14 @@ def transcribir_audio(ruta_audio: str) -> dict:
 
     logger.info(f"📝 Transcribiendo: {ruta_audio}")
     try:
-        result = model.transcribe(ruta_audio, language="es")
+        # result = model.transcribe(ruta_audio, language="es")
+        
+        result = model.transcribe(
+            ruta_audio,
+            language="es",
+            batch_size=16
+        )
+        
         if not result.get("segments"):  # Si no hay segmentos
             raise ValueError("No se detectó voz activa en el audio.")
         return result
