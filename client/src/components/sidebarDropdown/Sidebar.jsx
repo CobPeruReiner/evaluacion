@@ -162,7 +162,9 @@ const Sidebar = () => {
                         {isSidebarOpen && <span>Registro de Fichas</span>}
                       </Link>
                     </li>
-                    {(user?.CARGO === 17 || user?.CARGO === 20) && (
+                    {(user?.CARGO === 17 ||
+                      user?.CARGO === 20 ||
+                      user?.CARGO === 7) && (
                       <li>
                         <Link
                           to="/criterios"
