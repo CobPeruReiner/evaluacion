@@ -137,7 +137,7 @@ const Sidebar = () => {
                 )}
 
                 {/* Admin */}
-                {(user?.CARGO === 6 ||
+                {(user?.CARGO === 7 ||
                   user?.CARGO === 20 ||
                   user?.CARGO === 17 ||
                   user?.CARGO === 15) && (
