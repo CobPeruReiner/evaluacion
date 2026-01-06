@@ -1,5 +1,5 @@
 const { QueryTypes } = require("sequelize");
-const { db } = require("../../utils/database.util");
+const { dbWeb } = require("../../utils/database.util");
 
 const buscarIdPersonal = async (req, res, next) => {
   console.log("Bienvenido al middleware buscarIdPersonal.");
@@ -9,10 +9,10 @@ const buscarIdPersonal = async (req, res, next) => {
 
     const dni = req.body.idUsuarioActualizacion;
 
-    const personal = await db.query(
+    const personal = await dbWeb.query(
       `
       SELECT IDPERSONAL
-      FROM calidad.PERSONAL
+      FROM personal
       WHERE DOC = :dni;
       `,
       {
