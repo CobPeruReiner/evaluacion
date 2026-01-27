@@ -33,6 +33,9 @@ const {
 const {
   validarPesoTotal,
 } = require("../middlewares/Criterios/ValidarPesoTotal");
+const {
+  validarPesoMultiple,
+} = require("../middlewares/Criterios/validarPesoMultiple");
 
 const upload = multer({
   dest: path.join(__dirname, "..", "uploads"),
@@ -46,15 +49,15 @@ criteriosEvaluacionRouter.get("/items", getAllItems);
 criteriosEvaluacionRouter.post(
   "/items/create",
   buscarIdPersonal,
-  validarPesoTotal("ITEM"),
-  createItem
+  validarPesoMultiple("ITEM"),
+  createItem,
 );
 
 criteriosEvaluacionRouter.put(
   "/items/update",
   buscarIdPersonal,
   validarPesoTotal("ITEM"),
-  updateItem
+  updateItem,
 );
 
 // CRITERIOS
@@ -64,14 +67,14 @@ criteriosEvaluacionRouter.post(
   "/criterios/create",
   validarPesoTotal("CRITERIO"),
   buscarIdPersonal,
-  createCriterio
+  createCriterio,
 );
 
 criteriosEvaluacionRouter.put(
   "/criterios/update",
   validarPesoTotal("CRITERIO"),
   buscarIdPersonal,
-  updateCriterio
+  updateCriterio,
 );
 
 // ACCIONES
@@ -81,14 +84,14 @@ criteriosEvaluacionRouter.post(
   "/acciones/create",
   validarPesoTotal("ACCION_CRITERIO"),
   buscarIdPersonal,
-  createAccion
+  createAccion,
 );
 
 criteriosEvaluacionRouter.put(
   "/acciones/update",
   validarPesoTotal("ACCION_CRITERIO"),
   buscarIdPersonal,
-  updateAccion
+  updateAccion,
 );
 
 // MOTIVNOS NO PAGO

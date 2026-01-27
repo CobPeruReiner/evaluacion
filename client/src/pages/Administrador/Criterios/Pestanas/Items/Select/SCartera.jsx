@@ -2,32 +2,38 @@ import { useContext } from "react";
 import { CriteriosContext } from "../../../../../../Context/Criterios/ItemContext";
 
 export const SCartera = () => {
-  const { carterasCyCFiltradas, carteraAsocItemSelected, selectCarteraItem } =
-    useContext(CriteriosContext);
+  const {
+    carterasCyCFiltradas,
+    selectCarteraItem,
+    formNItem,
+    toggleCarteraItem,
+  } = useContext(CriteriosContext);
 
   return (
     <div
-      className={`scroll h-auto max-h-60 absolute top-11 left-0 right-0 border bg-gradient-to-br from-white shadow-[rgba(96,125,139,.1)] bg-[hsl(0_0%_100%)] shadow-lg p-3 rounded-md z-10 overflow-auto ${
+      className={`absolute top-11 left-0 right-0 max-h-60 overflow-auto border bg-white shadow-lg p-3 rounded-md z-10 ${
         selectCarteraItem ? "visible" : "invisible"
       }`}
     >
-      <div className="relative text-xs flex flex-col gap-3">
+      <div className="text-xs flex flex-col gap-2">
         {carterasCyCFiltradas.length === 0 ? (
-          <p className="text-xs text-[rgb(96_125_139/1)] px-3 py-2 hover:bg-gray-200 cursor-pointer">
-            No se encontraron carteras
-          </p>
+          <p className="px-3 py-2 text-gray-500">No se encontraron carteras</p>
         ) : (
-          <>
-            {carterasCyCFiltradas.map((item) => (
-              <p
-                key={item.id_cartera}
-                className="text-xs text-[rgb(96_125_139/1)] px-3 py-2 hover:bg-gray-200 cursor-pointer"
-                onClick={() => carteraAsocItemSelected(item)}
-              >
-                {item.cliente} -{item.cartera}
-              </p>
-            ))}
-          </>
+          carterasCyCFiltradas.map((item) => (
+            <label
+              key={item.id_cartera}
+              className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={formNItem.idCarteras.includes(item.id_cartera)}
+                onChange={() => toggleCarteraItem(item)}
+              />
+              <span>
+                {item.cliente} - {item.cartera}
+              </span>
+            </label>
+          ))
         )}
       </div>
     </div>

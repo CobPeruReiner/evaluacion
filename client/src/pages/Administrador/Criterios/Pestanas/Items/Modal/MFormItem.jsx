@@ -27,6 +27,8 @@ export const MFormItem = () => {
     formNItem,
     setFormNItem,
     handleInputChangeFormNItem,
+    toggleCarteraItem,
+    carterasCyC,
   } = useContext(CriteriosContext);
 
   return (
@@ -123,22 +125,45 @@ export const MFormItem = () => {
             <div
               ref={refSCartera}
               onClick={handleSelectCartera}
-              className="container-input-carteraItem relative w-ful"
+              className="relative w-full"
             >
-              <input
-                type="text"
-                id="carteraItem"
-                name="carteraItem"
-                className={inputBorder}
-                placeholder=""
-                value={inputCarteraItemAsoc}
-                onChange={filtrarCarteras}
-                disabled={isPostingNItem}
-                required
-              />
-              <label htmlFor="carteraItem" className={labelBorder}>
-                Cartera Asociada
-              </label>
+              <div
+                className={`w-full border rounded-md text-sm text-gray-500 px-3 border-gray-500 flex flex-wrap items-center gap-1 min-h-[40px] cursor-pointer`}
+              >
+                {formNItem.idCarteras.length === 0 ? (
+                  <span className="">Selecciona carteras</span>
+                ) : (
+                  formNItem.idCarteras.map((id) => {
+                    const cartera = carterasCyC.find(
+                      (c) => c.id_cartera === id,
+                    );
+                    if (!cartera) return null;
+
+                    return (
+                      <div
+                        key={id}
+                        className="flex items-center bg-gray-200 text-sm px-2 py-1 rounded"
+                      >
+                        <span className="mr-1">
+                          {cartera.cliente} - {cartera.cartera}
+                        </span>
+                        {modoNItem === "new" && (
+                          <button
+                            type="button"
+                            className="text-gray-500 hover:text-red-500 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleCarteraItem(cartera);
+                            }}
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
 
               <Down
                 className={`absolute right-2 top-[35%] ${
@@ -146,8 +171,9 @@ export const MFormItem = () => {
                 }`}
               />
 
-              {isPostingNItem ? null : <SCartera />}
+              {!isPostingNItem && modoNItem === "new" && <SCartera />}
             </div>
+
             {modoNItem === "edit" && (
               <div className="container-estado-item flex gap-4 items-center bg-transparent">
                 <h6 className="text-sm leading-[1.625] font-bold tracking-[0.0075em] text-gray-500">

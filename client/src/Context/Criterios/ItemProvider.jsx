@@ -14,7 +14,8 @@ const initItems = {
   pesoItem: "",
   fechaActualizacion: null,
   idUsuarioActualizacion: null,
-  idCartera: null,
+  idCarteras: [],
+  idCarteraOriginal: null,
   idEstado: 1,
 };
 
@@ -109,23 +110,27 @@ export const CriteriosProvider = ({ children }) => {
   const openModalNItem = (newModo = "new", newData = null) => {
     setModoNItem(newModo);
 
-    if (newModo === "edit") {
-      // const pesoTransformado = newData.PESO_ITEM * 100;
+    if (newModo === "edit" && newData) {
       const pesoTransformado = Math.round(Number(newData.PESO_ITEM) * 100);
 
       setFormNItem({
-        ...formNItem,
         idItem: newData.ID_ITEM,
         nombreItem: newData.NOMBRE_ITEM,
         pesoItem: pesoTransformado,
-        idCartera: newData.ID_CARTERA,
+        idCarteras: [newData.ID_CARTERA],
         idCarteraOriginal: newData.ID_CARTERA,
         idEstado: newData.ID_ESTADO,
       });
 
-      setinputCarteraItemAsoc(`${newData.NOMBRE_CARTERA}`);
+      setinputCarteraItemAsoc(newData.NOMBRE_CARTERA || "");
     } else {
-      setFormNItem(initItems);
+      setFormNItem({
+        idItem: null,
+        nombreItem: "",
+        pesoItem: "",
+        idCarteras: [],
+      });
+
       setinputCarteraItemAsoc("");
       setCarterasCyCFiltradas(carterasCyC);
     }
@@ -157,42 +162,51 @@ export const CriteriosProvider = ({ children }) => {
   // Filtrar las carteras
   const filtrarCarteras = (e) => {
     const query = e.target.value.toLowerCase();
-
     setinputCarteraItemAsoc(query);
 
-    if (query === "") {
+    if (!query) {
       setCarterasCyCFiltradas(carterasCyC);
     } else {
-      const filtered = carterasCyC.filter((c) =>
-        c.cartera?.toLowerCase().includes(query)
+      setCarterasCyCFiltradas(
+        carterasCyC.filter((c) => c.cartera?.toLowerCase().includes(query)),
       );
-
-      setCarterasCyCFiltradas(filtered);
     }
   };
 
-  // Seleccionar cartera
-  const carteraAsocItemSelected = (cartera) => {
-    const { id_cartera, cartera: carteraItem, cliente } = cartera;
+  // Toggle cartera (agregar / quitar)
+  const toggleCarteraItem = (cartera) => {
+    const { id_cartera } = cartera;
 
-    const query = `${carteraItem} - ${cliente}`;
+    setFormNItem((prev) => {
+      const existe = prev.idCarteras.includes(id_cartera);
 
-    // Seteamos el formulario con el id
-    setFormNItem({
-      ...formNItem,
-      idCartera: id_cartera,
+      return {
+        ...prev,
+        idCarteras: existe
+          ? prev.idCarteras.filter((id) => id !== id_cartera)
+          : [...prev.idCarteras, id_cartera],
+      };
     });
+  };
 
-    // Seteamos el input de cartera
-    setinputCarteraItemAsoc(query);
-
-    // Cerramos el select
-    setSelectCarteraItem(false);
+  // Reset form
+  const resetFormNItem = () => {
+    setFormNItem({
+      nombreItem: "",
+      pesoItem: "",
+      idCarteras: [],
+    });
+    setinputCarteraItemAsoc("");
   };
 
   // Enviar formulario
   const submitFormNItem = async (e) => {
     e.preventDefault();
+
+    if (!formNItem.idCarteras.length) {
+      toast.error("Debes seleccionar al menos una cartera");
+      return;
+    }
 
     const pesoOriginal = parseInt(formNItem.pesoItem, 10);
 
@@ -219,7 +233,7 @@ export const CriteriosProvider = ({ children }) => {
     try {
       const { data } = await axios.post(
         `${API_URL}/criteriosEvaluacion/items/create`,
-        formNItemFinal
+        formNItemFinal,
       );
 
       if (!data.ok) {
@@ -244,23 +258,29 @@ export const CriteriosProvider = ({ children }) => {
   const updateFormNItem = async (e) => {
     e.preventDefault();
 
-    const pesoOriginal = parseInt(formNItem.pesoItem, 10);
+    if (!formNItem.idCarteras.length) {
+      toast.error("La cartera es obligatoria");
+      return;
+    }
+
+    const pesoOriginal = Number(formNItem.pesoItem);
 
     if (isNaN(pesoOriginal) || pesoOriginal < 1 || pesoOriginal > 100) {
       toast.error("El peso debe ser un número entre 1 y 100");
       return;
     }
 
-    // Transformar peso a decimal
     const pesoTransformado = pesoOriginal / 100;
-
     const today = moment().format("YYYY-MM-DD HH:mm:ss");
 
     const formNItemFinal = {
-      ...formNItem,
+      idItem: formNItem.idItem,
+      nombreItem: formNItem.nombreItem,
+      pesoItem: pesoTransformado,
       fechaActualizacion: today,
       idUsuarioActualizacion: user.DOC,
-      pesoItem: pesoTransformado,
+      idCartera: formNItem.idCarteras[0],
+      idEstado: formNItem.idEstado,
     };
 
     setIsPostingNItem(true);
@@ -268,22 +288,18 @@ export const CriteriosProvider = ({ children }) => {
     try {
       const { data } = await axios.put(
         `${API_URL}/criteriosEvaluacion/items/update`,
-        formNItemFinal
+        formNItemFinal,
       );
 
       if (!data.ok) {
-        toast.error("Error al actualizar Item");
-        throw new Error("Error al actualizar Item");
+        throw new Error(data.msg || "Error al actualizar Item");
       }
 
       toast.success("Item actualizado");
       closeModalNItem();
       loadItem();
     } catch (error) {
-      const mensajeBackend = error.response?.data?.msg;
-
-      console.log(error);
-      toast.error(mensajeBackend || "Error al actualizar Item");
+      toast.error(error.response?.data?.msg || "Error al actualizar Item");
     } finally {
       setIsPostingNItem(false);
     }
@@ -304,13 +320,13 @@ export const CriteriosProvider = ({ children }) => {
   // Paginacion
   const pageStarItems = Math.max(
     1,
-    curPageItems - Math.floor(maxButtonsItems / 2)
+    curPageItems - Math.floor(maxButtonsItems / 2),
   );
 
   // Paginacion
   const pageEndItems = Math.min(
     totalItemsPages,
-    pageStarItems + maxButtonsItems - 1
+    pageStarItems + maxButtonsItems - 1,
   );
 
   // Abrir/cerrar modal
@@ -357,7 +373,7 @@ export const CriteriosProvider = ({ children }) => {
         c.NOMBRE_ITEM?.toLowerCase().includes(queryFiltered) ||
         c.NOMBRE_CARTERA?.toLowerCase().includes(queryFiltered) ||
         c.NOMBRE_USUARIO_ACTUALIZACION?.toLowerCase().includes(queryFiltered) ||
-        c.NOMBRE_CARTERA?.toLowerCase().includes(queryFiltered)
+        c.NOMBRE_CARTERA?.toLowerCase().includes(queryFiltered),
     );
   };
 
@@ -440,7 +456,7 @@ export const CriteriosProvider = ({ children }) => {
       setItemsFiltrados(criteriosItems);
     } else {
       const filtered = criteriosItems.filter((c) =>
-        c.NOMBRE_ITEM?.toLowerCase().includes(query)
+        c.NOMBRE_ITEM?.toLowerCase().includes(query),
       );
 
       setItemsFiltrados(filtered);
@@ -497,7 +513,7 @@ export const CriteriosProvider = ({ children }) => {
     try {
       const { data } = await axios.post(
         `${API_URL}/criteriosEvaluacion/criterios/create`,
-        formNCriterioFinal
+        formNCriterioFinal,
       );
 
       if (!data.ok) {
@@ -548,7 +564,7 @@ export const CriteriosProvider = ({ children }) => {
     try {
       const { data } = await axios.put(
         `${API_URL}/criteriosEvaluacion/criterios/update`,
-        formNCriterioFinal
+        formNCriterioFinal,
       );
 
       if (!data.ok) {
@@ -584,13 +600,13 @@ export const CriteriosProvider = ({ children }) => {
   // Paginacion
   const pageStarCriterios = Math.max(
     1,
-    curPageCriterios - Math.floor(maxButtonsCriterios / 2)
+    curPageCriterios - Math.floor(maxButtonsCriterios / 2),
   );
 
   // Paginacion
   const pageEndCriterios = Math.min(
     totalCriteriosPages,
-    pageStarCriterios + maxButtonsCriterios - 1
+    pageStarCriterios + maxButtonsCriterios - 1,
   );
 
   // Abrir/cerrar modal
@@ -623,7 +639,7 @@ export const CriteriosProvider = ({ children }) => {
   // Actualizar Criterios paginados
   const updateCriteriosPaginated = (
     data = criteriosCriterios,
-    page = curPageCriterios
+    page = curPageCriterios,
   ) => {
     const startIndex = (page - 1) * CriteriosPerPage;
     const endIndex = startIndex + CriteriosPerPage;
@@ -641,7 +657,7 @@ export const CriteriosProvider = ({ children }) => {
         c.NOMBRE_CRITERIO?.toLowerCase().includes(queryFiltered) ||
         c.NOMBRE_ITEM?.toLowerCase().includes(queryFiltered) ||
         c.NOMBRE_USUARIO_ACTUALIZACION?.toLowerCase().includes(queryFiltered) ||
-        c.NOMBRE_CARTERA?.toLowerCase().includes(queryFiltered)
+        c.NOMBRE_CARTERA?.toLowerCase().includes(queryFiltered),
     );
   };
 
@@ -735,7 +751,7 @@ export const CriteriosProvider = ({ children }) => {
         (c) =>
           c.NOMBRE_CRITERIO?.toLowerCase().includes(query) ||
           c.NOMBRE_ITEM?.toLowerCase().includes(query) ||
-          c.NOMBRE_CARTERA?.toLowerCase().includes(query)
+          c.NOMBRE_CARTERA?.toLowerCase().includes(query),
       );
       setcriteriosFiltrados(filtered);
     }
@@ -784,7 +800,7 @@ export const CriteriosProvider = ({ children }) => {
     try {
       const { data } = await axios.post(
         `${API_URL}/criteriosEvaluacion/acciones/create`,
-        formNAccionesFinal
+        formNAccionesFinal,
       );
 
       toast.success(data.msg || "Accion creada exitosamente");
@@ -831,7 +847,7 @@ export const CriteriosProvider = ({ children }) => {
     try {
       const { data } = await axios.put(
         `${API_URL}/criteriosEvaluacion/acciones/update`,
-        formNAccionesFinal
+        formNAccionesFinal,
       );
 
       toast.success(data.msg || "Accion actualizada exitosamente");
@@ -865,12 +881,12 @@ export const CriteriosProvider = ({ children }) => {
   // Paginación
   const pageStartAcciones = Math.max(
     1,
-    curPageAcciones - Math.floor(maxButtonsAcciones / 2)
+    curPageAcciones - Math.floor(maxButtonsAcciones / 2),
   );
 
   const pageEndAcciones = Math.min(
     totalAccionesPages,
-    pageStartAcciones + maxButtonsAcciones - 1
+    pageStartAcciones + maxButtonsAcciones - 1,
   );
 
   // Abrir/cerrar modal de cantidad por página
@@ -904,7 +920,7 @@ export const CriteriosProvider = ({ children }) => {
   // Actualizar acciones paginadas
   const updateAccionesPaginated = (
     data = criteriosAcciones,
-    page = curPageAcciones
+    page = curPageAcciones,
   ) => {
     const startIndex = (page - 1) * AccionesPerPage;
     const endIndex = startIndex + AccionesPerPage;
@@ -922,7 +938,7 @@ export const CriteriosProvider = ({ children }) => {
         a.NOMBRE_ACCION_CRITERIO?.toLowerCase().includes(queryFiltered) ||
         a.NOMBRE_CRITERIO?.toLowerCase().includes(queryFiltered) ||
         a.NOMBRE_USUARIO_ACTUALIZACION?.toLowerCase().includes(queryFiltered) ||
-        a.NOMBRE_CARTERA?.toLowerCase().includes(queryFiltered)
+        a.NOMBRE_CARTERA?.toLowerCase().includes(queryFiltered),
     );
   };
 
@@ -957,7 +973,7 @@ export const CriteriosProvider = ({ children }) => {
       setCarterasMotNP(carterasCyC);
     } else {
       const filtered = carterasCyC.filter((c) =>
-        c.cartera?.toLowerCase().includes(query)
+        c.cartera?.toLowerCase().includes(query),
       );
 
       setCarterasMotNP(filtered);
@@ -1041,7 +1057,7 @@ export const CriteriosProvider = ({ children }) => {
     try {
       const { data } = await axios.post(
         `${API_URL}/criteriosEvaluacion/motivos/create`,
-        formNMotPago
+        formNMotPago,
       );
 
       if (!data.ok) {
@@ -1082,7 +1098,7 @@ export const CriteriosProvider = ({ children }) => {
     try {
       const { data } = await axios.put(
         `${API_URL}/criteriosEvaluacion/motivos/update`,
-        formNMotPago
+        formNMotPago,
       );
 
       if (!data.ok) {
@@ -1129,7 +1145,7 @@ export const CriteriosProvider = ({ children }) => {
     return motivosNoPago.filter(
       (m) =>
         m.NOMBRE_MOTIVO_NO_PAGO?.toLowerCase().includes(query) ||
-        m.NOMBRE_CARTERA?.toLowerCase().includes(query)
+        m.NOMBRE_CARTERA?.toLowerCase().includes(query),
     );
   };
 
@@ -1144,7 +1160,7 @@ export const CriteriosProvider = ({ children }) => {
   // Actualizar motivos paginados
   const updateMotivosPaginated = (
     data = motivosNoPago,
-    page = curPageMotivos
+    page = curPageMotivos,
   ) => {
     const start = (page - 1) * motivosPerPage;
     const end = start + motivosPerPage;
@@ -1171,12 +1187,12 @@ export const CriteriosProvider = ({ children }) => {
   // Rango de botones de paginación
   const pageStartMotivos = Math.max(
     1,
-    curPageMotivos - Math.floor(maxButtonsMotivos / 2)
+    curPageMotivos - Math.floor(maxButtonsMotivos / 2),
   );
 
   const pageEndMotivos = Math.min(
     totalMotivosPages,
-    pageStartMotivos + maxButtonsMotivos - 1
+    pageStartMotivos + maxButtonsMotivos - 1,
   );
 
   // =========================== MOTIVOS NO PAGO Paginacion ===========================
@@ -1201,7 +1217,7 @@ export const CriteriosProvider = ({ children }) => {
     setSelectCarteraTipoGestion(!selectCarteraTipoGestion);
 
   useOutsideClick(refSCarteraTipoGestion, () =>
-    setSelectCarteraTipoGestion(false)
+    setSelectCarteraTipoGestion(false),
   );
 
   // Cierre del modal al hacer click fuera
@@ -1257,7 +1273,7 @@ export const CriteriosProvider = ({ children }) => {
     try {
       const { data } = await axios.post(
         `${API_URL}/criteriosEvaluacion/gestiones/create`,
-        formTipoGestion
+        formTipoGestion,
       );
 
       if (!data.ok) throw new Error(data.msg);
@@ -1289,7 +1305,7 @@ export const CriteriosProvider = ({ children }) => {
     try {
       const { data } = await axios.put(
         `${API_URL}/criteriosEvaluacion/gestiones/update`,
-        formTipoGestion
+        formTipoGestion,
       );
 
       if (!data.ok) throw new Error(data.msg);
@@ -1315,7 +1331,7 @@ export const CriteriosProvider = ({ children }) => {
       setCarterasTipoGestion(carterasCyC); // O la lista general
     } else {
       const filtered = carterasCyC.filter((c) =>
-        c.cartera?.toLowerCase().includes(query)
+        c.cartera?.toLowerCase().includes(query),
       );
       setCarterasTipoGestion(filtered);
     }
@@ -1356,7 +1372,7 @@ export const CriteriosProvider = ({ children }) => {
     return tiposGestion.filter(
       (t) =>
         t.NOMBRE_TIPO_GESTION?.toLowerCase().includes(query) ||
-        t.NOMBRE_CARTERA?.toLowerCase().includes(query) // si estás trayendo cartera
+        t.NOMBRE_CARTERA?.toLowerCase().includes(query), // si estás trayendo cartera
     );
   };
 
@@ -1389,12 +1405,12 @@ export const CriteriosProvider = ({ children }) => {
 
   const pageStartTipos = Math.max(
     1,
-    curPageTipos - Math.floor(maxButtonsTipos / 2)
+    curPageTipos - Math.floor(maxButtonsTipos / 2),
   );
 
   const pageEndTipos = Math.min(
     totalTiposPages,
-    pageStartTipos + maxButtonsTipos - 1
+    pageStartTipos + maxButtonsTipos - 1,
   );
 
   // ============================== TIPOS DE GESTIÓN PAGINACION ==============================
@@ -1455,7 +1471,7 @@ export const CriteriosProvider = ({ children }) => {
     try {
       const { data } = await axios.post(
         `${API_URL}/criteriosEvaluacion/llamadas/create`,
-        formTipoLlamada
+        formTipoLlamada,
       );
 
       if (!data.ok) throw new Error(data.msg);
@@ -1483,7 +1499,7 @@ export const CriteriosProvider = ({ children }) => {
     try {
       const { data } = await axios.put(
         `${API_URL}/criteriosEvaluacion/llamadas/update`,
-        formTipoLlamada
+        formTipoLlamada,
       );
 
       if (!data.ok) throw new Error(data.msg);
@@ -1520,7 +1536,7 @@ export const CriteriosProvider = ({ children }) => {
   const filteredTiposLlamada = () => {
     const q = searchTipoLlamada.toLowerCase();
     return tiposLlamada.filter((t) =>
-      t.NOMBRE_TIPO_LLAMADA?.toLowerCase().includes(q)
+      t.NOMBRE_TIPO_LLAMADA?.toLowerCase().includes(q),
     );
   };
 
@@ -1533,7 +1549,7 @@ export const CriteriosProvider = ({ children }) => {
 
   const updatePaginatedTiposLlamada = (
     data = tiposLlamada,
-    page = curPageTipoLlamada
+    page = curPageTipoLlamada,
   ) => {
     const start = (page - 1) * tiposLlamadaPerPage;
     const end = start + tiposLlamadaPerPage;
@@ -1546,7 +1562,7 @@ export const CriteriosProvider = ({ children }) => {
     setModalPageTipoLlamada(!modalPageTipoLlamada);
 
   useOutsideClick(refModalPageTipoLlamada, () =>
-    setModalPageTipoLlamada(false)
+    setModalPageTipoLlamada(false),
   );
 
   const changePerPageTipoLlamada = (newPerPage) => {
@@ -1557,12 +1573,12 @@ export const CriteriosProvider = ({ children }) => {
 
   const pageStartTipoLlamada = Math.max(
     1,
-    curPageTipoLlamada - Math.floor(maxButtonsTipoLlamada / 2)
+    curPageTipoLlamada - Math.floor(maxButtonsTipoLlamada / 2),
   );
 
   const pageEndTipoLlamada = Math.min(
     totalPaginasTipoLlamada,
-    pageStartTipoLlamada + maxButtonsTipoLlamada - 1
+    pageStartTipoLlamada + maxButtonsTipoLlamada - 1,
   );
 
   // ============================== TIPOS DE LLAMADA PAGINACION ==============================
@@ -1709,7 +1725,7 @@ export const CriteriosProvider = ({ children }) => {
 
             const [fechaHora] = nombre.split("_");
             const fecha = moment(fechaHora, "YYYYMMDD-HHmmss").format(
-              "DD/MM/YYYY"
+              "DD/MM/YYYY",
             );
 
             nuevosArchivos.push({
@@ -1718,7 +1734,7 @@ export const CriteriosProvider = ({ children }) => {
               tamaño: `${(blob.size / 1024).toFixed(1)} KB`,
             });
           }
-        })
+        }),
       );
 
       setArchivos(nuevosArchivos);
@@ -1763,7 +1779,7 @@ export const CriteriosProvider = ({ children }) => {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       if (!data.ok) {
@@ -1772,7 +1788,7 @@ export const CriteriosProvider = ({ children }) => {
       }
 
       toast.success(
-        `Audios procesados: ${data.exitosos.length} exitosos, ${data.fallidos.length} fallidos`
+        `Audios procesados: ${data.exitosos.length} exitosos, ${data.fallidos.length} fallidos`,
       );
 
       setprocessResultSuccess(data.exitosos);
@@ -1849,7 +1865,7 @@ export const CriteriosProvider = ({ children }) => {
 
   const removerCartera = (id) => {
     const newSelected = formAuditoriaAudios.idCarteras.filter(
-      (item) => item !== id
+      (item) => item !== id,
     );
 
     setFormAuditoriaAudios({
@@ -1870,7 +1886,7 @@ export const CriteriosProvider = ({ children }) => {
       // Fecha hasta menor a fecha desde
       if (
         moment(formAuditoriaAudios.fechaDesde).isAfter(
-          formAuditoriaAudios.fechaHasta
+          formAuditoriaAudios.fechaHasta,
         )
       ) {
         toast.error("La fecha hasta debe ser mayor a la fecha desde");
@@ -1911,7 +1927,7 @@ export const CriteriosProvider = ({ children }) => {
 
     try {
       const { data } = await axios.get(
-        `${API_URL}/criteriosEvaluacion/auditoria/detalle?archivo=${detalle}`
+        `${API_URL}/criteriosEvaluacion/auditoria/detalle?archivo=${detalle}`,
       );
       if (data.ok) {
         setEvaluacionDetail(data.resultado);
@@ -1966,12 +1982,12 @@ export const CriteriosProvider = ({ children }) => {
 
   const pageStartAudios = Math.max(
     1,
-    curPageAudios - Math.floor(maxButtonsAudios / 2)
+    curPageAudios - Math.floor(maxButtonsAudios / 2),
   );
 
   const pageEndAudios = Math.min(
     totalAudiosPages,
-    pageStartAudios + maxButtonsAudios - 1
+    pageStartAudios + maxButtonsAudios - 1,
   );
 
   const handleModalPageAudios = () => setModalPageAudios(!modalPageAudios);
@@ -2000,7 +2016,7 @@ export const CriteriosProvider = ({ children }) => {
       ...(evaluacionDetail?.exitosos ?? []),
       ...(evaluacionDetail?.fallidos ?? []),
     ],
-    page = curPageAudios
+    page = curPageAudios,
   ) => {
     const startIndex = (page - 1) * audiosPerPage;
     const endIndex = startIndex + audiosPerPage;
@@ -2044,7 +2060,7 @@ export const CriteriosProvider = ({ children }) => {
 
     try {
       const { data } = await axios.get(
-        `${API_URL}/criteriosEvaluacion/criterios`
+        `${API_URL}/criteriosEvaluacion/criterios`,
       );
 
       if (!data.ok) {
@@ -2066,7 +2082,7 @@ export const CriteriosProvider = ({ children }) => {
 
     try {
       const { data } = await axios.get(
-        `${API_URL}/criteriosEvaluacion/acciones`
+        `${API_URL}/criteriosEvaluacion/acciones`,
       );
 
       if (!data.ok) {
@@ -2088,7 +2104,7 @@ export const CriteriosProvider = ({ children }) => {
 
     try {
       const { data } = await axios.get(
-        `${API_URL}/criteriosEvaluacion/motivos`
+        `${API_URL}/criteriosEvaluacion/motivos`,
       );
 
       // console.log("Motivos de no pago", data);
@@ -2112,7 +2128,7 @@ export const CriteriosProvider = ({ children }) => {
 
     try {
       const { data } = await axios.get(
-        `${API_URL}/criteriosEvaluacion/gestiones`
+        `${API_URL}/criteriosEvaluacion/gestiones`,
       );
 
       if (!data.ok) {
@@ -2134,7 +2150,7 @@ export const CriteriosProvider = ({ children }) => {
 
     try {
       const { data } = await axios.get(
-        `${API_URL}/criteriosEvaluacion/llamadas`
+        `${API_URL}/criteriosEvaluacion/llamadas`,
       );
 
       if (!data.ok) {
@@ -2169,8 +2185,8 @@ export const CriteriosProvider = ({ children }) => {
       try {
         const { data } = await axios.get(
           `${API_URL}/criteriosEvaluacion/efectos?filtro=${encodeURIComponent(
-            value
-          )}`
+            value,
+          )}`,
         );
 
         if (data.ok) {
@@ -2188,7 +2204,7 @@ export const CriteriosProvider = ({ children }) => {
   const loadCarterasActive = async () => {
     try {
       const { data } = await axios.get(
-        `${API_URL}/criteriosEvaluacion/getAll-cartera`
+        `${API_URL}/criteriosEvaluacion/getAll-cartera`,
       );
       if (data.ok) {
         // console.log("Data:", data);
@@ -2337,7 +2353,7 @@ export const CriteriosProvider = ({ children }) => {
         setFormNItem,
         openModalNItem,
         closeModalNItem,
-        carteraAsocItemSelected,
+        toggleCarteraItem,
         submitFormNItem,
         updateFormNItem,
         filtrarCarteras,

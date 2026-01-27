@@ -19,18 +19,19 @@ const getAllItems = async (_req, res) => {
   try {
     const items = await db.query(
       `
-        SELECT tb1.ID_ITEM, tb1.NOMBRE_ITEM, tb1.PESO_ITEM, tb1.ID_CARTERA, tb2.NOMBRE_CARTERA, tb1.FECHA_ACTUALIZACION, tb1.USUARIO_ACTUALIZACION, CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION, tb1.ID_ESTADO
+        SELECT tb1.ID_ITEM, tb1.NOMBRE_ITEM, tb1.PESO_ITEM, tb1.ID_CARTERA, tb2.cartera AS NOMBRE_CARTERA, tb1.FECHA_ACTUALIZACION, tb1.USUARIO_ACTUALIZACION, CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION, tb1.ID_ESTADO
         FROM calidad.ITEM tb1
-        LEFT JOIN calidad.CARTERA tb2
-        ON tb1.ID_CARTERA = tb2.ID_CARTERA AND tb1.ID_ESTADO = 1
-        LEFT JOIN calidad.PERSONAL tb3
+        LEFT JOIN SISTEMAGEST_DESARROLLO.cartera tb2
+        ON tb1.ID_CARTERA = tb2.id
+        LEFT JOIN SISTEMAGEST_DESARROLLO.personal tb3
         ON tb1.USUARIO_ACTUALIZACION = tb3.IDPERSONAL
-        WHERE tb2.ESTADO = 1
+        WHERE tb2.estado = 1
+          AND tb1.ID_ESTADO = 1
         ORDER BY tb1.FECHA_ACTUALIZACION DESC;
       `,
       {
         type: QueryTypes.SELECT,
-      }
+      },
     );
 
     res.status(200).json({
@@ -52,19 +53,19 @@ const createItem = async (req, res) => {
     pesoItem,
     fechaActualizacion,
     idUsuarioActualizacion,
-    idCartera,
+    idCarteras,
   } = req.body;
 
   console.log("===================== CREANDO ITEM =====================");
   console.log("Creando item con: ", req.body);
 
-  // Validación de campos obligatorios
   if (
     !nombreItem?.trim() ||
     pesoItem === undefined ||
     !fechaActualizacion ||
     !idUsuarioActualizacion ||
-    !idCartera
+    !Array.isArray(idCarteras) ||
+    !idCarteras.length
   ) {
     return res.status(400).json({
       ok: false,
@@ -72,7 +73,6 @@ const createItem = async (req, res) => {
     });
   }
 
-  // Validación de tipos básicos
   if (isNaN(pesoItem)) {
     return res.status(400).json({
       ok: false,
@@ -90,8 +90,9 @@ const createItem = async (req, res) => {
   try {
     const nombreItemUppercase = nombreItem.toUpperCase();
 
-    await db.query(
-      `
+    for (const idCartera of idCarteras) {
+      await db.query(
+        `
         INSERT INTO calidad.ITEM (
           NOMBRE_ITEM,
           PESO_ITEM,
@@ -108,18 +109,19 @@ const createItem = async (req, res) => {
           :idCartera,
           1
         );
-      `,
-      {
-        replacements: {
-          nombreItem: nombreItemUppercase,
-          pesoItem,
-          fechaActualizacion,
-          usuarioActualizacion: idUsuarioActualizacion,
-          idCartera,
+        `,
+        {
+          replacements: {
+            nombreItem: nombreItemUppercase,
+            pesoItem,
+            fechaActualizacion,
+            usuarioActualizacion: idUsuarioActualizacion,
+            idCartera,
+          },
+          type: QueryTypes.INSERT,
         },
-        type: QueryTypes.INSERT,
-      }
-    );
+      );
+    }
 
     return res.status(201).json({
       ok: true,
@@ -204,7 +206,7 @@ const updateItem = async (req, res) => {
           idEstado,
         },
         type: QueryTypes.UPDATE,
-      }
+      },
     );
 
     return res.status(200).json({
@@ -223,7 +225,7 @@ const updateItem = async (req, res) => {
 // ======================== CRITERIOS ========================
 const getAllCriterios = async (_req, res) => {
   console.log(
-    "===================== OBTENIENDO CRITERIOS ====================="
+    "===================== OBTENIENDO CRITERIOS =====================",
   );
 
   try {
@@ -238,21 +240,24 @@ const getAllCriterios = async (_req, res) => {
           tb1.FECHA_ACTUALIZACION,
           tb1.USUARIO_ACTUALIZACION,
           CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION,
-          tb4.NOMBRE_CARTERA,
+          tb4.cartera AS NOMBRE_CARTERA,
           tb1.ID_ESTADO
         FROM calidad.CRITERIO tb1
         INNER JOIN calidad.ITEM tb2
           ON tb1.ID_ITEM = tb2.ID_ITEM AND tb2.ID_ESTADO = 1
-        LEFT JOIN calidad.PERSONAL tb3
+        LEFT JOIN SISTEMAGEST_DESARROLLO.personal tb3
           ON tb1.USUARIO_ACTUALIZACION = tb3.IDPERSONAL
-        LEFT JOIN calidad.CARTERA tb4
-          ON tb2.ID_CARTERA = tb4.ID_CARTERA AND tb4.ESTADO = 1
+        LEFT JOIN SISTEMAGEST_DESARROLLO.cartera tb4
+          ON tb2.ID_CARTERA = tb4.id AND tb4.estado = 1
         WHERE tb1.ID_ESTADO = 1
+          AND tb2.ID_ESTADO = 1
+          AND tb4.estado = 1
+          AND tb4.id IS NOT NULL
         ORDER BY tb1.FECHA_ACTUALIZACION DESC;
       `,
       {
         type: QueryTypes.SELECT,
-      }
+      },
     );
 
     res.status(200).json({
@@ -300,7 +305,7 @@ const createCriterio = async (req, res) => {
       {
         replacements: { idItem },
         type: QueryTypes.SELECT,
-      }
+      },
     );
 
     // 2. Obtener peso del ítem
@@ -309,7 +314,7 @@ const createCriterio = async (req, res) => {
       {
         replacements: { idItem },
         type: QueryTypes.SELECT,
-      }
+      },
     );
 
     if (!item) {
@@ -349,7 +354,7 @@ const createCriterio = async (req, res) => {
           idItem,
         },
         type: QueryTypes.INSERT,
-      }
+      },
     );
 
     res.status(201).json({
@@ -377,7 +382,7 @@ const updateCriterio = async (req, res) => {
   } = req.body;
 
   console.log(
-    "===================== ACTUALIZANDO CRITERIO ====================="
+    "===================== ACTUALIZANDO CRITERIO =====================",
   );
   console.log("req.body: ", req.body);
 
@@ -419,7 +424,7 @@ const updateCriterio = async (req, res) => {
           idItem,
         },
         type: QueryTypes.UPDATE,
-      }
+      },
     );
 
     res.status(200).json({
@@ -438,7 +443,7 @@ const updateCriterio = async (req, res) => {
 // ======================== ACCIONES ========================
 const getAllAcciones = async (_req, res) => {
   console.log(
-    "===================== OBTENIENDO ACCIONES ====================="
+    "===================== OBTENIENDO ACCIONES =====================",
   );
 
   try {
@@ -457,23 +462,23 @@ const getAllAcciones = async (_req, res) => {
           tb4.ID_ITEM,
           tb4.NOMBRE_ITEM,
           tb4.PESO_ITEM,
-          tb5.NOMBRE_CARTERA,
+          tb5.cartera AS NOMBRE_CARTERA,
           tb1.ESTADO_ACCION
         FROM calidad.ACCION_CRITERIO tb1
         INNER JOIN calidad.CRITERIO tb2
           ON tb1.ID_CRITERIO = tb2.ID_CRITERIO AND tb2.ID_ESTADO = 1
         INNER JOIN calidad.ITEM tb4
           ON tb2.ID_ITEM = tb4.ID_ITEM AND tb4.ID_ESTADO = 1
-        INNER JOIN calidad.CARTERA tb5
-          ON tb4.ID_CARTERA = tb5.ID_CARTERA AND tb5.ESTADO = 1
-        LEFT JOIN calidad.PERSONAL tb3
+        INNER JOIN SISTEMAGEST_DESARROLLO.cartera tb5
+          ON tb4.ID_CARTERA = tb5.id AND tb5.estado = 1
+        LEFT JOIN SISTEMAGEST_DESARROLLO.personal tb3
           ON tb1.USUARIO_ACTUALIZACION = tb3.IDPERSONAL
         WHERE tb1.ESTADO_ACCION = 1
         ORDER BY tb1.FECHA_ACTUALIZACION DESC;
       `,
       {
         type: QueryTypes.SELECT,
-      }
+      },
     );
 
     res.status(200).json({
@@ -531,7 +536,7 @@ const createAccion = async (req, res) => {
           idCriterio,
         },
         type: QueryTypes.INSERT,
-      }
+      },
     );
 
     res.status(201).json({
@@ -559,7 +564,7 @@ const updateAccion = async (req, res) => {
   } = req.body;
 
   console.log(
-    "===================== ACTUALIZANDO ACCION ====================="
+    "===================== ACTUALIZANDO ACCION =====================",
   );
   console.log("req.body: ", req.body);
 
@@ -604,7 +609,7 @@ const updateAccion = async (req, res) => {
           idEstado,
         },
         type: QueryTypes.UPDATE,
-      }
+      },
     );
 
     return res.status(200).json({
@@ -623,20 +628,20 @@ const updateAccion = async (req, res) => {
 // ======================== MOTIVNOS NO PAGO ========================
 const getAllMotivosNoPago = async (_req, res) => {
   console.log(
-    "===================== OBTENIENDO MOTIVOS NO PAGO ====================="
+    "===================== OBTENIENDO MOTIVOS NO PAGO =====================",
   );
 
   try {
     const motivos = await db.query(
       `
-        SELECT tb1.ID_MOTIVO_NO_PAGO, tb1.NOMBRE_MOTIVO_NO_PAGO, tb1.ID_CARTERA, tb2.NOMBRE_CARTERA, tb1.ID_ESTADO
+        SELECT tb1.ID_MOTIVO_NO_PAGO, tb1.NOMBRE_MOTIVO_NO_PAGO, tb1.ID_CARTERA, tb2.cartera AS NOMBRE_CARTERA, tb1.ID_ESTADO
         FROM calidad.MOTIVO_NO_PAGO tb1
-        LEFT JOIN calidad.CARTERA tb2
-        ON tb1.ID_CARTERA = tb2.ID_CARTERA;
+        LEFT JOIN SISTEMAGEST_DESARROLLO.cartera tb2
+        ON tb1.ID_CARTERA = tb2.id;
       `,
       {
         type: QueryTypes.SELECT,
-      }
+      },
     );
 
     res.status(200).json({
@@ -656,7 +661,7 @@ const createMotivoNoPago = async (req, res) => {
   const { nombreMotivo, idCartera } = req.body;
 
   console.log(
-    "===================== CREANDO MOTIVO NO PAGO ====================="
+    "===================== CREANDO MOTIVO NO PAGO =====================",
   );
   console.log("req.body: ", req.body);
 
@@ -679,7 +684,7 @@ const createMotivoNoPago = async (req, res) => {
           idCartera,
         },
         type: QueryTypes.INSERT,
-      }
+      },
     );
 
     res.status(201).json({
@@ -699,7 +704,7 @@ const updateMotivoNoPago = async (req, res) => {
   const { idMotivo, nombreMotivo, idCartera, idEstado } = req.body;
 
   console.log(
-    "===================== ACTUALIZANDO MOTIVO NO PAGO ====================="
+    "===================== ACTUALIZANDO MOTIVO NO PAGO =====================",
   );
   console.log("req.body: ", req.body);
 
@@ -727,7 +732,7 @@ const updateMotivoNoPago = async (req, res) => {
           idEstado,
         },
         type: QueryTypes.UPDATE,
-      }
+      },
     );
 
     res.status(200).json({
@@ -746,20 +751,20 @@ const updateMotivoNoPago = async (req, res) => {
 // ======================== TIPOS DE GESTION ========================
 const getAllTiposGestion = async (_req, res) => {
   console.log(
-    "===================== OBTENIENDO TIPOS DE GESTION ====================="
+    "===================== OBTENIENDO TIPOS DE GESTION =====================",
   );
 
   try {
     const gestiones = await db.query(
       `
-        SELECT tb1.ID_TIPO_GESTION, tb1.NOMBRE_TIPO_GESTION, tb1.ID_CARTERA, tb2.NOMBRE_CARTERA, tb1.ID_ESTADO
+        SELECT tb1.ID_TIPO_GESTION, tb1.NOMBRE_TIPO_GESTION, tb1.ID_CARTERA, tb2.cartera AS NOMBRE_CARTERA, tb1.ID_ESTADO
         FROM calidad.TIPO_GESTION tb1
-        LEFT JOIN calidad.CARTERA tb2
-        ON tb1.ID_CARTERA = tb2.ID_CARTERA;
+        LEFT JOIN SISTEMAGEST_DESARROLLO.cartera tb2
+        ON tb1.ID_CARTERA = tb2.id;
       `,
       {
         type: QueryTypes.SELECT,
-      }
+      },
     );
 
     res.status(200).json({
@@ -779,7 +784,7 @@ const createTipoGestion = async (req, res) => {
   const { nombreGestion, idCartera } = req.body;
 
   console.log(
-    "===================== CREANDO TIPO DE GESTION ====================="
+    "===================== CREANDO TIPO DE GESTION =====================",
   );
   console.log("req.body: ", req.body);
 
@@ -802,7 +807,7 @@ const createTipoGestion = async (req, res) => {
           idCartera,
         },
         type: QueryTypes.INSERT,
-      }
+      },
     );
 
     res.status(201).json({
@@ -822,7 +827,7 @@ const updateTipoGestion = async (req, res) => {
   const { idTipoGestion, nombreGestion, idCartera, idEstado } = req.body;
 
   console.log(
-    "===================== ACTUALIZANDO TIPO DE GESTION ====================="
+    "===================== ACTUALIZANDO TIPO DE GESTION =====================",
   );
   console.log("req.body: ", req.body);
 
@@ -855,7 +860,7 @@ const updateTipoGestion = async (req, res) => {
           idEstado,
         },
         type: QueryTypes.UPDATE,
-      }
+      },
     );
 
     if (affectedRows === 0) {
@@ -881,7 +886,7 @@ const updateTipoGestion = async (req, res) => {
 // ======================== TIPOS DE LLAMADA ========================
 const getAllTiposLlamada = async (_req, res) => {
   console.log(
-    "===================== OBTENIENDO TIPOS DE LLAMADA ====================="
+    "===================== OBTENIENDO TIPOS DE LLAMADA =====================",
   );
 
   try {
@@ -891,7 +896,7 @@ const getAllTiposLlamada = async (_req, res) => {
       `,
       {
         type: QueryTypes.SELECT,
-      }
+      },
     );
 
     res.status(200).json({
@@ -911,7 +916,7 @@ const createTipoLlamada = async (req, res) => {
   const { nombreLlamada } = req.body;
 
   console.log(
-    "===================== CREANDO TIPO DE LLAMADA ====================="
+    "===================== CREANDO TIPO DE LLAMADA =====================",
   );
   console.log("req.body: ", req.body);
 
@@ -933,7 +938,7 @@ const createTipoLlamada = async (req, res) => {
           nombreLlamada,
         },
         type: QueryTypes.INSERT,
-      }
+      },
     );
 
     res.status(201).json({
@@ -953,7 +958,7 @@ const updateTipoLlamada = async (req, res) => {
   const { idTipoLlamada, nombreLlamada, idEstado } = req.body;
 
   console.log(
-    "===================== ACTUALIZANDO TIPO DE LLAMADA ====================="
+    "===================== ACTUALIZANDO TIPO DE LLAMADA =====================",
   );
   console.log("req.body: ", req.body);
 
@@ -979,7 +984,7 @@ const updateTipoLlamada = async (req, res) => {
           idEstado,
         },
         type: QueryTypes.UPDATE,
-      }
+      },
     );
 
     if (affectedRows === 0) {
@@ -1025,7 +1030,7 @@ const getAllEfectos = async (req, res) => {
       {
         type: QueryTypes.SELECT,
         replacements,
-      }
+      },
     );
 
     res.status(200).json({
@@ -1095,7 +1100,7 @@ const processZip = async (req, res) => {
       {
         headers: form.getHeaders(),
         maxBodyLength: Infinity,
-      }
+      },
     );
 
     console.log("✅ Respuesta recibida");
@@ -1165,12 +1170,12 @@ const processZip = async (req, res) => {
 
     const resultadoPath = path.join(
       carpetaFecha,
-      `resultados_${nombreBase}.json`
+      `resultados_${nombreBase}.json`,
     );
     fs.writeFileSync(
       resultadoPath,
       JSON.stringify({ usuario, exitosos: procesados, fallidos }, null, 2),
-      "utf-8"
+      "utf-8",
     );
 
     fs.unlink(zipPath, () => {
