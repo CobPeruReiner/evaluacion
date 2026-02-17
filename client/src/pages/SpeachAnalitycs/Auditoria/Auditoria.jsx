@@ -40,7 +40,6 @@ export const Auditoria = () => {
 
   return (
     <>
-      <Toaster position="top-right" richColors />
       <div className="sombra container-gestiones-cycweb relative bg-white flex flex-col py-10 px-5 gap-7 rounded-md transition-all duration-300">
         {/* ENCABEZADO */}
         <div className="container-tittle relative flex items-center justify-center w-full">

@@ -1,6 +1,7 @@
 export * from "./Auth/Login";
 export * from "./Consultas/Gestiones/VistaGestionesCycWeb";
 export * from "./Consultas/Evaluacion/FichaEvaluacion";
+export * from "./Consultas/EvaluacionR/FichaEvaluacionR";
 export * from "./Administrador/RegistroFichas/FichaEvaluacionTable";
 export * from "./Monitor/FichaEvaluacionMonitor";
 export * from "./Asesor/Perfil/AsesorPerfil";

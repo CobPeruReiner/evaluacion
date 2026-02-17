@@ -1,20 +1,34 @@
 import "./App.css";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import ProtectedRoutesLogin from "./components/ProtectedRoutesLogin";
 import Sidebar from "./components/sidebarDropdown/Sidebar";
-import { useSelector } from "react-redux";
-import { useContext } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useContext, useEffect } from "react";
 import { SideBarContext } from "./Context/SideBarContext";
 import * as Views from "./pages";
+import { checkToken } from "./store/actions/user.actions";
 
 function App() {
   const { isSidebarOpen } = useContext(SideBarContext);
 
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const isAuth = useSelector((state) => state.user.isAuth);
   const user = useSelector((state) => state.user.user);
 
   const location = useLocation();
 
   const isActive = (path) => location.pathname === path;
+
+  useEffect(() => {
+    if (!isAuth) {
+      dispatch(checkToken(navigate));
+    }
+    if (user && user.cargo === "asesor") {
+      navigate("/perfilAsesor");
+    }
+  }, [isAuth, dispatch]);
 
   return (
     <>
@@ -35,7 +49,7 @@ function App() {
             <Route path="/" element={<Views.VistaGestionesCycWeb />} />
 
             {/* EVALUACION FICHA */}
-            <Route path="/evaluacion" element={<Views.FichaEvaluacion />} />
+            <Route path="/evaluacion" element={<Views.FichaEvaluacionR />} />
 
             {/* REPORTE EVALUACIONES */}
             <Route path="/table" element={<Views.FichaEvaluacionTable />} />

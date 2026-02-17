@@ -27,7 +27,6 @@ export const CriteriosEvaluacion = () => {
 
   return (
     <>
-      <Toaster position="top-right" richColors />
       <div className="sombra container-gestiones-cycweb relative bg-white flex flex-col py-10 px-5 gap-7 rounded-md transition-all duration-300">
         <h1 className="text-2xl font-bold">Gestión de Criterios</h1>
 

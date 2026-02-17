@@ -1,7 +1,4 @@
-import { useContext, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { checkToken } from "../../../store/actions/user.actions";
+import { useContext } from "react";
 import { Toaster } from "sonner";
 import { UploadFile } from "../../../Icons/Iconos";
 import { CriteriosContext } from "../../../Context/Criterios/ItemContext";
@@ -10,27 +7,11 @@ import { MVerCalificados } from "./Components/Modal/MVerCalificados";
 import { buttonSecondary } from "../../../utils/styles";
 
 export const Procesamiento = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-
-  const isAuth = useSelector((state) => state.user.isAuth);
-  const user = useSelector((state) => state.user.user);
-
   const { handleZip, inputRef, openMVerCalificacion } =
     useContext(CriteriosContext);
 
-  useEffect(() => {
-    if (!isAuth) {
-      dispatch(checkToken(navigate));
-    }
-    if (user && user.cargo === "asesor") {
-      navigate("/perfilAsesor");
-    }
-  }, [isAuth, dispatch]);
-
   return (
     <>
-      <Toaster position="top-right" richColors />
       <div className="sombra container-procesamiento-audios relative bg-white flex flex-col py-10 px-5 gap-7 rounded-md transition-all duration-300">
         <h1 className="title-procesamiento text-2xl font-bold">
           Procesamiento de Audios

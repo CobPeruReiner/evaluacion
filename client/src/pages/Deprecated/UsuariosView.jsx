@@ -1,13 +1,9 @@
-import React from "react";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import "./usuariosView.css";
 import { AiFillEdit } from "react-icons/ai";
 import { AiFillDelete } from "react-icons/ai";
 import ChangePassword from "./ChangePassword";
-import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { checkToken } from "../../store/actions/user.actions";
 
 const USERS_URL = `${import.meta.env.VITE_API_URL}api/v1/users/`;
 
@@ -15,17 +11,6 @@ const UsuariosView = () => {
   const [users, setUsers] = useState([]);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [currentUser, setCurrentUser] = useState("");
-
-  const navigate = useNavigate();
-
-  const isAuth = useSelector((state) => state.user.isAuth);
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    if (!isAuth) {
-      dispatch(checkToken(navigate));
-    }
-  }, [isAuth, dispatch]);
 
   useEffect(() => {
     axios

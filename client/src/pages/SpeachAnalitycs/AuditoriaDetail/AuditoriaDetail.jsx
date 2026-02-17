@@ -55,7 +55,6 @@ export const AuditoriaDetail = () => {
 
   return (
     <>
-      <Toaster position="top-right" richColors />
       <div className="sombra container-gestiones-cycweb relative bg-white flex flex-col py-10 px-5 gap-7 rounded-md transition-all duration-300">
         <div className="container-header flex flex-col md:flex-row justify-between gap-4 items-center">
           <button

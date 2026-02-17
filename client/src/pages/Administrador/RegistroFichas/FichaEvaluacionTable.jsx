@@ -589,7 +589,7 @@ export const FichaEvaluacionTable = () => {
             <Popup
               trigger={
                 <p className="vista-gestiones-web__center-column">{`${getWordStr(
-                  row.observaciones
+                  row.observaciones,
                 )} ...`}</p>
               }
               position="center"
@@ -647,9 +647,9 @@ export const FichaEvaluacionTable = () => {
               res.data.clientesYcarteras.map((item) => [
                 item.id_cliente,
                 { value: item.id_cliente, label: item.cliente },
-              ])
+              ]),
             ).values(),
-          ].sort(compareFunction)
+          ].sort(compareFunction),
         );
       })
       .catch((err) => {
@@ -672,7 +672,7 @@ export const FichaEvaluacionTable = () => {
     setObjectClienteSelected({ value: e.value, label: e.label });
     setObjectCarteraSelected([]);
     const filteredCarteras = clientesCarterasData.filter(
-      (item) => item.id_cliente == e.value
+      (item) => item.id_cliente == e.value,
     );
 
     filteredCarteras.unshift({ cartera: "TODOS", id_cartera: "" });
@@ -683,7 +683,7 @@ export const FichaEvaluacionTable = () => {
           label: e.cartera,
           value: e.id_cartera,
         };
-      })
+      }),
     );
     setClienteSelected(e.label);
   };
@@ -738,7 +738,6 @@ export const FichaEvaluacionTable = () => {
 
   return (
     <>
-      <Toaster />
       <div className="sombra container-fichaEvaluacion relative bg-white flex flex-col py-10 px-5 gap-7 rounded-md transition-all duration-300">
         {/* TÍTULO */}
         <div className="flex items-center justify-between">
