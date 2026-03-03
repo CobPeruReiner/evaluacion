@@ -276,5 +276,6 @@ def seleccionar_accion_registra_gestion(texto: str, acciones: list) -> dict:
         "dejaré constancia",
         "para su seguimiento",
         "hacer el reporte",
+        "visualizar"
     ]
     return _seleccionar_accion(texto, acciones, palabras_clave)
