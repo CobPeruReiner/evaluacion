@@ -25,7 +25,8 @@ const initCriterios = {
   pesoCriterio: "",
   fechaActualizacion: null,
   idUsuarioActualizacion: null,
-  idItem: null,
+  idItems: [],
+  idItemOriginal: null,
   idEstado: 1,
 };
 
@@ -187,16 +188,6 @@ export const CriteriosProvider = ({ children }) => {
           : [...prev.idCarteras, id_cartera],
       };
     });
-  };
-
-  // Reset form
-  const resetFormNItem = () => {
-    setFormNItem({
-      nombreItem: "",
-      pesoItem: "",
-      idCarteras: [],
-    });
-    setinputCarteraItemAsoc("");
   };
 
   // Enviar formulario
@@ -412,15 +403,18 @@ export const CriteriosProvider = ({ children }) => {
         idCriterio: newData.ID_CRITERIO,
         nombreCriterio: newData.NOMBRE_CRITERIO,
         pesoCriterio: parseFloat(pesoTransformado.toFixed(2)),
-        idItem: newData.ID_ITEM,
+
+        idItems: [newData.ID_ITEM],
         idItemOriginal: newData.ID_ITEM,
         idEstado: newData.ID_ESTADO,
       });
 
       setInputItemAsoc(`${newData.NOMBRE_ITEM}`);
+      setItemsFiltrados(criteriosItems);
     } else {
       setFormNCriterio(initCriterios);
       setInputItemAsoc("");
+      setItemsFiltrados(criteriosItems);
     }
 
     setModalNCriterio(true);
@@ -429,6 +423,8 @@ export const CriteriosProvider = ({ children }) => {
   const closeModalNCriterio = () => {
     setFormNCriterio(initCriterios);
     setInputItemAsoc("");
+    setItemsFiltrados(criteriosItems);
+    setSelectItemCriterio(false);
     setModalNCriterio(false);
   };
 
@@ -449,18 +445,42 @@ export const CriteriosProvider = ({ children }) => {
   // Filtrar las carteras
   const filtrarItems = (e) => {
     const query = e.target.value.toLowerCase();
-
     setInputItemAsoc(query);
 
-    if (query === "") {
+    if (!query) {
       setItemsFiltrados(criteriosItems);
-    } else {
-      const filtered = criteriosItems.filter((c) =>
-        c.NOMBRE_ITEM?.toLowerCase().includes(query),
-      );
-
-      setItemsFiltrados(filtered);
+      return;
     }
+
+    const filtered = criteriosItems.filter((it) => {
+      const nombre = it.NOMBRE_ITEM?.toLowerCase() || "";
+      const cartera = it.NOMBRE_CARTERA?.toLowerCase() || "";
+      return nombre.includes(query) || cartera.includes(query);
+    });
+
+    setItemsFiltrados(filtered);
+  };
+
+  const toggleItemCriterio = (item) => {
+    const idItem = item.ID_ITEM;
+
+    setFormNCriterio((prev) => {
+      const existe = prev.idItems.includes(idItem);
+
+      if (modoNCriterio === "edit") {
+        return {
+          ...prev,
+          idItems: [idItem],
+        };
+      }
+
+      return {
+        ...prev,
+        idItems: existe
+          ? prev.idItems.filter((id) => id !== idItem)
+          : [...prev.idItems, idItem],
+      };
+    });
   };
 
   // Seleccionar cartera
@@ -486,19 +506,18 @@ export const CriteriosProvider = ({ children }) => {
   const submitFormNCriterio = async (e) => {
     e.preventDefault();
 
-    // const pesoOriginal = parseInt(formNCriterio.pesoCriterio, 10);
-    const pesoOriginal = parseFloat(formNCriterio.pesoCriterio);
+    if (!formNCriterio.idItems.length) {
+      toast.error("Debes seleccionar al menos un ítem");
+      return;
+    }
 
+    const pesoOriginal = parseFloat(formNCriterio.pesoCriterio);
     if (isNaN(pesoOriginal) || pesoOriginal < 1 || pesoOriginal > 100) {
       toast.error("El peso debe ser un número entre 1 y 100");
       return;
     }
 
-    // Transformar peso a decimal
-    // const pesoTransformado = pesoOriginal / 100;
     const pesoTransformado = +(pesoOriginal / 100).toFixed(3);
-
-    // Datetime
     const today = moment().format("YYYY-MM-DD HH:mm:ss");
 
     const formNCriterioFinal = {
@@ -506,6 +525,8 @@ export const CriteriosProvider = ({ children }) => {
       fechaActualizacion: today,
       idUsuarioActualizacion: user.DOC,
       pesoCriterio: pesoTransformado,
+
+      idItems: formNCriterio.idItems,
     };
 
     setIsPostingNCriterio(true);
@@ -517,8 +538,8 @@ export const CriteriosProvider = ({ children }) => {
       );
 
       if (!data.ok) {
-        toast.error("Error al crear Criterio");
-        throw new Error("Error al crear Criterio");
+        toast.error(data.msg || "Error al crear Criterio");
+        throw new Error(data.msg || "Error al crear Criterio");
       }
 
       toast.success("Criterio creado");
@@ -526,7 +547,6 @@ export const CriteriosProvider = ({ children }) => {
       loadCriterios();
     } catch (error) {
       const mensajeBackend = error.response?.data?.msg;
-
       console.log(error);
       toast.error(mensajeBackend || "Error al crear Criterio");
     } finally {
@@ -538,25 +558,30 @@ export const CriteriosProvider = ({ children }) => {
   const updateFormNCriterio = async (e) => {
     e.preventDefault();
 
-    // const pesoOriginal = parseInt(formNCriterio.pesoCriterio, 10);
-    const pesoOriginal = parseFloat(formNCriterio.pesoCriterio);
+    if (!formNCriterio.idItems.length) {
+      toast.error("El ítem es obligatorio");
+      return;
+    }
 
+    const pesoOriginal = parseFloat(formNCriterio.pesoCriterio);
     if (isNaN(pesoOriginal) || pesoOriginal < 1 || pesoOriginal > 100) {
       toast.error("El peso debe ser un número entre 1 y 100");
       return;
     }
 
-    // Transformar peso a decimal
-    // const pesoTransformado = pesoOriginal / 100;
     const pesoTransformado = +(pesoOriginal / 100).toFixed(3);
-
     const today = moment().format("YYYY-MM-DD HH:mm:ss");
 
     const formNCriterioFinal = {
-      ...formNCriterio,
+      idCriterio: formNCriterio.idCriterio,
+      nombreCriterio: formNCriterio.nombreCriterio,
+      pesoCriterio: pesoTransformado,
       fechaActualizacion: today,
       idUsuarioActualizacion: user.DOC,
-      pesoCriterio: pesoTransformado,
+
+      idItem: formNCriterio.idItems[0],
+      idItemOriginal: formNCriterio.idItemOriginal,
+      idEstado: formNCriterio.idEstado,
     };
 
     setIsPostingNCriterio(true);
@@ -568,8 +593,8 @@ export const CriteriosProvider = ({ children }) => {
       );
 
       if (!data.ok) {
-        toast.error("Error al actualizar Criterio");
-        throw new Error("Error al actualizar Criterio");
+        toast.error(data.msg || "Error al actualizar Criterio");
+        throw new Error(data.msg || "Error al actualizar Criterio");
       }
 
       toast.success("Criterio actualizado");
@@ -577,7 +602,6 @@ export const CriteriosProvider = ({ children }) => {
       loadCriterios();
     } catch (error) {
       const mensajeBackend = error.response?.data?.msg;
-
       console.log(error);
       toast.error(mensajeBackend || "Error al actualizar Criterio");
     } finally {
@@ -2399,6 +2423,7 @@ export const CriteriosProvider = ({ children }) => {
         submitFormNCriterio,
         updateFormNCriterio,
         filtrarItems,
+        toggleItemCriterio,
         handleInputChangeFormNCriterio,
         handleSelectItem,
 
