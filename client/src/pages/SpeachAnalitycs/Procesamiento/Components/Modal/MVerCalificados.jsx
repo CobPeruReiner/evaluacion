@@ -4,10 +4,16 @@ import { Loader } from "../../../../../components/Loader";
 import { Close, Pause, Play } from "../../../../../Icons/Iconos";
 import moment from "moment";
 
-const getEvaluacion = (item) =>
-  item?.metadatos?.idCartera == 70
-    ? item?.evaluacion?.scotiabank_evaluacion?.resumen_final
-    : item?.evaluacion?.resumen_final;
+const getEvaluacion = (item) => {
+  if (item?.metadatos?.idCartera == 70) {
+    return (
+      item?.evaluacion?.scotiabank_evaluacion?.resumen_final ||
+      item?.evaluacion?.resumen_final
+    );
+  }
+
+  return item?.evaluacion?.resumen_final;
+};
 
 export const MVerCalificados = () => {
   const {
@@ -201,7 +207,7 @@ export const MVerCalificados = () => {
                               </div>
                             </div>
                           );
-                        }
+                        },
                       ) || (
                         <p className="text-center text-gray-500">
                           Sin transcripción
