@@ -138,6 +138,7 @@ const Sidebar = () => {
 
                 {/* Admin */}
                 {(user?.CARGO === 7 ||
+                  user?.CARGO === 29 ||
                   user?.CARGO === 20 ||
                   user?.CARGO === 17 ||
                   user?.CARGO === 15) && (
@@ -164,6 +165,7 @@ const Sidebar = () => {
                     </li>
                     {(user?.CARGO === 17 ||
                       user?.CARGO === 20 ||
+                      user?.CARGO === 29 ||
                       user?.CARGO === 7) && (
                       <li>
                         <Link
@@ -189,6 +191,7 @@ const Sidebar = () => {
                 {/* Speech Analytics */}
                 {(user?.CARGO === 20 ||
                   user?.CARGO === 17 ||
+                  user?.CARGO === 29 ||
                   user?.CARGO === 7) && (
                   <>
                     {isSidebarOpen && (
