@@ -43,7 +43,12 @@ export const AuditoriaDetail = () => {
     if (!isAuth) {
       dispatch(checkToken(navigate));
     }
-    if (user && user?.CARGO !== 17 && user?.CARGO !== 20) {
+    if (
+      user &&
+      user?.CARGO !== 17 &&
+      user?.CARGO !== 20 &&
+      user?.CARGO !== 29
+    ) {
       navigate("/");
     } else {
       obtenerDetalleEvaluacion(archivo);
