@@ -5,7 +5,6 @@ services:
       context: ./client
     env_file:
       - ./client/.env.production
-    command: npm run build
     volumes:
       - client-build:/app/build
     depends_on:
