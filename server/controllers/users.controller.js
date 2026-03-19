@@ -4,7 +4,6 @@ const bcrypt = require("bcryptjs");
 const { QueryTypes } = require("sequelize");
 const { AppError } = require("../utils/appError.util");
 const { catchAsync } = require("../utils/catchAsync.util");
-const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 const md5 = require("md5");
