@@ -1,6 +1,6 @@
 const { User } = require("../models/user.model");
 const { dbWeb } = require("../utils/database.util");
-// const bcrypt = require('bcryptjs');
+const bcrypt = require("bcryptjs");
 const { QueryTypes } = require("sequelize");
 const { AppError } = require("../utils/appError.util");
 const { catchAsync } = require("../utils/catchAsync.util");
@@ -35,12 +35,11 @@ const createUser = catchAsync(async (req, res, next) => {
 });
 
 const login = async (req, res, next) => {
-  // const { usuario, password, code } = req.body;
   const { usuario, password } = req.body;
+
   console.log(" =================INICIANDO SESION =================");
   console.log("Credenciales: ", req.body);
 
-  // Consulta SQL para buscar el usuario en la tabla personal
   const results = await dbWeb.query(
     `SELECT tb1.*, tb2.nombre
      FROM personal tb1
@@ -52,7 +51,7 @@ const login = async (req, res, next) => {
         usuario,
       },
       type: QueryTypes.SELECT,
-    }
+    },
   );
 
   if (results.length === 0) {
@@ -61,21 +60,25 @@ const login = async (req, res, next) => {
 
   const user = results[0];
 
-  const isPasswordValid = user.PASSWORD === md5(password);
+  let isPasswordValid = false;
+
+  if (user.PASSWORD && user.PASSWORD.startsWith("$2")) {
+    isPasswordValid = await bcrypt.compare(password, user.PASSWORD);
+  } else {
+    isPasswordValid = user.PASSWORD === md5(password);
+  }
 
   if (!isPasswordValid) {
     console.log("Login fallido: ", usuario);
     return next(new AppError("Invalid password", 400));
   }
 
-  // console.log("Login exitoso: ", user);
-
   const token = await jwt.sign(
     { id: user.IDPERSONAL },
     process.env.JWT_SECRET,
     {
       expiresIn: "10h",
-    }
+    },
   );
 
   console.log("Logeado: ", user.NOMBRES);
@@ -119,7 +122,7 @@ const getSupervisores = catchAsync(async (req, res, next) => {
     "SELECT IDPERSONAL, APELLIDOS, NOMBRES, DOC FROM personal WHERE cargo = 16 AND idestado = 1 ORDER BY APELLIDOS",
     {
       type: QueryTypes.SELECT,
-    }
+    },
   );
   res.status(200).json({
     status: "success",
@@ -143,7 +146,7 @@ const getAsesorCarteras = catchAsync(async (req, res, next) => {
     {
       replacements: { doc },
       type: QueryTypes.SELECT,
-    }
+    },
   );
   res.status(200).json({
     status: "success",
