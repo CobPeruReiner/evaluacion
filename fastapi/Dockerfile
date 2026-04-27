@@ -28,7 +28,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Instala dependencias de Python primero (mejor cache)
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install --upgrade pip && \
+  pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
 # Copia el código de la app
 COPY . .

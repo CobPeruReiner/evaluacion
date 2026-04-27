@@ -1,14 +1,12 @@
 numpy<2
-torch==2.1.2
+torch==2.1.2+cpu
+torchaudio==2.1.2+cpu
 transformers==4.36.2
-
 whisperx==3.2.0
-
 fastapi==0.110.3
 uvicorn[standard]==0.29.0
 python-multipart==0.0.9
 python-dotenv
-
 pydub
 mysql-connector-python
 gunicorn
