@@ -34,9 +34,9 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DB_HOST: 192.168.1.39
-      DB_USER: raul
-      DB_PASS: loquecallamoslosadmin1
+      DB_HOST: 192.168.1.36
+      DB_USER: cob_bd
+      DB_PASS: 33nKVs4@nC
       DB_NAME: calidad
       DEVICE: "cpu"
       MODEL_SIZE: "medium"

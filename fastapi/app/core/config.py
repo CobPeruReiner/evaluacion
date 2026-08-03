@@ -21,9 +21,9 @@ class Settings:
     TOKENIZERS_PARALLELISM: str = "false"
 
     # SYS CALIDAD
-    DB_HOST: str = os.getenv("DB_HOST", "192.168.1.39")
-    DB_USER: str = os.getenv("DB_USER", "raul")
-    DB_PASS: str = os.getenv("DB_PASS", "loquecallamoslosadmin1")
+    DB_HOST: str = os.getenv("DB_HOST", "192.168.1.36")
+    DB_USER: str = os.getenv("DB_USER", "cob_bd")
+    DB_PASS: str = os.getenv("DB_PASS", "33nKVs4@nC")
     DB_NAME: str = os.getenv("DB_NAME", "calidad")
 
     # SYS SISTEMAGEST
