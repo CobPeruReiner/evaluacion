@@ -486,7 +486,7 @@ const getCriteriosEvaluacionByCartera = async (req, res) => {
         INNER JOIN calidad.ITEM tb4
           ON tb2.ID_ITEM = tb4.ID_ITEM
          AND tb4.ID_ESTADO = 1
-        INNER JOIN SISTEMAGEST_DESARROLLO.cartera tb5
+        INNER JOIN SISTEMAGEST.cartera tb5
           ON tb4.ID_CARTERA = tb5.id
          AND tb5.estado = 1
         WHERE tb1.ESTADO_ACCION = 1

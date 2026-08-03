@@ -19,11 +19,20 @@ const getAllItems = async (_req, res) => {
   try {
     const items = await db.query(
       `
-        SELECT tb1.ID_ITEM, tb1.NOMBRE_ITEM, tb1.PESO_ITEM, tb1.ID_CARTERA, tb2.cartera AS NOMBRE_CARTERA, tb1.FECHA_ACTUALIZACION, tb1.USUARIO_ACTUALIZACION, CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION, tb1.ID_ESTADO
+        SELECT
+          tb1.ID_ITEM,
+          tb1.NOMBRE_ITEM,
+          tb1.PESO_ITEM,
+          tb1.ID_CARTERA,
+          tb2.cartera AS NOMBRE_CARTERA,
+          tb1.FECHA_ACTUALIZACION,
+          tb1.USUARIO_ACTUALIZACION,
+          CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION,
+          tb1.ID_ESTADO
         FROM calidad.ITEM tb1
-        LEFT JOIN SISTEMAGEST_DESARROLLO.cartera tb2
+        LEFT JOIN SISTEMAGEST.cartera tb2
         ON tb1.ID_CARTERA = tb2.id
-        LEFT JOIN SISTEMAGEST_DESARROLLO.personal tb3
+        LEFT JOIN SISTEMAGEST.personal tb3
         ON tb1.USUARIO_ACTUALIZACION = tb3.IDPERSONAL
         WHERE tb2.estado = 1
           AND tb1.ID_ESTADO = 1
@@ -245,9 +254,9 @@ const getAllCriterios = async (_req, res) => {
         FROM calidad.CRITERIO tb1
         INNER JOIN calidad.ITEM tb2
           ON tb1.ID_ITEM = tb2.ID_ITEM AND tb2.ID_ESTADO = 1
-        LEFT JOIN SISTEMAGEST_DESARROLLO.personal tb3
+        LEFT JOIN SISTEMAGEST.personal tb3
           ON tb1.USUARIO_ACTUALIZACION = tb3.IDPERSONAL
-        LEFT JOIN SISTEMAGEST_DESARROLLO.cartera tb4
+        LEFT JOIN SISTEMAGEST.cartera tb4
           ON tb2.ID_CARTERA = tb4.id AND tb4.estado = 1
         WHERE tb1.ID_ESTADO = 1
           AND tb2.ID_ESTADO = 1
@@ -469,9 +478,9 @@ const getAllAcciones = async (_req, res) => {
           ON tb1.ID_CRITERIO = tb2.ID_CRITERIO AND tb2.ID_ESTADO = 1
         INNER JOIN calidad.ITEM tb4
           ON tb2.ID_ITEM = tb4.ID_ITEM AND tb4.ID_ESTADO = 1
-        INNER JOIN SISTEMAGEST_DESARROLLO.cartera tb5
+        INNER JOIN SISTEMAGEST.cartera tb5
           ON tb4.ID_CARTERA = tb5.id AND tb5.estado = 1
-        LEFT JOIN SISTEMAGEST_DESARROLLO.personal tb3
+        LEFT JOIN SISTEMAGEST.personal tb3
           ON tb1.USUARIO_ACTUALIZACION = tb3.IDPERSONAL
         WHERE tb1.ESTADO_ACCION = 1
         ORDER BY tb1.FECHA_ACTUALIZACION DESC;
@@ -636,7 +645,7 @@ const getAllMotivosNoPago = async (_req, res) => {
       `
         SELECT tb1.ID_MOTIVO_NO_PAGO, tb1.NOMBRE_MOTIVO_NO_PAGO, tb1.ID_CARTERA, tb2.cartera AS NOMBRE_CARTERA, tb1.ID_ESTADO
         FROM calidad.MOTIVO_NO_PAGO tb1
-        LEFT JOIN SISTEMAGEST_DESARROLLO.cartera tb2
+        LEFT JOIN SISTEMAGEST.cartera tb2
         ON tb1.ID_CARTERA = tb2.id;
       `,
       {
@@ -759,7 +768,7 @@ const getAllTiposGestion = async (_req, res) => {
       `
         SELECT tb1.ID_TIPO_GESTION, tb1.NOMBRE_TIPO_GESTION, tb1.ID_CARTERA, tb2.cartera AS NOMBRE_CARTERA, tb1.ID_ESTADO
         FROM calidad.TIPO_GESTION tb1
-        LEFT JOIN SISTEMAGEST_DESARROLLO.cartera tb2
+        LEFT JOIN SISTEMAGEST.cartera tb2
         ON tb1.ID_CARTERA = tb2.id;
       `,
       {
@@ -1291,7 +1300,7 @@ const obtenerResultadosPorFechaCartera = (req, res) => {
 const getAllCarteras = async (req, res) => {
   try {
     const query = `
-      SELECT id, cartera AS nombre FROM cartera WHERE estado = 1 ORDER BY cartera;
+      SELECT id, cartera AS nombre FROM SISTEMAGEST.cartera WHERE estado = 1 ORDER BY cartera;
     `;
 
     const [results] = await dbWeb.query(query);

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import DataTable from "react-data-table-component";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -23,29 +23,28 @@ const paginationOptions = {
 };
 
 const compareFunction = (a, b) => {
-  if (a.label < b.label) {
-    return -1;
-  }
-  if (a.label > b.label) {
-    return 1;
-  }
-  return 0;
+  return a.label.localeCompare(b.label, "es", {
+    sensitivity: "base",
+  });
 };
 
-function countWords(str) {
-  return str.trim().split(/\s+/).length;
+function countWords(str = "") {
+  return str.trim().split(/\s+/).filter(Boolean).length;
 }
 
-function getWordStr(str) {
+function getWordStr(str = "") {
   if (countWords(str) > 10) {
     return str.split(/\s+/).slice(0, 10).join(" ");
   }
+
   return str;
 }
 
-// const URL = 'http://192.168.1.51:4000/api/v1/Reporte';
-const ASESORES_CYC_WEB_URL = `${API_URL}api/v1/gestionsCycWeb/personal`;
-const CARYCLI_CYC_WEB_URL = `${API_URL}api/v1/gestionsCycWeb/carYcli`;
+const BASE_API_URL = API_URL.endsWith("/") ? API_URL : `${API_URL}/`;
+
+const ASESORES_CYC_WEB_URL = `${BASE_API_URL}api/v1/gestionsCycWeb/personal`;
+
+const CARYCLI_CYC_WEB_URL = `${BASE_API_URL}api/v1/gestionsCycWeb/carYcli`;
 
 export const FichaEvaluacionTable = () => {
   const [datosFicha, setDatosFicha] = useState([]);
@@ -59,24 +58,27 @@ export const FichaEvaluacionTable = () => {
   const [asesoresData, setAsesoresData] = useState([]);
 
   const [clienteSelected, setClienteSelected] = useState("");
-  const [objectCarteraSelected, setObjectCarteraSelected] = useState([]);
-  const [objectClienteSelected, setObjectClienteSelected] = useState([]);
-  const [asesorSelected, setAsesorSelected] = useState([]);
+  const [objectCarteraSelected, setObjectCarteraSelected] = useState(null);
+  const [objectClienteSelected, setObjectClienteSelected] = useState(null);
+  const [asesorSelected, setAsesorSelected] = useState(null);
 
-  const selectCarteraRef = useRef();
-  const selectClienteRef = useRef();
-  const selectAsesorRef = useRef();
+  const [loadingFiltros, setLoadingFiltros] = useState(false);
+  const [loadingSearch, setLoadingSearch] = useState(false);
+
+  const selectCarteraRef = useRef(null);
+  const selectClienteRef = useRef(null);
+  const selectAsesorRef = useRef(null);
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const isAuth = useSelector((state) => state.user.isAuth);
-  const dispatch = useDispatch();
 
   useEffect(() => {
     if (!isAuth) {
       dispatch(checkToken(navigate));
     }
-  }, [isAuth, dispatch]);
+  }, [isAuth, dispatch, navigate]);
 
   const columns = [
     {
@@ -634,72 +636,136 @@ export const FichaEvaluacionTable = () => {
     },
   ];
 
-  //FILTER
-
   useEffect(() => {
-    axios
-      .get(CARYCLI_CYC_WEB_URL)
-      .then((res) => {
-        setClientesCarterasData(res.data.clientesYcarteras);
-        setClientesData(
-          [
-            ...new Map(
-              res.data.clientesYcarteras.map((item) => [
-                item.id_cliente,
-                { value: item.id_cliente, label: item.cliente },
-              ]),
-            ).values(),
-          ].sort(compareFunction),
-        );
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    let componenteActivo = true;
 
-    axios
-      .get(ASESORES_CYC_WEB_URL)
-      .then((res) => {
-        const asesores = res.data.personal;
-        asesores.unshift({ IDPERSONAL: "TODOS", DNI: "", ASESOR: "TODOS" });
-        setAsesoresData(asesores);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    const cargarFiltros = async () => {
+      setLoadingFiltros(true);
+
+      try {
+        const [clientesResponse, asesoresResponse] = await Promise.all([
+          axios.get(CARYCLI_CYC_WEB_URL),
+          axios.get(ASESORES_CYC_WEB_URL),
+        ]);
+
+        const clientesYcarteras = Array.isArray(
+          clientesResponse.data?.clientesYcarteras,
+        )
+          ? clientesResponse.data.clientesYcarteras
+          : Array.isArray(clientesResponse.data)
+            ? clientesResponse.data
+            : [];
+
+        const personal = Array.isArray(asesoresResponse.data?.personal)
+          ? asesoresResponse.data.personal
+          : Array.isArray(asesoresResponse.data)
+            ? asesoresResponse.data
+            : [];
+
+        if (!componenteActivo) return;
+
+        setClientesCarterasData(clientesYcarteras);
+
+        const clientesUnicos = [
+          ...new Map(
+            clientesYcarteras.map((item) => [
+              item.id_cliente,
+              {
+                value: item.id_cliente,
+                label: item.cliente,
+              },
+            ]),
+          ).values(),
+        ].sort(compareFunction);
+
+        setClientesData(clientesUnicos);
+
+        const opcionesAsesores = personal
+          .filter((asesor) => asesor?.ASESOR)
+          .map((asesor) => ({
+            value: asesor.DNI,
+            label: asesor.ASESOR,
+          }))
+          .sort(compareFunction);
+
+        setAsesoresData([
+          {
+            value: "",
+            label: "TODOS",
+          },
+          ...opcionesAsesores,
+        ]);
+      } catch (error) {
+        console.error("Error al cargar los filtros:", error);
+
+        if (componenteActivo) {
+          toast.error("No se pudieron cargar los filtros");
+        }
+      } finally {
+        if (componenteActivo) {
+          setLoadingFiltros(false);
+        }
+      }
+    };
+
+    cargarFiltros();
+
+    return () => {
+      componenteActivo = false;
+    };
   }, []);
 
-  const handleCliente = (e) => {
-    setObjectClienteSelected({ value: e.value, label: e.label });
-    setObjectCarteraSelected([]);
+  const handleCliente = (option) => {
+    setObjectClienteSelected(option);
+    setObjectCarteraSelected(null);
+
+    if (!option) {
+      setClienteSelected("");
+      setCarterasData([]);
+      return;
+    }
+
     const filteredCarteras = clientesCarterasData.filter(
-      (item) => item.id_cliente == e.value,
+      (item) => String(item.id_cliente) === String(option.value),
     );
 
-    filteredCarteras.unshift({ cartera: "TODOS", id_cartera: "" });
+    const opcionesCarteras = filteredCarteras
+      .map((item) => ({
+        value: item.id_cartera,
+        label: item.cartera,
+      }))
+      .sort(compareFunction);
 
-    setCarterasData(
-      filteredCarteras.map((e) => {
-        return {
-          label: e.cartera,
-          value: e.id_cartera,
-        };
-      }),
-    );
-    setClienteSelected(e.label);
+    setCarterasData([
+      {
+        value: "",
+        label: "TODOS",
+      },
+      ...opcionesCarteras,
+    ]);
+
+    setClienteSelected(option.label);
   };
 
-  const handleCartera = (e) => {
-    setObjectCarteraSelected({ value: e.value, label: e.label });
+  const handleCartera = (option) => {
+    setObjectCarteraSelected(option);
+  };
+
+  const handleAsesor = (option) => {
+    setAsesorSelected(option);
   };
 
   const handleSearch = async () => {
-    if (
-      !objectClienteSelected.label &&
-      !objectCarteraSelected.label &&
-      !firstDate &&
-      !secondDate &&
-      !asesorSelected.value
-    ) {
+    const cliente = objectClienteSelected?.label ?? "";
+    const tramo = objectCarteraSelected?.label ?? "";
+    const asesor = asesorSelected?.value ?? "";
+
+    const tieneCliente = Boolean(objectClienteSelected);
+    const tieneCartera = Boolean(objectCarteraSelected);
+    const tieneAsesor = Boolean(asesorSelected);
+    const tieneFechas = Boolean(firstDate && secondDate);
+
+    if (!tieneCliente && !tieneCartera && !tieneAsesor && !tieneFechas) {
       toast.warning("Debe elegir al menos un filtro");
       return;
     }
@@ -709,32 +775,43 @@ export const FichaEvaluacionTable = () => {
       return;
     }
 
+    if (firstDate && secondDate && firstDate > secondDate) {
+      toast.warning("La fecha inicial no puede ser mayor a la fecha final");
+      return;
+    }
+
+    setLoadingSearch(true);
+
     try {
       const fichas = await getAsesorEvaluaciones({
-        cliente: objectClienteSelected.label,
-        tramo: objectCarteraSelected.label,
+        cliente,
+        tramo,
         firstDate,
         secondDate,
-        asesor: asesorSelected.value,
+        asesor,
       });
-      setDatosFicha(fichas);
+
+      setDatosFicha(Array.isArray(fichas) ? fichas : []);
     } catch (error) {
+      console.error("Error al buscar fichas:", error);
       toast.error("Error al buscar fichas");
-      console.log(error);
+    } finally {
+      setLoadingSearch(false);
     }
   };
 
   const handleClean = () => {
-    setObjectClienteSelected([]);
-    setObjectCarteraSelected([]);
+    setObjectClienteSelected(null);
+    setObjectCarteraSelected(null);
+    setAsesorSelected(null);
+
+    setClienteSelected("");
+    setCarterasData([]);
     setFirstDate("");
     setSecondDate("");
-    setAsesorSelected([]);
+    setInputText("");
+    setDatosFicha([]);
   };
-
-  // console.log(asesorSelected);
-  // console.log(objectCarteraSelected);
-  // console.log(objectClienteSelected);
 
   return (
     <>

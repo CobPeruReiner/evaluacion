@@ -91,6 +91,12 @@ function App() {
               path="/speech/auditoria/detalle/:archivo"
               element={<Views.AuditoriaDetail />}
             />
+
+            {/* REPORTE GESTIONES */}
+            <Route
+              path="/auditoria/gestiones"
+              element={<Views.ReporteGestiones />}
+            />
           </Route>
         </Routes>
       </div>

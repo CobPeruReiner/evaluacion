@@ -233,6 +233,34 @@ const Sidebar = () => {
                     </li>
                   </>
                 )}
+
+                {(user?.CARGO === 20 ||
+                  user?.CARGO === 17 ||
+                  user?.CARGO === 29 ||
+                  user?.CARGO === 7) && (
+                  <>
+                    {isSidebarOpen && (
+                      <h3 className="text-xs font-semibold text-gray-400 px-4">
+                        Auditoria
+                      </h3>
+                    )}
+                    <li>
+                      <Link
+                        to="/auditoria/gestiones"
+                        className={`flex items-center text-xs ${
+                          isSidebarOpen ? "justify-start" : "justify-center"
+                        } space-x-2 py-2 px-3 rounded-md transition-all ${
+                          isActive("/auditoria/gestiones")
+                            ? "bg-[#e0f7fc] text-[#09c]"
+                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                        }`}
+                      >
+                        <MdOutlineMonitor size={24} />
+                        {isSidebarOpen && <span>Reporte de Gestiones</span>}
+                      </Link>
+                    </li>
+                  </>
+                )}
               </>
             )}
           </ul>

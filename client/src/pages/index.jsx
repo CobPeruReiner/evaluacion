@@ -10,3 +10,4 @@ export * from "./Administrador/Criterios/CriteriosEvaluacion";
 export * from "./SpeachAnalitycs/Auditoria/Auditoria";
 export * from "./SpeachAnalitycs/Procesamiento/Procesamiento";
 export * from "./SpeachAnalitycs/AuditoriaDetail/AuditoriaDetail";
+export * from "./Auditoria/ReporteGestiones";
