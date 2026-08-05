@@ -29,7 +29,7 @@ def obtener_items_por_cartera(conn, id_cartera: str) -> list:
                 ID_ITEM, 
                 NOMBRE_ITEM, 
                 PESO_ITEM
-            FROM calidad.ITEM
+            FROM CALIDAD.ITEM
             WHERE ID_CARTERA = %s 
               AND ID_ESTADO = 1
             ORDER BY ID_ITEM
@@ -52,7 +52,7 @@ def obtener_criterios_por_item(conn, id_item: int) -> list:
                 PESO_CRITERIO,
                 ID_ITEM,
                 EVALUADOR_KEY
-            FROM calidad.CRITERIO
+            FROM CALIDAD.CRITERIO
             WHERE ID_ITEM = %s AND ID_ESTADO = 1
         """,
             (id_item,),
@@ -73,7 +73,7 @@ def obtener_criterios_por_item(conn, id_item: int) -> list:
 #                 PESO_ACCION_CRITERIO,
 #                 ID_CRITERIO,
 #                 ESTADO_ACCION
-#             FROM calidad.ACCION_CRITERIO
+#             FROM CALIDAD.ACCION_CRITERIO
 #             WHERE ID_CRITERIO = %s AND ESTADO_ACCION = 1
 #         """,
 #             (id_criterio,),

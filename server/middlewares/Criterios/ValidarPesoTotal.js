@@ -68,15 +68,15 @@
 //             COALESCE(SUM(C.PESO_CRITERIO), 0) AS sumaTotal,
 //             (
 //               SELECT I.PESO_ITEM
-//               FROM calidad.ITEM I
+//               FROM CALIDAD.ITEM I
 //               WHERE I.ID_ITEM = :idPadre
 //             ) AS pesoItem,
 //             (
 //               SELECT C2.PESO_CRITERIO
-//               FROM calidad.CRITERIO C2
+//               FROM CALIDAD.CRITERIO C2
 //               WHERE C2.ID_CRITERIO = :idElemento
 //             ) AS pesoAnterior
-//           FROM calidad.CRITERIO C
+//           FROM CALIDAD.CRITERIO C
 //           WHERE C.ID_ITEM = :idPadre
 //         `;
 
@@ -109,15 +109,15 @@
 //           COALESCE(SUM(A.PESO_ACCION_CRITERIO), 0) AS sumaTotal,
 //           (
 //             SELECT C.PESO_CRITERIO
-//             FROM calidad.CRITERIO C
+//             FROM CALIDAD.CRITERIO C
 //             WHERE C.ID_CRITERIO = :idPadre
 //           ) AS pesoCriterio,
 //           (
 //             SELECT A2.PESO_ACCION_CRITERIO
-//             FROM calidad.ACCION_CRITERIO A2
+//             FROM CALIDAD.ACCION_CRITERIO A2
 //             WHERE A2.ID_ACCION_CRITERIO = :idElemento
 //           ) AS pesoAnterior
-//            FROM calidad.ACCION_CRITERIO A
+//            FROM CALIDAD.ACCION_CRITERIO A
 //            WHERE A.ID_CRITERIO = :idPadre
 //         `;
 
@@ -146,7 +146,7 @@
 //       // === ITEM: Comparar contra 1.00 directamente ===
 //       let query = `
 //         SELECT COALESCE(SUM(${campoPesoDB}), 0) AS sumaActual
-//         FROM calidad.${tabla}
+//         FROM CALIDAD.${tabla}
 //         WHERE ${campoPadreDB} = :idPadre
 //           AND ID_ESTADO = 1
 //       `;
@@ -261,17 +261,17 @@
 //             COALESCE(SUM(C.PESO_CRITERIO), 0) AS sumaTotal,
 //             (
 //               SELECT I.PESO_ITEM
-//               FROM calidad.ITEM I
+//               FROM CALIDAD.ITEM I
 //               WHERE I.ID_ITEM = :idPadre
 //                 AND I.ID_ESTADO = 1
 //             ) AS pesoItem,
 //             (
 //               SELECT C2.PESO_CRITERIO
-//               FROM calidad.CRITERIO C2
+//               FROM CALIDAD.CRITERIO C2
 //               WHERE C2.ID_CRITERIO = :idElemento
 //                 AND C2.ID_ESTADO = 1
 //             ) AS pesoAnterior
-//           FROM calidad.CRITERIO C
+//           FROM CALIDAD.CRITERIO C
 //           WHERE C.ID_ITEM = :idPadre
 //             AND C.ID_ESTADO = 1
 //         `;
@@ -311,17 +311,17 @@
 //             COALESCE(SUM(A.PESO_ACCION_CRITERIO), 0) AS sumaTotal,
 //             (
 //               SELECT C.PESO_CRITERIO
-//               FROM calidad.CRITERIO C
+//               FROM CALIDAD.CRITERIO C
 //               WHERE C.ID_CRITERIO = :idPadre
 //                 AND C.ID_ESTADO = 1
 //             ) AS pesoCriterio,
 //             (
 //               SELECT A2.PESO_ACCION_CRITERIO
-//               FROM calidad.ACCION_CRITERIO A2
+//               FROM CALIDAD.ACCION_CRITERIO A2
 //               WHERE A2.ID_ACCION_CRITERIO = :idElemento
 //                 AND A2.ESTADO_ACCION = 1
 //             ) AS pesoAnterior
-//           FROM calidad.ACCION_CRITERIO A
+//           FROM CALIDAD.ACCION_CRITERIO A
 //           WHERE A.ID_CRITERIO = :idPadre
 //             AND A.ESTADO_ACCION = 1
 //         `;
@@ -357,7 +357,7 @@
 //       // ================= ITEM =================
 //       let query = `
 //         SELECT COALESCE(SUM(${campoPesoDB}), 0) AS sumaActual
-//         FROM calidad.${tabla}
+//         FROM CALIDAD.${tabla}
 //         WHERE ${campoPadreDB} = :idPadre
 //           AND ID_ESTADO = 1
 //       `;
@@ -502,17 +502,17 @@ const validarPesoTotal = (tabla) => {
             COALESCE(SUM(C.PESO_CRITERIO), 0) AS sumaTotal,
             (
               SELECT I.PESO_ITEM
-              FROM calidad.ITEM I
+              FROM CALIDAD.ITEM I
               WHERE I.ID_ITEM = :idPadre
                 AND I.ID_ESTADO = 1
             ) AS pesoItem,
             (
               SELECT C2.PESO_CRITERIO
-              FROM calidad.CRITERIO C2
+              FROM CALIDAD.CRITERIO C2
               WHERE C2.ID_CRITERIO = :idElemento
                 AND C2.ID_ESTADO = 1
             ) AS pesoAnterior
-          FROM calidad.CRITERIO C
+          FROM CALIDAD.CRITERIO C
           WHERE C.ID_ITEM = :idPadre
             AND C.ID_ESTADO = 1
         `;
@@ -552,17 +552,17 @@ const validarPesoTotal = (tabla) => {
             COALESCE(SUM(A.PESO_ACCION_CRITERIO), 0) AS sumaTotal,
             (
               SELECT C.PESO_CRITERIO
-              FROM calidad.CRITERIO C
+              FROM CALIDAD.CRITERIO C
               WHERE C.ID_CRITERIO = :idPadre
                 AND C.ID_ESTADO = 1
             ) AS pesoCriterio,
             (
               SELECT A2.PESO_ACCION_CRITERIO
-              FROM calidad.ACCION_CRITERIO A2
+              FROM CALIDAD.ACCION_CRITERIO A2
               WHERE A2.ID_ACCION_CRITERIO = :idElemento
                 AND A2.ESTADO_ACCION = 1
             ) AS pesoAnterior
-          FROM calidad.ACCION_CRITERIO A
+          FROM CALIDAD.ACCION_CRITERIO A
           WHERE A.ID_CRITERIO = :idPadre
             AND A.ESTADO_ACCION = 1
         `;
@@ -598,7 +598,7 @@ const validarPesoTotal = (tabla) => {
       // ================= ITEM =================
       let query = `
         SELECT COALESCE(SUM(${campoPesoDB}), 0) AS sumaActual
-        FROM calidad.${tabla}
+        FROM CALIDAD.${tabla}
         WHERE ${campoPadreDB} = :idPadre
           AND ID_ESTADO = 1
       `;
