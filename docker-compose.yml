@@ -34,10 +34,10 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DB_HOST: 192.168.1.36
-      DB_USER: cob_bd
-      DB_PASS: 33nKVs4@nC
-      DB_NAME: calidad
+      DB_HOST: 192.168.1.31
+      DB_USER: cycwebcob
+      DB_PASS: k4&{'Ba7Np1
+      DB_NAME: CALIDAD
       DEVICE: "cpu"
       MODEL_SIZE: "medium"
       COMPUTE_TYPE: "int8"
