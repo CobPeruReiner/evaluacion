@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 # Usa una imagen oficial de Python ligera y reciente
 FROM python:3.10-slim-bookworm
 
@@ -28,7 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Instala dependencias de Python primero (mejor cache)
 COPY requirements.txt .
-RUN pip install --upgrade pip && \
+RUN --mount=type=cache,target=/root/.cache/pip pip install --upgrade pip && \
   pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
 # Copia el código de la app

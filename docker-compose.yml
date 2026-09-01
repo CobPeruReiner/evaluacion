@@ -1,28 +1,16 @@
 services:
-  client:
-    image: evaluacion-client
-    build:
-      context: ./client
-    env_file:
-      - ./client/.env.production
-    volumes:
-      - client-build:/app/build
-    depends_on:
-      - server
-
   server:
     image: evaluacion-server
     build:
-      context: ./server
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "4001:4001"
     env_file:
       - ./server/.env.production
     volumes:
-      - client-build:/app/public
       - ./server/resultados:/app/server/resultados
       - ./server/audios:/app/server/audios
-    command: ["node", "server.js"]
 
   fastapi_backend:
     build:
@@ -44,5 +32,3 @@ services:
       HF_AUTH_TOKEN: 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
     volumes: []
 
-volumes:
-  client-build:
