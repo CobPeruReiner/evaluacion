@@ -15,7 +15,7 @@ def seleccionar_accion_info_producto(
     texto: str, acciones: list, id_cartera: str, tipificaciones: dict = None
 ) -> dict:
     castigo = es_cartera_castigo(id_cartera)
-    mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
+    mapa = {a["NOMBRE"].strip().upper(): a for a in acciones}
 
     monto_encontrado = detectar_monto(texto)
     dias_encontrado = detectar_antiguedad(texto)
@@ -53,7 +53,7 @@ def seleccionar_accion_indagar_pago(
     texto: str, acciones: list, id_cartera: str, tipificaciones: dict = None
 ) -> dict:
     castigo = es_cartera_castigo(id_cartera)
-    mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
+    mapa = {a["NOMBRE"].strip().upper(): a for a in acciones}
 
     motivo_pats = [
         r"que\s+le\s+impide\s+pagar",
@@ -112,7 +112,7 @@ def seleccionar_accion_indagar_pago(
 
 
 def seleccionar_accion_asesorar(texto: str, acciones: list, id_cartera: str) -> dict:
-    mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
+    mapa = {a["NOMBRE"].strip().upper(): a for a in acciones}
 
     escalonadas = (
         sum(
@@ -205,7 +205,7 @@ def seleccionar_accion_asesorar(texto: str, acciones: list, id_cartera: str) -> 
 # Función auxiliar para fallback
 def _accion_no_cumple(acciones: list) -> dict:
     for accion in acciones:
-        if accion["NOMBRE_ACCION_CRITERIO"].strip().upper() in [
+        if accion["NOMBRE"].strip().upper() in [
             "NO CUMPLE",
             "NO SE EVIDENCIA",
         ]:

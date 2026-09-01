@@ -31,8 +31,7 @@ export const SCriterios = () => {
                 className="text-xs text-[rgb(96_125_139/1)] px-3 py-2 hover:bg-gray-200 cursor-pointer"
                 onClick={() => criterioAsocSelected(item)}
               >
-                {item.NOMBRE_ITEM} - {item.NOMBRE_CRITERIO} -{" "}
-                {item.NOMBRE_CARTERA}
+                {item.NOMBRE_ITEM} - {item.NOMBRE} - {item.NOMBRE_CARTERA}
               </p>
             ))}
           </>

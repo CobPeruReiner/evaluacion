@@ -11,6 +11,7 @@ const { carterasRouter } = require("./routes/carteras.routes");
 const { viewsRouter } = require("./routes/views.routes");
 const { gestionesCycWebRouter } = require("./routes/gestionesCycWeb.routes");
 const { criteriosEvaluacionRouter } = require("./routes/criterios.routes");
+const { evaluacionesRouter } = require("./routes/evaluaciones.routes");
 
 const app = express();
 
@@ -45,6 +46,7 @@ app.use("/api/v1/base", baseRouter);
 app.use("/api/v1/carteras", carterasRouter);
 app.use("/api/v1/gestionsCycWeb", gestionesCycWebRouter);
 app.use("/api/v1/criteriosEvaluacion", criteriosEvaluacionRouter);
+app.use("/api/v1/evaluaciones", evaluacionesRouter);
 app.use("/*", viewsRouter);
 
 module.exports = { app };

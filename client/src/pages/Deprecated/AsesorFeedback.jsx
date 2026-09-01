@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import "./styles/asesorFeedback.css";
-import icon from "../assets/logo.jpg"; // Importar la imagen
+import "../styles/asesorFeedback.css";
+import icon from "../../assets/logo.jpg";
 import { useDispatch, useSelector } from "react-redux";
 import { checkToken } from "../../store/actions/user.actions";
 import { updateCurrentEvaluacion } from "../../store/actions/currentEvaluacion.actions";
@@ -30,12 +30,13 @@ const AsesorFeedback = () => {
   const { isAuth, user } = useSelector((state) => state.user);
 
   const currentEvaluacion = useSelector(
-    (state) => state.currentEvaluacion.currentEvaluacion
+    (state) => state.currentEvaluacion.currentEvaluacion,
   );
   const navigate = useNavigate();
 
   const [feedbackRecibido, setFeedbackRecibido] = useState(0);
   const [feedbackCompromiso, setFeedbackCompromiso] = useState("");
+  const supervisor = user?.supervisor || "No asignado";
 
   useEffect(() => {
     if (!isAuth) {
@@ -70,7 +71,7 @@ const AsesorFeedback = () => {
       }
     }
     const options = currentOptions.filter(
-      (e) => e.toLowerCase() !== "sí cumple" && e.toLowerCase() !== "no aplica"
+      (e) => e.toLowerCase() !== "sí cumple" && e.toLowerCase() !== "no aplica",
     );
     return options;
   };
@@ -98,7 +99,7 @@ const AsesorFeedback = () => {
       await updateAsesorFeedback(
         currentEvaluacion.id,
         feedbackRecibido,
-        feedbackCompromiso
+        feedbackCompromiso,
       );
       alert("Feedback registrado");
       navigate("/evaluacionesAsesor");
@@ -267,7 +268,7 @@ const AsesorFeedback = () => {
                 // styles depending on current value
                 style={{ fontSize: "1.2rem" }}
                 className={`cell ${getCalificacionStyles(
-                  currentEvaluacion.calificacion_final
+                  currentEvaluacion.calificacion_final,
                 )}`}
               >
                 {/* 48.00% */}
@@ -331,7 +332,7 @@ const AsesorFeedback = () => {
           if (rowIndex === 4 && colIndex === 5) {
             return (
               <div key={`${rowIndex}-${colIndex}`} className="cell">
-                {user.supervisor}
+                {supervisor}
                 {/* VICTOR UCHUYA (X) */}
               </div>
             );
@@ -543,7 +544,7 @@ const AsesorFeedback = () => {
                 key={`${rowIndex}-${colIndex}`}
                 className={`cell colspan ${
                   isNegativeOption(
-                    currentEvaluacion.contactar_con_persona_12
+                    currentEvaluacion.contactar_con_persona_12,
                   ) && "red-bg white-text"
                 }`}
                 style={{ "--col-span": 2 }}
@@ -572,7 +573,7 @@ const AsesorFeedback = () => {
                 key={`${rowIndex}-${colIndex}`}
                 className={`cell colspan ${
                   isNegativeOption(
-                    currentEvaluacion.identificacion_gestor_13
+                    currentEvaluacion.identificacion_gestor_13,
                   ) && "red-bg white-text"
                 }`}
                 style={{ "--col-span": 2 }}
@@ -643,7 +644,7 @@ const AsesorFeedback = () => {
                 key={`${rowIndex}-${colIndex}`}
                 className={`cell colspan ${
                   isNegativeOption(
-                    currentEvaluacion.indagar_motivo_no_pago_22
+                    currentEvaluacion.indagar_motivo_no_pago_22,
                   ) && "red-bg white-text"
                 }`}
                 style={{ "--col-span": 2 }}
@@ -715,7 +716,7 @@ const AsesorFeedback = () => {
                 key={`${rowIndex}-${colIndex}`}
                 className={`cell colspan ${
                   isNegativeOption(
-                    currentEvaluacion.mantiene_sentido_urgencia_31
+                    currentEvaluacion.mantiene_sentido_urgencia_31,
                   ) && "red-bg white-text"
                 }`}
                 style={{ "--col-span": 2 }}
@@ -744,7 +745,7 @@ const AsesorFeedback = () => {
                 key={`${rowIndex}-${colIndex}`}
                 className={`cell colspan ${
                   isNegativeOption(
-                    currentEvaluacion.perseverancia_objetivo_32
+                    currentEvaluacion.perseverancia_objetivo_32,
                   ) && "red-bg white-text"
                 }`}
                 style={{ "--col-span": 2 }}
@@ -1134,7 +1135,7 @@ const AsesorFeedback = () => {
               {`R${rowIndex + 1}C${colIndex + 1}`}
             </div>
           );
-        })
+        }),
       )}
     </div>
   );

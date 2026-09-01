@@ -58,8 +58,8 @@ const buildFormularioEvaluacion = (acciones = []) => {
     if (!item.criterios.has(idCriterio)) {
       item.criterios.set(idCriterio, {
         idCriterio,
-        nombreCriterio: row.NOMBRE_CRITERIO,
-        pesoCriterio: row.PESO_CRITERIO,
+        nombreCriterio: row.NOMBRE,
+        pesoCriterio: row.PESO,
         acciones: [],
       });
     }
@@ -67,9 +67,9 @@ const buildFormularioEvaluacion = (acciones = []) => {
     const criterio = item.criterios.get(idCriterio);
 
     criterio.acciones.push({
-      idAccion: row.ID_ACCION_CRITERIO,
-      nombreAccion: row.NOMBRE_ACCION_CRITERIO,
-      pesoAccion: row.PESO_ACCION_CRITERIO,
+      idAccion: row.ID_ACCION,
+      nombreAccion: row.NOMBRE,
+      pesoAccion: row.PESO,
     });
   });
 

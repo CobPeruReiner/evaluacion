@@ -295,6 +295,13 @@ export const MonitoreoProvider = ({ children }) => {
     });
   };
 
+  const seleccionarEfectos = (efectosSeleccionados = []) => {
+    setFilterGestiones((prev) => ({
+      ...prev,
+      idEfectos: Array.from(new Set(efectosSeleccionados.flatMap((efecto) => efecto.IDS))),
+    }));
+  };
+
   const agruparEfectos = (lista) => {
     const map = {};
 
@@ -436,7 +443,9 @@ export const MonitoreoProvider = ({ children }) => {
 
       const { data } = await axios.get(ASESORES_CYC_WEB_URL);
 
-      setAsesores(data.personal || []);
+      const source = data.personal ?? data.data ?? [];
+      // Algunos drivers devuelven los resultados de un SP como [[...]].
+      setAsesores(Array.isArray(source?.[0]) ? source.flat() : source);
     } catch (error) {
       console.log(error);
     } finally {
@@ -491,11 +500,20 @@ export const MonitoreoProvider = ({ children }) => {
     try {
       setLoadingGestiones(true);
 
+      const todosLosEfectos = efectosAgrupados
+        .flatMap((efecto) => efecto.IDS)
+        .every((id) => filterGestiones.idEfectos.includes(id));
+
       const params = {
         p_id_cartera: filterGestiones.idCartera,
         p_fecha_inicio: filterGestiones.fechaInicio,
         p_fecha_fin: filterGestiones.fechaFin,
-        p_idefectos: filterGestiones.idEfectos.join(","),
+        // Sin filtro y "todos" significan lo mismo para el SP. Evitamos
+        // serializar cientos de IDs en la URL y en su parámetro VARCHAR.
+        p_idefectos:
+          filterGestiones.idEfectos.length && !todosLosEfectos
+            ? filterGestiones.idEfectos.join(",")
+            : undefined,
       };
 
       const { data } = await axios.get(
@@ -578,6 +596,7 @@ export const MonitoreoProvider = ({ children }) => {
         filtrarEfecto,
         toggleEfecto,
         toggleTodosEfectos,
+        seleccionarEfectos,
         loadEfectosByCartera,
 
         // asesor

@@ -42,8 +42,8 @@ def evaluar_apertura(segmentos: list, id_cartera: str) -> dict:
         peso_obtenido = 0
 
         for criterio in criterios:
-            nombre = criterio["NOMBRE_CRITERIO"].strip().upper()
-            peso_criterio = float(criterio.get("PESO_CRITERIO", 0))
+            nombre = criterio["NOMBRE"].strip().upper()
+            peso_criterio = float(criterio.get("PESO", 0))
             acciones = obtener_acciones_por_criterio(conn, criterio["ID_CRITERIO"])
             accion_detectada = None
 
@@ -63,21 +63,21 @@ def evaluar_apertura(segmentos: list, id_cartera: str) -> dict:
                 continue
 
             peso_accion = (
-                float(accion_detectada.get("PESO_ACCION_CRITERIO", 0))
+                float(accion_detectada.get("PESO", 0))
                 if accion_detectada
                 else 0.0
             )
             peso_total += peso_criterio
             peso_obtenido += peso_accion
 
-            resultado_criterios[criterio["NOMBRE_CRITERIO"]] = {
-                "NOMBRE_ACCION_CRITERIO": (
-                    accion_detectada.get("NOMBRE_ACCION_CRITERIO")
+            resultado_criterios[criterio["NOMBRE"]] = {
+                "NOMBRE": (
+                    accion_detectada.get("NOMBRE")
                     if accion_detectada
                     else "NO DETECTADO"
                 ),
-                "PESO_ACCION_CRITERIO": peso_accion,
-                "PESO_CRITERIO": peso_criterio,
+                "PESO": peso_accion,
+                "PESO": peso_criterio,
             }
 
         cumplimiento = (peso_obtenido / peso_total) * 100 if peso_total else 0.0

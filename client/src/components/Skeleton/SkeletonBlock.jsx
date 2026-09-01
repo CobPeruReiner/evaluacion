@@ -1,16 +1,3 @@
-export const SkeletonBlock = ({ title = true, lines = 6, className = "" }) => {
-  return (
-    <div className={`w-full ${className}`}>
-      {title && (
-        <div className="flex flex-col w-full h-3 mb-4 bg-gray-300 rounded-full animate-pulse" />
-      )}
+import { AppSkeleton } from "../ui/PrimeStates";
 
-      {Array.from({ length: lines }).map((_, i) => (
-        <div
-          key={i}
-          className="block w-full h-2 mb-2 bg-gray-300 rounded-full animate-pulse"
-        />
-      ))}
-    </div>
-  );
-};
+export const SkeletonBlock = ({ title = true, lines = 6, className = "" }) => <div className={`w-full space-y-2 ${className}`}>{title && <AppSkeleton height=".75rem" />}{Array.from({ length: lines }).map((_, i) => <AppSkeleton key={i} width={i === lines - 1 ? "72%" : "100%"} height=".5rem" />)}</div>;

@@ -1,0 +1,5 @@
+/* Las utilidades siguen pudiendo personalizar cada componente mediante PT. */
+@layer tailwind-utilities {
+  @tailwind components;
+  @tailwind utilities;
+}

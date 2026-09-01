@@ -14,7 +14,7 @@ def _seleccionar_accion(texto: str, acciones: list, palabras_clave: list) -> dic
         (
             a
             for a in acciones
-            if a["NOMBRE_ACCION_CRITERIO"].strip().upper() == "SI CUMPLE"
+            if a["NOMBRE"].strip().upper() == "SI CUMPLE"
         ),
         None,
     )
@@ -22,7 +22,7 @@ def _seleccionar_accion(texto: str, acciones: list, palabras_clave: list) -> dic
         (
             a
             for a in acciones
-            if a["NOMBRE_ACCION_CRITERIO"].strip().upper() == "NO CUMPLE"
+            if a["NOMBRE"].strip().upper() == "NO CUMPLE"
         ),
         None,
     )
@@ -32,15 +32,15 @@ def _seleccionar_accion(texto: str, acciones: list, palabras_clave: list) -> dic
             f"Acciones 'SI CUMPLE' o 'NO CUMPLE' no encontradas para un criterio. Acciones disponibles: {acciones}"
         )
         return {
-            "NOMBRE_ACCION_CRITERIO": "ERROR_CONFIGURACION_ACCION",
-            "PESO_ACCION_CRITERIO": 0.0,
+            "NOMBRE": "ERROR_CONFIGURACION_ACCION",
+            "PESO": 0.0,
         }
 
-    accion_si_cumple["PESO_ACCION_CRITERIO"] = float(
-        accion_si_cumple["PESO_ACCION_CRITERIO"]
+    accion_si_cumple["PESO"] = float(
+        accion_si_cumple["PESO"]
     )
-    accion_no_cumple["PESO_ACCION_CRITERIO"] = float(
-        accion_no_cumple["PESO_ACCION_CRITERIO"]
+    accion_no_cumple["PESO"] = float(
+        accion_no_cumple["PESO"]
     )
 
     for palabra in palabras_clave:

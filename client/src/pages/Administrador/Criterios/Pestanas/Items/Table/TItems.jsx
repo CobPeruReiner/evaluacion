@@ -46,7 +46,7 @@ export const TItems = () => {
               </td>
               <td className="py-3 px-6">{item.NOMBRE_CARTERA}</td>
               <td className="py-3 px-6">
-                {moment(item.FECHA_ACTUALIZACION)
+                {moment(item.FE_ACTUALIZACION)
                   .utc()
                   .format("DD/MM/YYYY HH:mm:ss")}
               </td>

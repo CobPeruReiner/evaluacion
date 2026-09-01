@@ -468,30 +468,32 @@ const getCriteriosEvaluacionByCartera = async (req, res) => {
     const acciones = await db.query(
       `
         SELECT
-          tb1.ID_ACCION_CRITERIO,
-          tb1.NOMBRE_ACCION_CRITERIO,
-          tb1.PESO_ACCION_CRITERIO,
+          tb1.ID_ACCION AS ID_ACCION_CRITERIO,
+          tb1.NOMBRE AS NOMBRE_ACCION_CRITERIO,
+          tb1.PESO AS PESO_ACCION_CRITERIO,
           tb1.ID_CRITERIO,
-          tb2.NOMBRE_CRITERIO,
-          tb2.PESO_CRITERIO,
+          tb2.NOMBRE AS NOMBRE_CRITERIO,
+          tb2.PESO AS PESO_CRITERIO,
           tb4.ID_ITEM,
-          tb4.NOMBRE_ITEM,
-          tb4.PESO_ITEM,
-          tb5.cartera AS NOMBRE_CARTERA,
-          tb1.ESTADO_ACCION
+          tb4.NOMBRE AS NOMBRE_ITEM,
+          tb4.PESO AS PESO_ITEM,
+          tb5.cartera AS NOMBRE_CARTERA
         FROM CALIDAD.ACCION_CRITERIO tb1
         INNER JOIN CALIDAD.CRITERIO tb2
           ON tb1.ID_CRITERIO = tb2.ID_CRITERIO
-         AND tb2.ID_ESTADO = 1
+         AND tb2.ESTADO = 1
         INNER JOIN CALIDAD.ITEM tb4
           ON tb2.ID_ITEM = tb4.ID_ITEM
-         AND tb4.ID_ESTADO = 1
+         AND tb4.ESTADO = 1
+        INNER JOIN CALIDAD.MODELO_EVALUACION modelo
+          ON tb4.ID_MODELO = modelo.ID_MODELO
+         AND modelo.ESTADO = 1
         INNER JOIN SISTEMAGEST.cartera tb5
-          ON tb4.ID_CARTERA = tb5.id
+          ON modelo.ID_CARTERA = tb5.id
          AND tb5.estado = 1
-        WHERE tb1.ESTADO_ACCION = 1
-          AND tb4.ID_CARTERA = ?
-        ORDER BY tb4.NOMBRE_ITEM ASC
+        WHERE tb1.ESTADO = 1
+          AND modelo.ID_CARTERA = ?
+        ORDER BY tb4.NOMBRE ASC, tb2.NOMBRE ASC, tb1.NOMBRE ASC
       `,
       {
         replacements: [cartera],

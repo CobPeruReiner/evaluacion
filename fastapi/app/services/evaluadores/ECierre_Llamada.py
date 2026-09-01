@@ -39,8 +39,8 @@ def evaluar_cierre_llamada(
         peso_cumplido = 0
 
         for criterio in criterios:
-            nombre_criterio = criterio["NOMBRE_CRITERIO"].strip().upper()
-            peso_criterio = float(criterio.get("PESO_CRITERIO", 0))
+            nombre_criterio = criterio["NOMBRE"].strip().upper()
+            peso_criterio = float(criterio.get("PESO", 0))
 
             acciones = obtener_acciones_por_criterio(conn, criterio["ID_CRITERIO"])
 
@@ -54,11 +54,11 @@ def evaluar_cierre_llamada(
             if not accion:
                 continue
 
-            peso_accion = float(accion.get("PESO_ACCION_CRITERIO", 0))
-            accion["PESO_ACCION_CRITERIO"] = peso_accion
-            accion["PESO_CRITERIO"] = peso_criterio
+            peso_accion = float(accion.get("PESO", 0))
+            accion["PESO"] = peso_accion
+            accion["PESO"] = peso_criterio
 
-            resultados[criterio["NOMBRE_CRITERIO"]] = accion
+            resultados[criterio["NOMBRE"]] = accion
 
             peso_total += peso_criterio
             peso_cumplido += peso_criterio * peso_accion

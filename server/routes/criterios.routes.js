@@ -36,12 +36,20 @@ const {
 const {
   validarPesoMultiple,
 } = require("../middlewares/Criterios/validarPesoMultiple");
+const { listModelos, getModelo, createModelo, updateModelo, deactivateModelo } = require("../controllers/modelosEvaluacion.controller");
 
 const upload = multer({
   dest: path.join(__dirname, "..", "uploads"),
 });
 
 const criteriosEvaluacionRouter = express.Router();
+
+// EDITOR DINÁMICO DE PLANTILLAS
+criteriosEvaluacionRouter.get("/modelos", listModelos);
+criteriosEvaluacionRouter.get("/modelos/:idModelo", getModelo);
+criteriosEvaluacionRouter.post("/modelos", createModelo);
+criteriosEvaluacionRouter.put("/modelos/:idModelo", updateModelo);
+criteriosEvaluacionRouter.delete("/modelos/:idModelo", deactivateModelo);
 
 // ITEMS
 criteriosEvaluacionRouter.get("/items", getAllItems);

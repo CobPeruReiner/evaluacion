@@ -18,12 +18,12 @@ export const SEfecto = () => {
 
   return (
     <div
-      className={`scroll h-auto max-h-36 absolute top-11 left-0 right-0 border bg-gradient-to-br from-white shadow-[rgba(96,125,139,.1)] bg-[hsl(0_0%_100%)] shadow-lg p-3 rounded-md z-10 overflow-auto ${
+      className={`scroll h-auto max-h-52 absolute top-[52px] left-0 right-0 border border-stone-200 bg-white shadow-soft p-2 rounded-lg z-20 overflow-auto ${
         selectEfecto ? "visible" : "invisible"
       }`}
     >
       <div className="text-xs flex flex-col gap-2">
-        <label className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 cursor-pointer border-b">
+        <label className="flex items-center gap-2 rounded-md px-3 py-2.5 hover:bg-red-50 cursor-pointer border-b border-stone-100">
           <input
             type="checkbox"
             checked={todosSeleccionados}
@@ -43,7 +43,7 @@ export const SEfecto = () => {
             return (
               <label
                 key={efecto.EFECTO}
-                className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm hover:bg-red-50 cursor-pointer"
               >
                 <input
                   type="checkbox"

@@ -5,8 +5,7 @@ import { useDispatch } from "react-redux";
 import { logout } from "../store/actions/user.actions";
 
 export const SideBarProvider = ({ children }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isManualOpen, setIsManualOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -18,10 +17,8 @@ export const SideBarProvider = ({ children }) => {
   };
 
   const sideBarActive = () => setIsSidebarOpen(true);
-
-  const sideBarInactive = () => {
-    if (!isManualOpen) setIsSidebarOpen(false);
-  };
+  const sideBarInactive = () => undefined;
+  const toggleSidebar = () => setIsSidebarOpen((open) => !open);
 
   const isActive = (path) => location.pathname === path;
 
@@ -31,7 +28,7 @@ export const SideBarProvider = ({ children }) => {
         isSidebarOpen,
         sideBarActive,
         sideBarInactive,
-        isManualOpen,
+        toggleSidebar,
         handleLogOut,
         isActive,
       }}

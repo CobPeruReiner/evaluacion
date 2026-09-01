@@ -50,7 +50,7 @@ export const RenderComun = ({ item, itemIndex }) => {
               </h5>
               <span
                 className={`px-3 py-1 rounded-full text-sm font-semibold ${getResultadoColor(
-                  detalle.resultado
+                  detalle.resultado,
                 )}`}
               >
                 {detalle.resultado}
@@ -77,13 +77,13 @@ export const RenderComun = ({ item, itemIndex }) => {
                     >
                       <span className="text-gray-700 text-sm">{criterio}</span>
                       <span className="text-sm font-semibold text-gray-800">
-                        {accion.NOMBRE_ACCION_CRITERIO || "No evaluado"}
+                        {accion.NOMBRE || "No evaluado"}
                         <span className="text-xs text-gray-400 ml-2">
-                          ({accion.PESO_ACCION_CRITERIO})
+                          ({accion.PESO})
                         </span>
                       </span>
                     </div>
-                  )
+                  ),
                 )}
               </div>
             </div>
@@ -103,7 +103,7 @@ export const RenderComun = ({ item, itemIndex }) => {
             <strong>Estado Global:</strong>{" "}
             <span
               className={`px-2 py-1 rounded-full text-sm font-semibold ${getResultadoColor(
-                resumen_final.estado_global
+                resumen_final.estado_global,
               )}`}
             >
               {resumen_final.estado_global}

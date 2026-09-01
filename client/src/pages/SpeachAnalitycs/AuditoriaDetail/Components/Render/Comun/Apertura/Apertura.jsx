@@ -33,13 +33,13 @@ export const Apertura = ({ item }) => {
                 >
                   <span className="text-gray-600">{nombreCriterio}</span>
                   <span className="text-right font-medium">
-                    {accion.NOMBRE_ACCION_CRITERIO || "No evaluado"}
+                    {accion.NOMBRE || "No evaluado"}
                     <span className="text-xs text-gray-400 ml-2">
-                      {accion.PESO_ACCION_CRITERIO}
+                      {accion.PESO}
                     </span>
                   </span>
                 </div>
-              )
+              ),
             )}
           </div>
         </div>

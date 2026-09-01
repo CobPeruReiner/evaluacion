@@ -38,27 +38,27 @@ export const TAcciones = () => {
         ) : (
           accionesPaginated.map((accion) => (
             <tr
-              key={accion.ID_ACCION_CRITERIO}
+              key={accion.ID_ACCION}
               onClick={() => openModalNAcciones("edit", accion)}
               className="text-xs text-left leading-[1.5] font-normal border-b border-[#e9ecef] cursor-pointer hover:bg-gray-100"
             >
-              <td className="py-3 px-6">{accion.ID_ACCION_CRITERIO}</td>
-              <td className="py-3 px-6">{accion.NOMBRE_ACCION_CRITERIO}</td>
-              <td className="py-3 px-6">{accion.NOMBRE_CRITERIO}</td>
+              <td className="py-3 px-6">{accion.ID_ACCION}</td>
+              <td className="py-3 px-6">{accion.NOMBRE}</td>
+              <td className="py-3 px-6">{accion.NOMBRE}</td>
               <td className="py-3 px-6">{accion.NOMBRE_ITEM}</td>
               <td className="py-3 px-6">{accion.NOMBRE_CARTERA}</td>
               {/* <td className="py-3 px-6">
-                {accion.PESO_ACCION_CRITERIO
-                  ? accion.PESO_ACCION_CRITERIO * 100
+                {accion.PESO
+                  ? accion.PESO * 100
                   : "-"}{" "}
                 %
               </td> */}
               <td className="py-3 px-6">
-                {formatPercent(accion.PESO_ACCION_CRITERIO, { decimals: 2 })}%
+                {formatPercent(accion.PESO, { decimals: 2 })}%
               </td>
               <td className="py-3 px-6">
-                {accion.FECHA_ACTUALIZACION
-                  ? moment(accion.FECHA_ACTUALIZACION)
+                {accion.FE_ACTUALIZACION
+                  ? moment(accion.FE_ACTUALIZACION)
                       .utc()
                       .format("DD/MM/YYYY HH:mm:ss")
                   : "-"}

@@ -1,5 +1,5 @@
 import "./login.css";
-import { RiMapPinUserFill } from "react-icons/ri";
+import { RiLockPasswordLine } from "react-icons/ri";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -60,7 +60,11 @@ export const Login = () => {
         />
       )}
       <div className="login-body">
-        <RiMapPinUserFill className="login-title" />
+        <div className="login-brand" aria-hidden="true"><span /><span /><span /><span /></div>
+        <p className="login-eyebrow">COBRANZAS PERÚ</p>
+        <h1>Bienvenido</h1>
+        <p className="login-copy">Ingresa para continuar con la gestión de calidad.</p>
+        <RiLockPasswordLine className="login-title" />
         <form className="login-container" onSubmit={onSubmit}>
           <div className="login-usuario">
             <label htmlFor="usuario" className="login-usuario__label">
@@ -92,7 +96,7 @@ export const Login = () => {
             />
           </div>
 
-          <button className="login-button">Enviar</button>
+          <button className="login-button">Ingresar</button>
         </form>
       </div>
     </div>

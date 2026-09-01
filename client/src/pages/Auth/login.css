@@ -5,32 +5,36 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-family: 'Kanit', sans-serif;
+    padding: 1.5rem;
+    background: radial-gradient(circle at 8% 12%, #fee2e2 0, transparent 28%), #f7f7f6;
 }
 
 .login-body{
     width: 100%;
-    max-width: 400px;
+    max-width: 430px;
     height: fit-content;
-    padding: 2em 3em;
-    background-color: #fafafa;  
-    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
-    border-radius: 20px;
+    padding: 2.5rem;
+    background-color: rgba(255,255,255,.96);
+    box-shadow: 0 22px 55px rgba(37,37,37,.12);
+    border: 1px solid #e7e5e4;
+    border-radius: 18px;
 }
+.login-brand{display:grid;grid-template-columns:repeat(2,14px);gap:3px;width:max-content;margin:0 auto 1.25rem}.login-brand span{width:14px;height:14px;background:#ed1c24}.login-brand span:nth-child(2){background:#a8a8a8}.login-brand span:nth-child(3){background:#575756}
+.login-body h1{text-align:center;font-size:1.65rem;font-weight:700;color:#252525}.login-eyebrow{text-align:center;color:#ed1c24;font-size:.72rem;font-weight:700;letter-spacing:.12em}.login-copy{text-align:center;color:#78716c;font-size:.9rem;margin:.5rem 0 1.25rem}
 
 .login-title{
-    color: #060b26;
-    font-size: 5rem;
+    color: #ed1c24;
+    font-size: 2rem;
     display: block;
     margin: auto;
-    margin-bottom: .5em;
+    margin-bottom: .75rem;
 }
 
 .login-container{
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 2em;
+    gap: 1.25rem;
 }
 
 .login-usuario, .login-password{
@@ -39,8 +43,8 @@
 }
 
 .login-container select, .login-container input {
-    padding: 5px;
-    border-radius: 10px;
+    padding: .75rem .85rem;
+    border-radius: 8px;
     border-style: none;
     border: 1px solid #ccc;
     font-family: 'Open Sans', sans-serif;
@@ -49,19 +53,18 @@
 }
 
 .login-button {
-  background: #060b26;
-  border: 1px solid #060b26;
-  border-radius: 6px;
-  box-shadow: rgba(0, 0, 0, 0.1) 1px 2px 4px;
+  background: #ed1c24;
+  border: 1px solid #ed1c24;
+  border-radius: 8px;
   box-sizing: border-box;
   color: #FFFFFF;
   cursor: pointer;
   display: inline-block;
   font-family: nunito,roboto,proxima-nova,"proxima nova",sans-serif;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 800;
   line-height: 16px;
-  min-height: 40px;
+  min-height: 44px;
   outline: 0;
   padding: 12px 14px;
   text-align: center;
@@ -75,9 +78,8 @@
 
 .login-button:hover,
 .login-button:active {
-  background-color: initial;
-  background-position: 0 0;
-  color: #060b26;
+  background-color: #c9161d;
+  color: #fff;
 }
 
 .login-button:active {

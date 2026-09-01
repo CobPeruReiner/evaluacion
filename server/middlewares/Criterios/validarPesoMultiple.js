@@ -49,7 +49,7 @@ const validarPesoMultiple = (tabla) => {
           const [resultado] = await db.query(
             `
             SELECT COALESCE(SUM(PESO_ITEM), 0) AS sumaActual
-            FROM CALIDAD.ITEM
+            FROM calidad.ITEM
             WHERE ID_CARTERA = :idCartera
               AND ID_ESTADO = 1
             `,
@@ -96,18 +96,18 @@ const validarPesoMultiple = (tabla) => {
         const [resultado] = await db.query(
           `
           SELECT
-            COALESCE(SUM(C.PESO_CRITERIO), 0) AS sumaTotal,
+            COALESCE(SUM(C.PESO), 0) AS sumaTotal,
             (
               SELECT I.PESO_ITEM
-              FROM CALIDAD.ITEM I
+              FROM calidad.ITEM I
               WHERE I.ID_ITEM = :idItem
             ) AS pesoItem,
             (
-              SELECT C2.PESO_CRITERIO
-              FROM CALIDAD.CRITERIO C2
+              SELECT C2.PESO
+              FROM calidad.CRITERIO C2
               WHERE C2.ID_CRITERIO = :idCriterio
             ) AS pesoAnterior
-          FROM CALIDAD.CRITERIO C
+          FROM calidad.CRITERIO C
           WHERE C.ID_ITEM = :idItem
           `,
           {
@@ -149,18 +149,18 @@ const validarPesoMultiple = (tabla) => {
         const [resultado] = await db.query(
           `
           SELECT
-            COALESCE(SUM(A.PESO_ACCION_CRITERIO), 0) AS sumaTotal,
+            COALESCE(SUM(A.PESO), 0) AS sumaTotal,
             (
-              SELECT C.PESO_CRITERIO
-              FROM CALIDAD.CRITERIO C
+              SELECT C.PESO
+              FROM calidad.CRITERIO C
               WHERE C.ID_CRITERIO = :idCriterio
             ) AS pesoCriterio,
             (
-              SELECT A2.PESO_ACCION_CRITERIO
-              FROM CALIDAD.ACCION_CRITERIO A2
-              WHERE A2.ID_ACCION_CRITERIO = :idAccion
+              SELECT A2.PESO
+              FROM calidad.ACCION_CRITERIO A2
+              WHERE A2.ID_ACCION = :idAccion
             ) AS pesoAnterior
-          FROM CALIDAD.ACCION_CRITERIO A
+          FROM calidad.ACCION_CRITERIO A
           WHERE A.ID_CRITERIO = :idCriterio
           `,
           {

@@ -137,8 +137,8 @@ def evaluar_fase_scotiabank(
 
             for criterio in criterios:
                 id_criterio = criterio["ID_CRITERIO"]
-                nombre_criterio = criterio["NOMBRE_CRITERIO"]
-                peso_criterio = float(criterio["PESO_CRITERIO"])
+                nombre_criterio = criterio["NOMBRE"]
+                peso_criterio = float(criterio["PESO"])
 
                 logger.info("============== PESO CRITERIO ==============")
                 logger.info(f"Peso del criterio: {peso_criterio}")
@@ -149,7 +149,7 @@ def evaluar_fase_scotiabank(
                 )
 
                 peso_accion = (
-                    float(accion_detectada.get("PESO_ACCION_CRITERIO", 0.0))
+                    float(accion_detectada.get("PESO", 0.0))
                     if accion_detectada
                     else 0.0
                 )
@@ -157,13 +157,13 @@ def evaluar_fase_scotiabank(
                 peso_total += peso_criterio
 
                 criterios_dict[nombre_criterio] = {
-                    "NOMBRE_ACCION_CRITERIO": (
-                        accion_detectada.get("NOMBRE_ACCION_CRITERIO")
+                    "NOMBRE": (
+                        accion_detectada.get("NOMBRE")
                         if accion_detectada
                         else "NO DETECTADO"
                     ),
-                    "PESO_ACCION_CRITERIO": peso_accion,
-                    "PESO_CRITERIO": peso_criterio,
+                    "PESO": peso_accion,
+                    "PESO": peso_criterio,
                 }
 
             porcentaje = (peso_obtenido / peso_total) * 100 if peso_total > 0 else 0.0

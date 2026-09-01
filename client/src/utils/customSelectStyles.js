@@ -1,18 +1,19 @@
 // customSelectStyles.js
-const customSelectStyles = (focusedBorderColor = '#b5651d', hoverBackgroundColor = '#e6e6e6') => ({
+const customSelectStyles = (focusedBorderColor = '#ed1c24', hoverBackgroundColor = '#fff1f2') => ({
     container: (provided) => ({
         ...provided,
         width: '100%', // Ocupa todo el ancho del contenedor
     }),
     control: (provided, state) => ({
         ...provided,
-        backgroundColor: '#f0f0f0', // Fondo del control
-        borderColor: state.isFocused ? focusedBorderColor : '#ced4da', // Color del borde personalizado
-        boxShadow: state.isFocused ? `0 0 0 1px ${focusedBorderColor}` : 'none', // Sombra al estar enfocado
+        backgroundColor: '#ffffff',
+        borderColor: state.isFocused ? focusedBorderColor : '#d6d3d1',
+        boxShadow: state.isFocused ? `0 0 0 2px #fee2e2` : 'none',
         '&:hover': {
             borderColor: focusedBorderColor, // Color del borde al pasar el cursor
         },
-        height: '40px', // Altura del selector
+        minHeight: '46px',
+        borderRadius: '8px',
     }),
     placeholder: (provided) => ({
         ...provided,
@@ -28,15 +29,19 @@ const customSelectStyles = (focusedBorderColor = '#b5651d', hoverBackgroundColor
     }),
     menu: (provided) => ({
         ...provided,
-        backgroundColor: '#f0f0f0', // Fondo del menú desplegable
+        backgroundColor: '#ffffff',
+        borderRadius: '8px',
+        boxShadow: '0 12px 28px rgba(37,37,37,.12)',
+        overflow: 'hidden',
+        zIndex: 30,
     }),
     option: (provided, state) => ({
         ...provided,
-        backgroundColor: state.isFocused ? hoverBackgroundColor : 'transparent', // Fondo personalizado al enfocar
-        color: state.isFocused ? '#ffffff' : '#495057', // Color de la opción
+        backgroundColor: state.isFocused ? hoverBackgroundColor : '#ffffff',
+        color: '#44403c',
         '&:hover': {
             backgroundColor: hoverBackgroundColor, // Fondo al pasar el cursor sobre la opción
-            color: '#ffffff', // Color del texto al pasar el cursor
+            color: '#991b1b',
         },
     }),
     dropdownIndicator: (provided, state) => ({

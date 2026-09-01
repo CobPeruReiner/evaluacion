@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 def seleccionar_accion_saludo(texto: str, acciones: list, id_cartera: str) -> dict:
     castigo = es_cartera_castigo(id_cartera)
-    mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
+    mapa = {a["NOMBRE"].strip().upper(): a for a in acciones}
 
     saludos_regular = [
         "buenos dias",
@@ -39,7 +39,7 @@ def seleccionar_accion_saludo(texto: str, acciones: list, id_cartera: str) -> di
 
 def seleccionar_accion_contacto(texto: str, acciones: list, id_cartera: str) -> dict:
     castigo = es_cartera_castigo(id_cartera)
-    mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
+    mapa = {a["NOMBRE"].strip().upper(): a for a in acciones}
 
     frases_regular = [
         "me comunico con",
@@ -117,7 +117,7 @@ def seleccionar_accion_contacto(texto: str, acciones: list, id_cartera: str) -> 
 
 
 # def seleccionar_accion_identificacion(texto: str, acciones: list) -> dict:
-#     mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
+#     mapa = {a["NOMBRE"].strip().upper(): a for a in acciones}
 
 #     tiene_presentacion = any(
 #         p in texto
@@ -158,7 +158,7 @@ def seleccionar_accion_contacto(texto: str, acciones: list, id_cartera: str) -> 
 
 
 def seleccionar_accion_identificacion(texto: str, acciones: list) -> dict:
-    mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
+    mapa = {a["NOMBRE"].strip().upper(): a for a in acciones}
 
     t = (texto or "").lower()
 

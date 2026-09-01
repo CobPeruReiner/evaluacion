@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 def seleccionar_accion_perseverancia(
     texto: str, acciones: list, id_cartera: str
 ) -> dict:
-    mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
+    mapa = {a["NOMBRE"].strip().upper(): a for a in acciones}
     texto = texto.lower()
 
     frases_rebate = [
@@ -49,7 +49,7 @@ def seleccionar_accion_perseverancia(
 
 
 def seleccionar_accion_compromiso(texto: str, acciones: list, id_cartera: str) -> dict:
-    mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
+    mapa = {a["NOMBRE"].strip().upper(): a for a in acciones}
     texto = texto.lower()
 
     frases_compromiso = [
@@ -94,7 +94,7 @@ def seleccionar_accion_compromiso(texto: str, acciones: list, id_cartera: str) -
 
 def _accion_no_cumple(acciones: list) -> dict:
     for a in acciones:
-        nombre = a["NOMBRE_ACCION_CRITERIO"].strip().upper()
+        nombre = a["NOMBRE"].strip().upper()
         if nombre in [
             "NO CUMPLE",
             "NO SE EVIDENCIA",

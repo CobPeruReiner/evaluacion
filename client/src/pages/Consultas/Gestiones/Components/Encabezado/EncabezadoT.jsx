@@ -13,7 +13,7 @@ export const EncabezadoT = () => {
   } = useContext(MonitoreoContext);
 
   return (
-    <div className="relative flex items-center justify-between gap-5">
+    <div className="relative flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
       <div
         ref={refModalPageGestiones}
         className="relative flex items-center text-xs text-[#8392ab] gap-2"
@@ -35,7 +35,7 @@ export const EncabezadoT = () => {
         <input
           type="search"
           id="default-search"
-          className="block w-full px-9 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-[#09c] focus:border-[#09c] outline-none"
+          className="block w-full rounded-lg border border-stone-200 bg-white px-9 py-2.5 text-sm text-stone-800 outline-none transition focus:border-brand-red"
           placeholder="Buscar gestiones"
           value={searchGestiones}
           onChange={handeInputSearchGestiones}

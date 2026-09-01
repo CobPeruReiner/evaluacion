@@ -42,16 +42,16 @@ export const TCriterios = () => {
               onClick={() => openModalNCriterio("edit", criterio)}
             >
               <td className="py-3 px-6">{criterio.ID_CRITERIO}</td>
-              <td className="py-3 px-6">{criterio.NOMBRE_CRITERIO}</td>
+              <td className="py-3 px-6">{criterio.NOMBRE}</td>
               <td className="py-3 px-6">{criterio.NOMBRE_ITEM}</td>
-              {/* <td className="py-3 px-6">{criterio.PESO_CRITERIO * 100}%</td> */}
+              {/* <td className="py-3 px-6">{criterio.PESO * 100}%</td> */}
               <td className="py-3 px-6">
-                {formatPercent(criterio.PESO_CRITERIO, { decimals: 2 })}%
+                {formatPercent(criterio.PESO, { decimals: 2 })}%
               </td>
 
               <td className="py-3 px-6">{criterio.NOMBRE_CARTERA}</td>
               <td className="py-3 px-6">
-                {moment(criterio.FECHA_ACTUALIZACION)
+                {moment(criterio.FE_ACTUALIZACION)
                   .utc()
                   .format("DD/MM/YYYY HH:mm:ss")}
               </td>

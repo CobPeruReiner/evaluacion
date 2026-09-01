@@ -41,8 +41,8 @@ def evaluar_indagacion(
         peso_ponderado = 0
 
         for criterio in criterios:
-            nombre = criterio["NOMBRE_CRITERIO"].strip().upper()
-            peso_criterio = float(criterio.get("PESO_CRITERIO", 0))
+            nombre = criterio["NOMBRE"].strip().upper()
+            peso_criterio = float(criterio.get("PESO", 0))
             acciones = obtener_acciones_por_criterio(conn, criterio["ID_CRITERIO"])
 
             if "SITUACIÓN" in nombre:
@@ -61,11 +61,11 @@ def evaluar_indagacion(
             if not accion:
                 continue
 
-            peso_accion = float(accion.get("PESO_ACCION_CRITERIO", 0))
-            accion["PESO_ACCION_CRITERIO"] = peso_accion
-            accion["PESO_CRITERIO"] = peso_criterio
+            peso_accion = float(accion.get("PESO", 0))
+            accion["PESO"] = peso_accion
+            accion["PESO"] = peso_criterio
 
-            resultados[criterio["NOMBRE_CRITERIO"]] = accion
+            resultados[criterio["NOMBRE"]] = accion
 
             peso_total += peso_criterio
             peso_ponderado += peso_criterio * peso_accion

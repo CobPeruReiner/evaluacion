@@ -25,7 +25,7 @@ const getAllItems = async (_req, res) => {
           tb1.PESO_ITEM,
           tb1.ID_CARTERA,
           tb2.cartera AS NOMBRE_CARTERA,
-          tb1.FECHA_ACTUALIZACION,
+          tb1.FE_ACTUALIZACION,
           tb1.USUARIO_ACTUALIZACION,
           CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION,
           tb1.ID_ESTADO
@@ -36,7 +36,7 @@ const getAllItems = async (_req, res) => {
         ON tb1.USUARIO_ACTUALIZACION = tb3.IDPERSONAL
         WHERE tb2.estado = 1
           AND tb1.ID_ESTADO = 1
-        ORDER BY tb1.FECHA_ACTUALIZACION DESC;
+        ORDER BY tb1.FE_ACTUALIZACION DESC;
       `,
       {
         type: QueryTypes.SELECT,
@@ -105,7 +105,7 @@ const createItem = async (req, res) => {
         INSERT INTO CALIDAD.ITEM (
           NOMBRE_ITEM,
           PESO_ITEM,
-          FECHA_ACTUALIZACION,
+          FE_ACTUALIZACION,
           USUARIO_ACTUALIZACION,
           ID_CARTERA,
           ID_ESTADO
@@ -198,7 +198,7 @@ const updateItem = async (req, res) => {
         UPDATE CALIDAD.ITEM
         SET NOMBRE_ITEM = :nombreItem,
             PESO_ITEM = :pesoItem,
-            FECHA_ACTUALIZACION = :fechaActualizacion,
+            FE_ACTUALIZACION = :fechaActualizacion,
             USUARIO_ACTUALIZACION = :usuarioActualizacion,
             ID_CARTERA = :idCartera,
             ID_ESTADO = :idEstado
@@ -242,11 +242,11 @@ const getAllCriterios = async (_req, res) => {
       `
         SELECT
           tb1.ID_CRITERIO,
-          tb1.NOMBRE_CRITERIO,
-          tb1.PESO_CRITERIO,
+          tb1.NOMBRE,
+          tb1.PESO,
           tb1.ID_ITEM,
           tb2.NOMBRE_ITEM,
-          tb1.FECHA_ACTUALIZACION,
+          tb1.FE_ACTUALIZACION,
           tb1.USUARIO_ACTUALIZACION,
           CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION,
           tb4.cartera AS NOMBRE_CARTERA,
@@ -262,7 +262,7 @@ const getAllCriterios = async (_req, res) => {
           AND tb2.ID_ESTADO = 1
           AND tb4.estado = 1
           AND tb4.id IS NOT NULL
-        ORDER BY tb1.FECHA_ACTUALIZACION DESC;
+        ORDER BY tb1.FE_ACTUALIZACION DESC;
       `,
       {
         type: QueryTypes.SELECT,
@@ -310,7 +310,7 @@ const createCriterio = async (req, res) => {
   try {
     // 1. Obtener peso total actual de los criterios del ítem
     const [suma] = await db.query(
-      `SELECT COALESCE(SUM(PESO_CRITERIO), 0) AS total FROM CALIDAD.CRITERIO WHERE ID_ITEM = :idItem AND ID_ESTADO = 1`,
+      `SELECT COALESCE(SUM(PESO), 0) AS total FROM CALIDAD.CRITERIO WHERE ID_ITEM = :idItem AND ID_ESTADO = 1`,
       {
         replacements: { idItem },
         type: QueryTypes.SELECT,
@@ -350,7 +350,7 @@ const createCriterio = async (req, res) => {
     await db.query(
       `
       INSERT INTO CALIDAD.CRITERIO 
-      (NOMBRE_CRITERIO, PESO_CRITERIO, FECHA_ACTUALIZACION, USUARIO_ACTUALIZACION, ID_ITEM, ID_ESTADO)
+      (NOMBRE, PESO, FE_ACTUALIZACION, USUARIO_ACTUALIZACION, ID_ITEM, ID_ESTADO)
       VALUES 
       (:nombreCriterio, :pesoCriterio, :fechaActualizacion, :idUsuarioActualizacion, :idItem, 1);
       `,
@@ -414,9 +414,9 @@ const updateCriterio = async (req, res) => {
     await db.query(
       `
       UPDATE CALIDAD.CRITERIO
-      SET NOMBRE_CRITERIO = :nombreCriterio,
-      PESO_CRITERIO = :pesoCriterio,
-      FECHA_ACTUALIZACION = :fechaActualizacion,
+      SET NOMBRE = :nombreCriterio,
+      PESO = :pesoCriterio,
+      FE_ACTUALIZACION = :fechaActualizacion,
       USUARIO_ACTUALIZACION = :idUsuarioActualizacion,
       ID_ESTADO = :idEstado,
       ID_ITEM = :idItem
@@ -459,13 +459,13 @@ const getAllAcciones = async (_req, res) => {
     const acciones = await db.query(
       `
         SELECT
-          tb1.ID_ACCION_CRITERIO,
-          tb1.NOMBRE_ACCION_CRITERIO,
-          tb1.PESO_ACCION_CRITERIO,
+          tb1.ID_ACCION,
+          tb1.NOMBRE,
+          tb1.PESO,
           tb1.ID_CRITERIO,
-          tb2.NOMBRE_CRITERIO,
-          tb2.PESO_CRITERIO,
-          tb1.FECHA_ACTUALIZACION,
+          tb2.NOMBRE,
+          tb2.PESO,
+          tb1.FE_ACTUALIZACION,
           tb1.USUARIO_ACTUALIZACION,
           CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION,
           tb4.ID_ITEM,
@@ -483,7 +483,7 @@ const getAllAcciones = async (_req, res) => {
         LEFT JOIN SISTEMAGEST.personal tb3
           ON tb1.USUARIO_ACTUALIZACION = tb3.IDPERSONAL
         WHERE tb1.ESTADO_ACCION = 1
-        ORDER BY tb1.FECHA_ACTUALIZACION DESC;
+        ORDER BY tb1.FE_ACTUALIZACION DESC;
       `,
       {
         type: QueryTypes.SELECT,
@@ -533,7 +533,7 @@ const createAccion = async (req, res) => {
   try {
     await db.query(
       `
-        INSERT INTO CALIDAD.ACCION_CRITERIO (NOMBRE_ACCION_CRITERIO, PESO_ACCION_CRITERIO, FECHA_ACTUALIZACION, USUARIO_ACTUALIZACION, ID_CRITERIO, ESTADO_ACCION)
+        INSERT INTO CALIDAD.ACCION_CRITERIO (NOMBRE, PESO, FE_ACTUALIZACION, USUARIO_ACTUALIZACION, ID_CRITERIO, ESTADO_ACCION)
         VALUES (:nombreAccionUpper, :pesoAccion, :fechaActualizacion, :idUsuarioActualizacion, :idCriterio, 1);
       `,
       {
@@ -599,13 +599,13 @@ const updateAccion = async (req, res) => {
       `
       UPDATE CALIDAD.ACCION_CRITERIO
       SET 
-        NOMBRE_ACCION_CRITERIO = :nombreAccionUpper,
-        PESO_ACCION_CRITERIO = :pesoAccion,
-        FECHA_ACTUALIZACION = :fechaActualizacion,
+        NOMBRE = :nombreAccionUpper,
+        PESO = :pesoAccion,
+        FE_ACTUALIZACION = :fechaActualizacion,
         USUARIO_ACTUALIZACION = :idUsuarioActualizacion,
         ID_CRITERIO = :idCriterio,
         ESTADO_ACCION = :idEstado
-      WHERE ID_ACCION_CRITERIO = :idAccion;
+      WHERE ID_ACCION = :idAccion;
       `,
       {
         replacements: {
@@ -644,7 +644,7 @@ const getAllMotivosNoPago = async (_req, res) => {
     const motivos = await db.query(
       `
         SELECT tb1.ID_MOTIVO_NO_PAGO, tb1.NOMBRE_MOTIVO_NO_PAGO, tb1.ID_CARTERA, tb2.cartera AS NOMBRE_CARTERA, tb1.ID_ESTADO
-        FROM CALIDAD.MOTIVO_NO_PAGO tb1
+        FROM calidad.MOTIVO_NO_PAGO tb1
         LEFT JOIN SISTEMAGEST.cartera tb2
         ON tb1.ID_CARTERA = tb2.id;
       `,
@@ -684,7 +684,7 @@ const createMotivoNoPago = async (req, res) => {
   try {
     await db.query(
       `
-        INSERT INTO CALIDAD.MOTIVO_NO_PAGO (NOMBRE_MOTIVO_NO_PAGO, ID_CARTERA, ID_ESTADO)
+        INSERT INTO calidad.MOTIVO_NO_PAGO (NOMBRE_MOTIVO_NO_PAGO, ID_CARTERA, ID_ESTADO)
         VALUES (:nombreMotivo, :idCartera, 1);
       `,
       {
@@ -727,7 +727,7 @@ const updateMotivoNoPago = async (req, res) => {
   try {
     await db.query(
       `
-        UPDATE CALIDAD.MOTIVO_NO_PAGO
+        UPDATE calidad.MOTIVO_NO_PAGO
         SET NOMBRE_MOTIVO_NO_PAGO = :nombreMotivo,
             ID_CARTERA = :idCartera,
             ID_ESTADO = :idEstado
@@ -767,7 +767,7 @@ const getAllTiposGestion = async (_req, res) => {
     const gestiones = await db.query(
       `
         SELECT tb1.ID_TIPO_GESTION, tb1.NOMBRE_TIPO_GESTION, tb1.ID_CARTERA, tb2.cartera AS NOMBRE_CARTERA, tb1.ID_ESTADO
-        FROM CALIDAD.TIPO_GESTION tb1
+        FROM calidad.TIPO_GESTION tb1
         LEFT JOIN SISTEMAGEST.cartera tb2
         ON tb1.ID_CARTERA = tb2.id;
       `,
@@ -807,7 +807,7 @@ const createTipoGestion = async (req, res) => {
   try {
     await db.query(
       `
-        INSERT INTO CALIDAD.TIPO_GESTION (NOMBRE_TIPO_GESTION, ID_CARTERA, ID_ESTADO)
+        INSERT INTO calidad.TIPO_GESTION (NOMBRE_TIPO_GESTION, ID_CARTERA, ID_ESTADO)
         VALUES (:nombreGestion, :idCartera, 1);
       `,
       {
@@ -855,7 +855,7 @@ const updateTipoGestion = async (req, res) => {
   try {
     const [affectedRows] = await db.query(
       `
-        UPDATE CALIDAD.TIPO_GESTION
+        UPDATE calidad.TIPO_GESTION
         SET NOMBRE_TIPO_GESTION = :nombreGestion,
             ID_CARTERA = :idCartera,
             ID_ESTADO = :idEstado
@@ -901,7 +901,7 @@ const getAllTiposLlamada = async (_req, res) => {
   try {
     const llamadas = await db.query(
       `
-        SELECT * FROM CALIDAD.TIPO_LLAMADA;
+        SELECT * FROM calidad.TIPO_LLAMADA;
       `,
       {
         type: QueryTypes.SELECT,
@@ -939,7 +939,7 @@ const createTipoLlamada = async (req, res) => {
   try {
     await db.query(
       `
-        INSERT INTO CALIDAD.TIPO_LLAMADA (NOMBRE_TIPO_LLAMADA, ID_ESTADO)
+        INSERT INTO calidad.TIPO_LLAMADA (NOMBRE_TIPO_LLAMADA, ID_ESTADO)
         VALUES (:nombreLlamada, 1);
       `,
       {
@@ -981,7 +981,7 @@ const updateTipoLlamada = async (req, res) => {
   try {
     const [affectedRows] = await db.query(
       `
-        UPDATE CALIDAD.TIPO_LLAMADA
+        UPDATE calidad.TIPO_LLAMADA
         SET NOMBRE_TIPO_LLAMADA = :nombreLlamada,
             ID_ESTADO = :idEstado
         WHERE ID_TIPO_LLAMADA = :idTipoLlamada;
@@ -1031,7 +1031,7 @@ const getAllEfectos = async (req, res) => {
     const efectos = await db.query(
       `
       SELECT tb1.ID_EFECTO, tb1.EFECTO, tb1.HOMOLO, tb1.DESCRIPCION, tb1.ID_ESTADO
-      FROM CALIDAD.EFECTO tb1
+      FROM calidad.EFECTO tb1
       WHERE tb1.ID_ESTADO = 1
       ${whereClause}
       ORDER BY tb1.EFECTO ASC

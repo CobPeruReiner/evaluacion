@@ -1,0 +1,12 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap");
+
+/*
+ * PrimeReact publica su tema en `@layer primereact`. Sin capas explícitas,
+ * Preflight de Tailwind (CSS sin capa) lo sobreescribe y deja los controles
+ * sin borde, fondo ni espaciado. El orden conserva Preflight < Prime < utilities.
+ */
+@layer tailwind-base, primereact, tailwind-utilities;
+
+@layer tailwind-base {
+  @tailwind base;
+}

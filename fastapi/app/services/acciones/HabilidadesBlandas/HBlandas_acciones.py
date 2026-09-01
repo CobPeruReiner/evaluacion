@@ -5,7 +5,7 @@ logger = logging.getLogger(__name__)
 
 def seleccionar_accion_amabilidad(texto: str, acciones: list, id_cartera: str) -> dict:
     texto = texto.lower()
-    mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
+    mapa = {a["NOMBRE"].strip().upper(): a for a in acciones}
 
     palabras_positivas = [
         "muy bien",
@@ -61,7 +61,7 @@ def seleccionar_accion_comunicacion(
     texto: str, acciones: list, id_cartera: str
 ) -> dict:
     texto = texto.lower()
-    mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
+    mapa = {a["NOMBRE"].strip().upper(): a for a in acciones}
 
     muletillas = ["este", "eh", "o sea", "mmm", "ya", "okey", "me entiendes"]
 
@@ -105,7 +105,7 @@ def seleccionar_accion_comunicacion(
 
 def seleccionar_accion_escucha(texto: str, acciones: list, id_cartera: str) -> dict:
     texto = texto.lower()
-    mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
+    mapa = {a["NOMBRE"].strip().upper(): a for a in acciones}
 
     omite = ["como le dije", "eso ya lo explique", "eso no importa", "ya le respondi"]
     repregunta = ["que dijo", "como", "me repite", "no entendi"]

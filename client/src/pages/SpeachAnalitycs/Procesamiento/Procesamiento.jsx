@@ -12,25 +12,23 @@ export const Procesamiento = () => {
 
   return (
     <>
-      <div className="sombra container-procesamiento-audios relative bg-white flex flex-col py-10 px-5 gap-7 rounded-md transition-all duration-300">
-        <h1 className="title-procesamiento text-2xl font-bold">
-          Procesamiento de Audios
-        </h1>
+      <div className="sombra container-procesamiento-audios relative mx-auto flex max-w-5xl flex-col gap-7 rounded-2xl bg-white p-5 sm:p-8 transition-all duration-300">
+        <div><p className="text-xs font-bold uppercase tracking-[.16em] text-brand-red">Speech analytics</p><h1 className="mt-1 text-2xl font-bold text-brand-dark">Procesamiento de audios</h1><p className="mt-1 text-sm text-stone-500">Carga un archivo ZIP para transcribir y evaluar las llamadas.</p></div>
 
         <div className="upload-file-procesamiento flex-1 flex items-center justify-center min-h-[450px]">
           <div
-            className="group relative w-full max-w-md border-2 border-dashed border-gray-300 rounded-xl px-8 py-12 bg-gradient-to-b from-white to-gray-50 hover:from-[#e6f7ff] hover:to-[#d4f0ff] hover:border-[#09c] hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col items-center justify-center"
+            className="group relative w-full max-w-xl border-2 border-dashed border-stone-300 rounded-2xl px-8 py-14 bg-stone-50 hover:bg-red-50 hover:border-brand-red hover:shadow-soft transition-all duration-300 cursor-pointer flex flex-col items-center justify-center"
             onClick={() => inputRef.current?.click()}
           >
             <div className="flex flex-col items-center justify-center text-center">
-              <div className="bg-[#09c]/10 text-[#09c] p-5 rounded-full group-hover:bg-[#09c]/20 transition-all duration-300">
+              <div className="bg-red-100 text-brand-red p-5 rounded-full group-hover:bg-red-200 transition-all duration-300">
                 <UploadFile className="text-5xl" />
               </div>
-              <p className="mt-4 text-gray-700 font-medium text-sm group-hover:text-[#09c] transition-all">
-                Click o arrastra tus audios aquí
+              <p className="mt-4 text-brand-dark font-semibold text-sm group-hover:text-brand-red transition-all">
+                Selecciona o arrastra un archivo ZIP
               </p>
               <p className="text-xs text-gray-400 mt-1">
-                Formatos soportados: .wav, .mp3 (ZIP)
+                El ZIP puede contener archivos .wav o .mp3
               </p>
             </div>
 

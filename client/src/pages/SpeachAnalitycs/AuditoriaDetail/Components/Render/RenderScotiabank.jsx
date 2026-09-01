@@ -48,7 +48,7 @@ export const RenderScotiabank = ({ item, itemIndex }) => {
               </h5>
               <span
                 className={`px-3 py-1 rounded-full text-sm font-semibold ${getResultadoColor(
-                  detalle.resultado
+                  detalle.resultado,
                 )}`}
               >
                 {detalle.resultado}
@@ -77,13 +77,13 @@ export const RenderScotiabank = ({ item, itemIndex }) => {
                     >
                       <span className="text-gray-700 text-sm">{criterio}</span>
                       <span className="text-sm font-semibold text-gray-800">
-                        {accion.NOMBRE_ACCION_CRITERIO}
+                        {accion.NOMBRE}
                         <span className="text-xs text-gray-400 ml-2">
-                          ({accion.PESO_ACCION_CRITERIO})
+                          ({accion.PESO})
                         </span>
                       </span>
                     </div>
-                  )
+                  ),
                 )}
               </div>
             </div>

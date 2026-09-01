@@ -5,7 +5,7 @@ logger = logging.getLogger(__name__)
 
 
 def seleccionar_accion_reafirmar(texto: str, acciones: list, id_cartera: str) -> dict:
-    mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
+    mapa = {a["NOMBRE"].strip().upper(): a for a in acciones}
     texto = texto.lower()
 
     frases_confirmacion = [
@@ -63,7 +63,7 @@ def seleccionar_accion_reafirmar(texto: str, acciones: list, id_cartera: str) ->
 
 
 def seleccionar_accion_despedida(texto: str, acciones: list, id_cartera: str) -> dict:
-    mapa = {a["NOMBRE_ACCION_CRITERIO"].strip().upper(): a for a in acciones}
+    mapa = {a["NOMBRE"].strip().upper(): a for a in acciones}
     texto = texto.lower()
 
     despedidas_validas = [

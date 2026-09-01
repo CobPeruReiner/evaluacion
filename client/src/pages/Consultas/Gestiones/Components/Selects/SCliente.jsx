@@ -7,7 +7,7 @@ export const SCliente = () => {
 
   return (
     <div
-      className={`scroll h-auto max-h-36 absolute top-11 left-0 right-0 border bg-gradient-to-br from-white shadow-[rgba(96,125,139,.1)] bg-[hsl(0_0%_100%)] shadow-lg p-3 rounded-md z-10 overflow-auto ${
+      className={`scroll h-auto max-h-52 absolute top-[52px] left-0 right-0 border border-stone-200 bg-white shadow-soft p-2 rounded-lg z-20 overflow-auto ${
         selectCliente ? "visible" : "invisible"
       }`}
     >
@@ -15,7 +15,7 @@ export const SCliente = () => {
         {clientes?.map((cliente) => (
           <p
             key={cliente.id_cliente}
-            className="text-xs text-[rgb(96_125_139/1)] px-3 py-2 hover:bg-gray-200 cursor-pointer"
+            className="rounded-md px-3 py-2.5 text-sm text-stone-700 transition-colors hover:bg-red-50 hover:text-brand-red cursor-pointer"
             onClick={() => seleccionarCliente(cliente)}
           >
             {cliente.cliente}

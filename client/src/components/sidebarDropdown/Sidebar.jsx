@@ -1,304 +1,173 @@
-import { useContext } from "react";
-import { Link } from "react-router-dom";
-import { BiPowerOff } from "react-icons/bi";
-import { FiUserPlus, FiUsers } from "react-icons/fi";
-import { HiDocumentText } from "react-icons/hi";
-import { MdOutlineMonitor } from "react-icons/md";
-import { useSelector } from "react-redux";
+import { useContext, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { Button } from "primereact/button";
+import { PanelMenu } from "primereact/panelmenu";
+import { Sidebar as PrimeSidebar } from "primereact/sidebar";
+import { logout } from "../../store/actions/user.actions";
+import {
+  canAccessAsesorWorkspace,
+  canConfigureEvaluation,
+  canUseOperacion,
+  canUseSpeech,
+  canViewHistory,
+} from "../../utils/accessPolicy";
 import { SideBarContext } from "../../Context/SideBarContext";
 
-const Sidebar = () => {
-  const {
-    isSidebarOpen,
-    sideBarActive,
-    sideBarInactive,
-    isActive,
-    handleLogOut,
-  } = useContext(SideBarContext);
+const active = (location, path) =>
+  location.pathname === path || location.pathname.startsWith(`${path}/`);
 
+export default function Sidebar() {
   const user = useSelector((state) => state.user.user);
-  const isAuth = useSelector((state) => state.user.isAuth);
-
-  // console.log("user: ", user);
-
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [desktop, setDesktop] = useState(() => window.innerWidth >= 1024);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const { isSidebarOpen } = useContext(SideBarContext);
+  useEffect(() => {
+    const update = () => setDesktop(window.innerWidth >= 1024);
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+  useEffect(() => setMobileOpen(false), [location.pathname]);
+  const item = (label, icon, to) => ({
+    label,
+    icon,
+    className: active(location, to) ? "app-nav-active" : "",
+    command: () => navigate(to),
+  });
+  const model = useMemo(() => {
+    const sections = [];
+    if (canUseOperacion(user))
+      sections.push({
+        key: "operacion",
+        label: "Operación",
+        icon: "pi pi-briefcase",
+        expanded: true,
+        items: [item("Consulta de gestiones", "pi pi-search", "/")],
+      });
+    if (canViewHistory(user) || canConfigureEvaluation(user))
+      sections.push({
+        key: "calidad",
+        label: "Calidad",
+        icon: "pi pi-chart-line",
+        expanded: true,
+        items: [
+          ...(canViewHistory(user)
+            ? [
+                item(
+                  "Histórico de evaluaciones",
+                  "pi pi-history",
+                  "/evaluaciones",
+                ),
+              ]
+            : []),
+          ...(canConfigureEvaluation(user)
+            ? [item("Plantillas y opciones", "pi pi-sitemap", "/criterios")]
+            : []),
+        ],
+      });
+    if (canAccessAsesorWorkspace(user))
+      sections.push({
+        key: "asesor",
+        label: "Espacio de asesor",
+        icon: "pi pi-user",
+        items: [
+          item("Perfil de asesor", "pi pi-id-card", "/perfilAsesor"),
+          item(
+            "Evaluaciones de asesor",
+            "pi pi-list-check",
+            "/evaluacionesAsesor",
+          ),
+        ],
+      });
+    if (canUseSpeech(user))
+      sections.push({
+        key: "speech",
+        label: "Speech Analytics",
+        icon: "pi pi-microphone",
+        items: [
+          item("Procesamiento", "pi pi-upload", "/speech/procesamiento"),
+          item("Auditoría de audios", "pi pi-volume-up", "/speech/auditoria"),
+        ],
+      });
+    return sections;
+  }, [user, location.pathname]);
+  const close = () => !desktop && setMobileOpen(false);
+  const signOut = () => {
+    dispatch(logout());
+    navigate("/login");
+  };
+  const initials =
+    `${user?.NOMBRES?.[0] || "U"}${user?.APELLIDOS?.[0] || ""}`.toUpperCase();
   return (
     <>
-      {/* Sidebar */}
-      <div
-        onMouseEnter={sideBarActive}
-        onMouseLeave={sideBarInactive}
-        className={`fixed top-0 left-0 ${
-          isSidebarOpen ? "w-64" : "w-16"
-        } h-full bg-gray-50 flex flex-col border-r z-[201] transition-all duration-300`}
+      <Button
+        icon="pi pi-bars"
+        rounded
+        text
+        aria-label="Abrir navegación"
+        className="app-menu-trigger lg:hidden"
+        onClick={() => setMobileOpen(true)}
+      />
+      <PrimeSidebar
+        visible={desktop || mobileOpen}
+        onHide={close}
+        modal={!desktop}
+        dismissable={!desktop}
+        showCloseIcon={!desktop}
+        blockScroll={!desktop}
+        className={`app-sidebar ${desktop && !isSidebarOpen ? "app-sidebar-compact" : ""}`}
+        pt={{
+          content: { className: "flex h-full flex-col p-0" },
+          header: { className: "hidden" },
+        }}
       >
-        {/* Header */}
-        <div className="flex items-center space-x-3 px-4 pt-6">
-          <h1
-            className={`text-xl font-bold text-gray-900 transition-all ${
-              !isSidebarOpen ? "hidden" : ""
-            }`}
-          >
-            Evaluaciones
-          </h1>
-        </div>
-
-        {/* Menu */}
-        <div className="flex-1 overflow-y-auto mt-6">
-          <ul className="space-y-3">
-            {user && (
-              <>
-                {/* CONSULTA GESTIONES */}
-                {isSidebarOpen && (
-                  <h3 className="text-xs font-semibold text-gray-400 px-4">
-                    Consultas
-                  </h3>
-                )}
-                <li>
-                  <Link
-                    to="/"
-                    className={`flex items-center text-xs ${
-                      isSidebarOpen ? "justify-start" : "justify-center"
-                    } space-x-2 py-2 px-3 rounded-md transition-all ${
-                      isActive("/")
-                        ? "bg-[#e0f7fc] text-[#09c]"
-                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                    }`}
-                  >
-                    <MdOutlineMonitor size={24} />
-                    {isSidebarOpen && <span>Consulta de Gestiones</span>}
-                  </Link>
-                </li>
-
-                {/* Perfil Asesor */}
-                {(user?.CARGO === 17 || user?.CARGO === 20) && (
-                  <>
-                    {isSidebarOpen && (
-                      <h3 className="text-xs font-semibold text-gray-400 px-4">
-                        Asesor
-                      </h3>
-                    )}
-                    <li>
-                      <Link
-                        to="/perfilAsesor"
-                        className={`flex items-center text-xs ${
-                          isSidebarOpen ? "justify-start" : "justify-center"
-                        } space-x-2 py-2 px-3 rounded-md transition-all ${
-                          isActive("/perfilAsesor")
-                            ? "bg-[#e0f7fc] text-[#09c]"
-                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                        }`}
-                      >
-                        <FiUsers size={24} />
-                        {isSidebarOpen && <span>Perfil Asesor</span>}
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        to="/evaluacionesAsesor"
-                        className={`flex items-center text-xs ${
-                          isSidebarOpen ? "justify-start" : "justify-center"
-                        } space-x-2 py-2 px-3 rounded-md transition-all ${
-                          isActive("/evaluacionesAsesor")
-                            ? "bg-[#e0f7fc] text-[#09c]"
-                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                        }`}
-                      >
-                        <MdOutlineMonitor size={24} />
-                        {isSidebarOpen && <span>Evaluaciones</span>}
-                      </Link>
-                    </li>
-                  </>
-                )}
-
-                {/* Registro Monitor */}
-                {user?.CARGO !== 16 && (
-                  <>
-                    {isSidebarOpen && (
-                      <h3 className="text-xs font-semibold text-gray-400 px-4">
-                        Monitor
-                      </h3>
-                    )}
-                    <li>
-                      <Link
-                        to="/tableMonitor"
-                        className={`flex items-center text-xs ${
-                          isSidebarOpen ? "justify-start" : "justify-center"
-                        } space-x-2 py-2 px-3 rounded-md transition-all ${
-                          isActive("/tableMonitor")
-                            ? "bg-[#e0f7fc] text-[#09c]"
-                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                        }`}
-                      >
-                        <HiDocumentText size={24} />
-                        {isSidebarOpen && <span>Registro</span>}
-                      </Link>
-                    </li>
-                  </>
-                )}
-
-                {/* Admin */}
-                {(user?.CARGO === 7 ||
-                  user?.CARGO === 29 ||
-                  user?.CARGO === 20 ||
-                  user?.CARGO === 17 ||
-                  user?.CARGO === 15) && (
-                  <>
-                    {isSidebarOpen && (
-                      <h3 className="text-xs font-semibold text-gray-400 px-4">
-                        Administrador
-                      </h3>
-                    )}
-                    <li>
-                      <Link
-                        to="/table"
-                        className={`flex items-center text-xs ${
-                          isSidebarOpen ? "justify-start" : "justify-center"
-                        } space-x-2 py-2 px-3 rounded-md transition-all ${
-                          isActive("/table")
-                            ? "bg-[#e0f7fc] text-[#09c]"
-                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                        }`}
-                      >
-                        <HiDocumentText size={24} />
-                        {isSidebarOpen && <span>Registro de Fichas</span>}
-                      </Link>
-                    </li>
-                    {(user?.CARGO === 17 ||
-                      user?.CARGO === 20 ||
-                      user?.CARGO === 29 ||
-                      user?.CARGO === 7) && (
-                      <li>
-                        <Link
-                          to="/criterios"
-                          className={`flex items-center text-xs ${
-                            isSidebarOpen ? "justify-start" : "justify-center"
-                          } space-x-2 py-2 px-3 rounded-md transition-all ${
-                            isActive("/criterios")
-                              ? "bg-[#e0f7fc] text-[#09c]"
-                              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                          }`}
-                        >
-                          <MdOutlineMonitor size={24} />
-                          {isSidebarOpen && (
-                            <span>Criterios de Evaluación</span>
-                          )}
-                        </Link>
-                      </li>
-                    )}
-                  </>
-                )}
-
-                {/* Speech Analytics */}
-                {(user?.CARGO === 20 ||
-                  user?.CARGO === 17 ||
-                  user?.CARGO === 29 ||
-                  user?.CARGO === 7) && (
-                  <>
-                    {isSidebarOpen && (
-                      <h3 className="text-xs font-semibold text-gray-400 px-4">
-                        Speech Analytics
-                      </h3>
-                    )}
-                    <li>
-                      <Link
-                        to="/speech/procesamiento"
-                        className={`flex items-center text-xs ${
-                          isSidebarOpen ? "justify-start" : "justify-center"
-                        } space-x-2 py-2 px-3 rounded-md transition-all ${
-                          isActive("/speech/procesamiento")
-                            ? "bg-[#e0f7fc] text-[#09c]"
-                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                        }`}
-                      >
-                        <MdOutlineMonitor size={24} />
-                        {isSidebarOpen && (
-                          <span>Procesamiento y Evaluación</span>
-                        )}
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        to="/speech/auditoria"
-                        className={`flex items-center text-xs ${
-                          isSidebarOpen ? "justify-start" : "justify-center"
-                        } space-x-2 py-2 px-3 rounded-md transition-all ${
-                          isActive("/speech/auditoria")
-                            ? "bg-[#e0f7fc] text-[#09c]"
-                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                        }`}
-                      >
-                        <HiDocumentText size={24} />
-                        {isSidebarOpen && <span>Auditoría de Audios</span>}
-                      </Link>
-                    </li>
-                  </>
-                )}
-
-                {(user?.CARGO === 20 ||
-                  user?.CARGO === 17 ||
-                  user?.CARGO === 29 ||
-                  user?.CARGO === 7) && (
-                  <>
-                    {isSidebarOpen && (
-                      <h3 className="text-xs font-semibold text-gray-400 px-4">
-                        Auditoria
-                      </h3>
-                    )}
-                    <li>
-                      <Link
-                        to="/auditoria/gestiones"
-                        className={`flex items-center text-xs ${
-                          isSidebarOpen ? "justify-start" : "justify-center"
-                        } space-x-2 py-2 px-3 rounded-md transition-all ${
-                          isActive("/auditoria/gestiones")
-                            ? "bg-[#e0f7fc] text-[#09c]"
-                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                        }`}
-                      >
-                        <MdOutlineMonitor size={24} />
-                        {isSidebarOpen && <span>Reporte de Gestiones</span>}
-                      </Link>
-                    </li>
-                  </>
-                )}
-              </>
-            )}
-          </ul>
-        </div>
-
-        {/* Footer */}
-        <div
-          className={`flex items-center p-4 border-t transition-all ${
-            isSidebarOpen ? "justify-start space-x-3" : "flex-col space-y-2"
-          }`}
-        >
-          <div className="bg-gray-300 w-10 h-10 rounded-full flex items-center justify-center text-sm text-white">
-            {user?.NOMBRES?.[0] || "U"}
+        <div className="flex items-center gap-3 border-b border-stone-200 px-5 py-5">
+          <div className="grid h-9 w-9 shrink-0 grid-cols-2 gap-0.5 rounded-lg bg-stone-100 p-1">
+            <span className="bg-brand-red" />
+            <span className="bg-stone-400" />
+            <span className="bg-stone-500" />
+            <span className="bg-brand-red" />
           </div>
-
-          {isSidebarOpen ? (
-            <div>
-              <p className="text-sm font-semibold text-gray-800">
+          <div className="app-sidebar-copy min-w-0 flex-1">
+            <p className="text-sm font-bold tracking-tight text-stone-900">
+              COBRANZAS <span className="text-brand-red">PERÚ</span>
+            </p>
+            <p className="text-xs text-stone-500">Gestión de calidad</p>
+          </div>
+        </div>
+        <nav
+          className="flex-1 overflow-y-auto px-3 py-4"
+          aria-label="Navegación principal"
+        >
+          <PanelMenu model={model} multiple />
+        </nav>
+        <div className="border-t border-stone-200 p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-stone-900 text-xs font-bold text-white">
+              {initials}
+            </div>
+            <div className="app-sidebar-copy min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-stone-800">
                 {user?.NOMBRES || "Usuario"}
               </p>
-              <p className="text-xs text-gray-500">{user?.nombre || "Admin"}</p>
+              <p className="truncate text-xs text-stone-500">
+                {user?.nombre || user?.cargo || "Usuario"}
+              </p>
             </div>
-          ) : null}
-
-          {isAuth && (
-            <button
-              onClick={handleLogOut}
-              className={`${
-                isSidebarOpen ? "ml-auto" : ""
-              } text-red-500 hover:text-red-700`}
-            >
-              <BiPowerOff size={24} />
-            </button>
-          )}
+            <Button
+              icon="pi pi-sign-out"
+              severity="danger"
+              text
+              rounded
+              aria-label="Cerrar sesión"
+              onClick={signOut}
+            />
+          </div>
         </div>
-      </div>
+      </PrimeSidebar>
     </>
   );
-};
-
-export default Sidebar;
+}

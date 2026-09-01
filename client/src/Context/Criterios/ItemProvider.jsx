@@ -395,13 +395,13 @@ export const CriteriosProvider = ({ children }) => {
     setModoNCriterio(newModo);
 
     if (newModo === "edit") {
-      // const pesoTransformado = newData.PESO_CRITERIO * 100;
-      const pesoTransformado = Number(newData.PESO_CRITERIO) * 100;
+      // const pesoTransformado = newData.PESO * 100;
+      const pesoTransformado = Number(newData.PESO) * 100;
 
       setFormNCriterio({
         ...formNCriterio,
         idCriterio: newData.ID_CRITERIO,
-        nombreCriterio: newData.NOMBRE_CRITERIO,
+        nombreCriterio: newData.NOMBRE,
         pesoCriterio: parseFloat(pesoTransformado.toFixed(2)),
 
         idItems: [newData.ID_ITEM],
@@ -678,7 +678,7 @@ export const CriteriosProvider = ({ children }) => {
 
     return criteriosCriterios.filter(
       (c) =>
-        c.NOMBRE_CRITERIO?.toLowerCase().includes(queryFiltered) ||
+        c.NOMBRE?.toLowerCase().includes(queryFiltered) ||
         c.NOMBRE_ITEM?.toLowerCase().includes(queryFiltered) ||
         c.NOMBRE_USUARIO_ACTUALIZACION?.toLowerCase().includes(queryFiltered) ||
         c.NOMBRE_CARTERA?.toLowerCase().includes(queryFiltered),
@@ -717,20 +717,20 @@ export const CriteriosProvider = ({ children }) => {
     setModoNAcciones(newModo);
 
     if (newModo === "edit") {
-      // const pesoTransformado = newData.PESO_ACCION_CRITERIO * 100;
-      const pesoTransformado = Number(newData.PESO_ACCION_CRITERIO) * 100;
+      // const pesoTransformado = newData.PESO * 100;
+      const pesoTransformado = Number(newData.PESO) * 100;
 
       setFormNAcciones({
         ...formNAcciones,
-        idAccion: newData.ID_ACCION_CRITERIO,
-        nombreAccion: newData.NOMBRE_ACCION_CRITERIO,
+        idAccion: newData.ID_ACCION,
+        nombreAccion: newData.NOMBRE,
         pesoAccion: parseFloat(pesoTransformado.toFixed(2)),
         idCriterio: newData.ID_CRITERIO,
         idCriterioOriginal: newData.ID_CRITERIO,
         idEstado: newData.ESTADO_ACCION,
       });
 
-      setinputCarteraAccionesAsoc(`${newData.NOMBRE_CRITERIO}`);
+      setinputCarteraAccionesAsoc(`${newData.NOMBRE}`);
     } else {
       setFormNAcciones(initAccioness);
       setinputCarteraAccionesAsoc("");
@@ -773,7 +773,7 @@ export const CriteriosProvider = ({ children }) => {
     } else {
       const filtered = criteriosCriterios.filter(
         (c) =>
-          c.NOMBRE_CRITERIO?.toLowerCase().includes(query) ||
+          c.NOMBRE?.toLowerCase().includes(query) ||
           c.NOMBRE_ITEM?.toLowerCase().includes(query) ||
           c.NOMBRE_CARTERA?.toLowerCase().includes(query),
       );
@@ -783,14 +783,14 @@ export const CriteriosProvider = ({ children }) => {
 
   // Seleccionar criterio
   const criterioAsocSelected = (criterio) => {
-    const { ID_CRITERIO, NOMBRE_CRITERIO } = criterio;
+    const { ID_CRITERIO, NOMBRE } = criterio;
 
     setFormNAcciones({
       ...formNAcciones,
       idCriterio: ID_CRITERIO,
     });
 
-    setinputCarteraAccionesAsoc(NOMBRE_CRITERIO);
+    setinputCarteraAccionesAsoc(NOMBRE);
     setSelectCarteraAcciones(false);
   };
 
@@ -959,8 +959,8 @@ export const CriteriosProvider = ({ children }) => {
 
     return criteriosAcciones.filter(
       (a) =>
-        a.NOMBRE_ACCION_CRITERIO?.toLowerCase().includes(queryFiltered) ||
-        a.NOMBRE_CRITERIO?.toLowerCase().includes(queryFiltered) ||
+        a.NOMBRE?.toLowerCase().includes(queryFiltered) ||
+        a.NOMBRE?.toLowerCase().includes(queryFiltered) ||
         a.NOMBRE_USUARIO_ACTUALIZACION?.toLowerCase().includes(queryFiltered) ||
         a.NOMBRE_CARTERA?.toLowerCase().includes(queryFiltered),
     );
@@ -2244,9 +2244,8 @@ export const CriteriosProvider = ({ children }) => {
   // Cargamos las carteras del CyC
   useEffect(() => {
     loadCarterasCyC();
-    loadItem();
-    loadCriterios();
-    loadAcciones();
+    // Ítems, criterios y acciones ahora se cargan desde el editor de
+    // plantillas. No consultar las rutas históricas al iniciar la aplicación.
     loadMotNoPago();
     loadTiposGestion();
     loadTiposLlamada();

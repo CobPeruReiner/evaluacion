@@ -1,14 +1,3 @@
-import { Spinner } from "../Icons/Iconos";
+import { AppLoader } from "./ui/PrimeStates";
 
-export const Loader = ({ width = "w-12", height = "h-12" }) => {
-  return (
-    <div className="text-center">
-      <div role="status">
-        <Spinner
-          className={`inline ${width} ${height} animate-spin text-[#09f]`}
-        />
-        <span className="sr-only">Loading...</span>
-      </div>
-    </div>
-  );
-};
+export const Loader = () => <AppLoader className="w-full min-h-[240px]" />;

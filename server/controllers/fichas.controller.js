@@ -158,7 +158,7 @@ const getAllFichas = catchAsync(async (req, res, next) => {
     where: {
       [Op.and]: [
         literal(
-          `STR_TO_DATE(fecha_monitoreo, '%d/%m/%Y') BETWEEN '${formattedStartDate}' AND '${formattedEndDate}'`
+          `STR_TO_DATE(fecha_monitoreo, '%d/%m/%Y') BETWEEN '${formattedStartDate}' AND '${formattedEndDate}'`,
         ),
       ],
     },
@@ -199,8 +199,8 @@ const getFilteredlFichas = catchAsync(async (req, res, next) => {
 
     condiciones.push(
       literal(
-        `STR_TO_DATE(fecha_monitoreo, '%d/%m/%Y') BETWEEN '${formattedStartDate}' AND '${formattedEndDate}'`
-      )
+        `STR_TO_DATE(fecha_monitoreo, '%d/%m/%Y') BETWEEN '${formattedStartDate}' AND '${formattedEndDate}'`,
+      ),
     );
   }
 
@@ -274,7 +274,7 @@ const getTypeOfFicha = async (req, res, next) => {
       {
         replacements: { cartera },
         type: QueryTypes.SELECT,
-      }
+      },
     );
 
     res.status(200).json({ status: "success", fichas });
@@ -289,7 +289,9 @@ const getTypeOfFicha = async (req, res, next) => {
 
 const getAsesorEvaluaciones = catchAsync(async (req, res, next) => {
   const { dni, month } = req.query;
-  const currentYear = new Date().getFullYear();
+  // const currentYear = new Date().getFullYear();
+  const currentYear = 2024;
+  console.log(currentYear);
 
   const fichas = await Ficha.findAll({
     where: {
@@ -302,10 +304,10 @@ const getAsesorEvaluaciones = catchAsync(async (req, res, next) => {
             Sequelize.fn(
               "STR_TO_DATE",
               Sequelize.col("fecha_llamada"),
-              "%d/%m/%Y"
-            )
+              "%d/%m/%Y",
+            ),
           ),
-          currentYear
+          currentYear,
         ),
       ],
     },
@@ -342,11 +344,11 @@ const getPromedioAnualCalificacion = async (req, res) => {
             Sequelize.fn(
               "STR_TO_DATE",
               Sequelize.col("fecha_llamada"),
-              "%d/%m/%Y"
+              "%d/%m/%Y",
             ),
             {
               [Op.gt]: parsedDate,
-            }
+            },
           ),
         ],
       },
@@ -374,7 +376,7 @@ const addFeedbackData = catchAsync(async (req, res, next) => {
   if (!ficha) {
     // Si no se encuentra el registro, enviamos una respuesta adecuada
     return next(
-      new AppError(`Evaluación con id ${idevaluacion} no encontrado`, 404)
+      new AppError(`Evaluación con id ${idevaluacion} no encontrado`, 404),
     );
   }
 

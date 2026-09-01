@@ -14,7 +14,7 @@ logger = getLogger(__name__)
 
 def _accion_default_negativa(acciones: list) -> dict:
     if not acciones:
-        return {"NOMBRE_ACCION_CRITERIO": "NO DETECTADO", "PESO_ACCION_CRITERIO": 0.0}
+        return {"NOMBRE": "NO DETECTADO", "PESO": 0.0}
     return acciones[0]
 
 
@@ -53,19 +53,19 @@ def evaluar_item(
                 logger.exception(f"[EVALUADOR] Error invocando '{key}': {e}")
                 accion = _accion_default_negativa(acciones)
 
-        pa = float(accion.get("PESO_ACCION_CRITERIO", 0.0) if accion else 0.0)
-        pc = float(c.get("PESO_CRITERIO", 0.0))
+        pa = float(accion.get("PESO", 0.0) if accion else 0.0)
+        pc = float(c.get("PESO", 0.0))
         peso_total += pc
         peso_obtenido += pa
 
-        resultados[c["NOMBRE_CRITERIO"]] = {
-            "NOMBRE_ACCION_CRITERIO": (
-                accion.get("NOMBRE_ACCION_CRITERIO", "NO DETECTADO")
+        resultados[c["NOMBRE"]] = {
+            "NOMBRE": (
+                accion.get("NOMBRE", "NO DETECTADO")
                 if accion
                 else "NO DETECTADO"
             ),
-            "PESO_ACCION_CRITERIO": pa,
-            "PESO_CRITERIO": pc,
+            "PESO": pa,
+            "PESO": pc,
         }
 
     pct = (peso_obtenido / peso_total) * 100 if peso_total else 0.0
