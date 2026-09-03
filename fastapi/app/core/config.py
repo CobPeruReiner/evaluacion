@@ -24,7 +24,7 @@ class Settings:
     DB_HOST: str = os.getenv("DB_HOST", "192.168.1.36")
     DB_USER: str = os.getenv("DB_USER", "cob_bd")
     DB_PASS: str = os.getenv("DB_PASS", "33nKVs4@nC")
-    DB_NAME: str = os.getenv("DB_NAME", "calidad")
+    DB_NAME: str = os.getenv("DB_NAME", "CALIDAD")
 
     # SYS SISTEMAGEST
     DB_HOST_SISTEMAGEST: str = os.getenv("DB_HOST_SISTEMAGEST", "192.168.1.31")

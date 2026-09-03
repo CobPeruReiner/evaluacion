@@ -7,7 +7,7 @@ import { MVerCalificados } from "./Components/Modal/MVerCalificados";
 import { buttonSecondary } from "../../../utils/styles";
 
 export const Procesamiento = () => {
-  const { handleZip, inputRef, openMVerCalificacion } =
+  const { handleZip, inputRef, openMVerCalificacion, speechJob } =
     useContext(CriteriosContext);
 
   return (
@@ -52,6 +52,17 @@ export const Procesamiento = () => {
             Ver Evaluados
           </button>
         </div>
+
+        {speechJob && (
+          <section className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-brand-dark" aria-live="polite">
+            <p className="font-semibold">Lote en procesamiento</p>
+            <p className="mt-1 text-stone-600">
+              {speechJob.progress?.stage || "Esperando un worker disponible"}
+              {speechJob.progress?.current ? ` · audio ${speechJob.progress.current} de ${speechJob.progress.total}` : ""}
+              {speechJob.progress?.filename ? ` · ${speechJob.progress.filename}` : ""}
+            </p>
+          </section>
+        )}
       </div>
 
       <MVerProcesados />

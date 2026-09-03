@@ -1,9 +1,9 @@
 from logging import getLogger
 from app.core.evaluador import evaluar_item
 from app.core.scoring import estado_porcentaje
-from app.data.dao import obtener_items_por_cartera
+from app.data.dao import obtener_configuracion_evaluacion, obtener_items_por_cartera, obtener_tipo_cartera
 from app.services.utils.texto import normalizar_texto
-from app.db.session import SyS_Calidad
+from app.db.session import SyS_Calidad, SyS_Sistemagest
 
 logger = getLogger(__name__)
 
@@ -27,6 +27,14 @@ def evaluar_llamada(
         if not items:
             return {"error": f"No hay ítems activos para cartera {id_cartera}"}
 
+        criterios_por_item, acciones_por_criterio = obtener_configuracion_evaluacion(conn, id_cartera)
+
+        cartera_conn = SyS_Sistemagest()
+        try:
+            cartera_tipo = obtener_tipo_cartera(cartera_conn, id_cartera)
+        finally:
+            cartera_conn.close()
+
         cumplimientos = []
         for item in items:
             resultado = evaluar_item(
@@ -35,6 +43,9 @@ def evaluar_llamada(
                 id_cartera=id_cartera,
                 tipificaciones=tipificaciones,
                 conn=conn,
+                cartera_tipo=cartera_tipo,
+                criterios_preloaded=criterios_por_item.get(item["ID_ITEM"], []),
+                acciones_preloaded=acciones_por_criterio,
             )
             resultados[item["NOMBRE_ITEM"]] = resultado
             if resultado.get("cumplimiento") is not None:

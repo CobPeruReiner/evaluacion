@@ -1612,6 +1612,14 @@ export const CriteriosProvider = ({ children }) => {
 
   // Audios
   const [isPostingAudiosProcess, setIsPostingAudiosProcess] = useState(false);
+  const [speechJob, setSpeechJob] = useState(() => {
+    try {
+      return JSON.parse(window.localStorage.getItem("speech-audio-job")) || null;
+    } catch {
+      return null;
+    }
+  });
+  const speechPollingRef = useRef(false);
 
   // Almacenar .zip y mostrar audios
   const [archivos, setArchivos] = useState([]);
@@ -1780,7 +1788,39 @@ export const CriteriosProvider = ({ children }) => {
     setMProcesados(false);
   };
 
-  // Procesar audios
+  const pollSpeechJob = async (jobId) => {
+    if (speechPollingRef.current) return;
+    speechPollingRef.current = true;
+    try {
+      while (true) {
+        await new Promise((resolve) => setTimeout(resolve, 2500));
+        const { data } = await axios.get(`${API_URL}/criteriosEvaluacion/audios/${jobId}`);
+        if (data.status === "completed") {
+          window.localStorage.removeItem("speech-audio-job");
+          setSpeechJob(null);
+          setprocessResultSuccess(data.exitosos || []);
+          setProcessResultFailed(data.fallidos || []);
+          toast.success(`Lote terminado: ${(data.exitosos || []).length} exitosos, ${(data.fallidos || []).length} fallidos.`);
+          return;
+        }
+        if (data.status === "failed") {
+          throw new Error(data.error || "El procesamiento del lote falló");
+        }
+        setSpeechJob((current) => current?.jobId === jobId ? { ...current, status: data.status, progress: data.progress } : current);
+      }
+    } catch (error) {
+      console.error("Error consultando el lote de audios", error);
+      toast.error(error.response?.data?.error || error.message || "No se pudo consultar el lote de audios.");
+    } finally {
+      speechPollingRef.current = false;
+    }
+  };
+
+  useEffect(() => {
+    if (speechJob?.jobId) pollSpeechJob(speechJob.jobId);
+  }, [speechJob?.jobId]);
+
+  // Encola el ZIP. El procesamiento y sus consultas no bloquean la interfaz.
   const sendAudiosProcess = async () => {
     if (zipFile === null) {
       toast.error("No se ha seleccionado un archivo ZIP");
@@ -1796,7 +1836,7 @@ export const CriteriosProvider = ({ children }) => {
       formData.append("idEfecto", idEfectoAudios);
       formData.append("usuario", `${user?.NOMBRES} ${user?.APELLIDOS}`);
 
-      const { data } = await axios.post(
+      const { data: queuedJob } = await axios.post(
         `${API_URL}/criteriosEvaluacion/audios`,
         formData,
         {
@@ -1806,18 +1846,14 @@ export const CriteriosProvider = ({ children }) => {
         },
       );
 
-      if (!data.ok) {
-        toast.error(data.error || "Error al procesar audios");
-        throw new Error(data.error || "Error al procesar audios");
+      if (!queuedJob.ok || !queuedJob.jobId) {
+        throw new Error(queuedJob.error || "No se pudo encolar el lote de audios");
       }
 
-      toast.success(
-        `Audios procesados: ${data.exitosos.length} exitosos, ${data.fallidos.length} fallidos`,
-      );
-
-      setprocessResultSuccess(data.exitosos);
-      setProcessResultFailed(data.fallidos);
-      setMVerCalificacion(true);
+      const nextJob = { jobId: queuedJob.jobId, status: "queued" };
+      window.localStorage.setItem("speech-audio-job", JSON.stringify(nextJob));
+      setSpeechJob(nextJob);
+      toast.success("Lote recibido y puesto en cola. Puedes seguir trabajando mientras se procesa.");
       setArchivos([]);
       setZipFile(null);
       setMProcesados(false);
@@ -2593,6 +2629,7 @@ export const CriteriosProvider = ({ children }) => {
 
         // =============== PROCESAMIENTO DE AUDIOS ===============
         isPostingAudiosProcess,
+        speechJob,
         sendAudiosProcess,
         inputRef,
         archivos,

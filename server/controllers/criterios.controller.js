@@ -8,7 +8,8 @@ const { obtenerNombreAgente } = require("../utils/obtener-nombre-agente");
 const { obtenerConexionPorColor } = require("../utils/conexiones-vicidial");
 const { obtenerColorPorIdCartera } = require("../utils/obtener-color");
 
-const servidorPython = process.env.PATH_SERVAPLICACIONES || "localhost";
+// Dentro de Docker el nombre del servicio evita depender de puertos publicados.
+const servidorPython = process.env.PATH_SERVAPLICACIONES || "fastapi_backend";
 // Entorno
 const esProduccion = process.env.NODE_ENV === "production";
 
@@ -644,7 +645,7 @@ const getAllMotivosNoPago = async (_req, res) => {
     const motivos = await db.query(
       `
         SELECT tb1.ID_MOTIVO_NO_PAGO, tb1.NOMBRE_MOTIVO_NO_PAGO, tb1.ID_CARTERA, tb2.cartera AS NOMBRE_CARTERA, tb1.ID_ESTADO
-        FROM calidad.MOTIVO_NO_PAGO tb1
+        FROM CALIDAD.MOTIVO_NO_PAGO tb1
         LEFT JOIN SISTEMAGEST.cartera tb2
         ON tb1.ID_CARTERA = tb2.id;
       `,
@@ -684,7 +685,7 @@ const createMotivoNoPago = async (req, res) => {
   try {
     await db.query(
       `
-        INSERT INTO calidad.MOTIVO_NO_PAGO (NOMBRE_MOTIVO_NO_PAGO, ID_CARTERA, ID_ESTADO)
+        INSERT INTO CALIDAD.MOTIVO_NO_PAGO (NOMBRE_MOTIVO_NO_PAGO, ID_CARTERA, ID_ESTADO)
         VALUES (:nombreMotivo, :idCartera, 1);
       `,
       {
@@ -727,7 +728,7 @@ const updateMotivoNoPago = async (req, res) => {
   try {
     await db.query(
       `
-        UPDATE calidad.MOTIVO_NO_PAGO
+        UPDATE CALIDAD.MOTIVO_NO_PAGO
         SET NOMBRE_MOTIVO_NO_PAGO = :nombreMotivo,
             ID_CARTERA = :idCartera,
             ID_ESTADO = :idEstado
@@ -767,7 +768,7 @@ const getAllTiposGestion = async (_req, res) => {
     const gestiones = await db.query(
       `
         SELECT tb1.ID_TIPO_GESTION, tb1.NOMBRE_TIPO_GESTION, tb1.ID_CARTERA, tb2.cartera AS NOMBRE_CARTERA, tb1.ID_ESTADO
-        FROM calidad.TIPO_GESTION tb1
+        FROM CALIDAD.TIPO_GESTION tb1
         LEFT JOIN SISTEMAGEST.cartera tb2
         ON tb1.ID_CARTERA = tb2.id;
       `,
@@ -807,7 +808,7 @@ const createTipoGestion = async (req, res) => {
   try {
     await db.query(
       `
-        INSERT INTO calidad.TIPO_GESTION (NOMBRE_TIPO_GESTION, ID_CARTERA, ID_ESTADO)
+        INSERT INTO CALIDAD.TIPO_GESTION (NOMBRE_TIPO_GESTION, ID_CARTERA, ID_ESTADO)
         VALUES (:nombreGestion, :idCartera, 1);
       `,
       {
@@ -855,7 +856,7 @@ const updateTipoGestion = async (req, res) => {
   try {
     const [affectedRows] = await db.query(
       `
-        UPDATE calidad.TIPO_GESTION
+        UPDATE CALIDAD.TIPO_GESTION
         SET NOMBRE_TIPO_GESTION = :nombreGestion,
             ID_CARTERA = :idCartera,
             ID_ESTADO = :idEstado
@@ -901,7 +902,7 @@ const getAllTiposLlamada = async (_req, res) => {
   try {
     const llamadas = await db.query(
       `
-        SELECT * FROM calidad.TIPO_LLAMADA;
+        SELECT * FROM CALIDAD.TIPO_LLAMADA;
       `,
       {
         type: QueryTypes.SELECT,
@@ -939,7 +940,7 @@ const createTipoLlamada = async (req, res) => {
   try {
     await db.query(
       `
-        INSERT INTO calidad.TIPO_LLAMADA (NOMBRE_TIPO_LLAMADA, ID_ESTADO)
+        INSERT INTO CALIDAD.TIPO_LLAMADA (NOMBRE_TIPO_LLAMADA, ID_ESTADO)
         VALUES (:nombreLlamada, 1);
       `,
       {
@@ -981,7 +982,7 @@ const updateTipoLlamada = async (req, res) => {
   try {
     const [affectedRows] = await db.query(
       `
-        UPDATE calidad.TIPO_LLAMADA
+        UPDATE CALIDAD.TIPO_LLAMADA
         SET NOMBRE_TIPO_LLAMADA = :nombreLlamada,
             ID_ESTADO = :idEstado
         WHERE ID_TIPO_LLAMADA = :idTipoLlamada;
@@ -1031,7 +1032,7 @@ const getAllEfectos = async (req, res) => {
     const efectos = await db.query(
       `
       SELECT tb1.ID_EFECTO, tb1.EFECTO, tb1.HOMOLO, tb1.DESCRIPCION, tb1.ID_ESTADO
-      FROM calidad.EFECTO tb1
+      FROM CALIDAD.EFECTO tb1
       WHERE tb1.ID_ESTADO = 1
       ${whereClause}
       ORDER BY tb1.EFECTO ASC
@@ -1055,154 +1056,84 @@ const getAllEfectos = async (req, res) => {
   }
 };
 
-// PROCESAR ZIP
-const processZip = async (req, res) => {
-  console.log("📥 Petición recibida para procesar ZIP");
+const speechJobsDir = process.env.SPEECH_JOBS_DIR || "/data/jobs";
 
-  if (!req.file || path.extname(req.file.originalname) !== ".zip") {
-    console.warn("⚠️ Archivo inválido recibido");
-    return res
-      .status(400)
-      .json({ ok: false, error: "Debes subir un archivo .zip válido." });
+const enqueueSpeechJob = async (req, res) => {
+  const discardUpload = () => req.file && fs.promises.unlink(req.file.path).catch(() => {});
+  if (!req.file || path.extname(req.file.originalname).toLowerCase() !== ".zip") {
+    await discardUpload();
+    return res.status(400).json({ ok: false, error: "Debes subir un archivo .zip válido." });
   }
-
-  const zipPath = req.file.path;
-  const nombreZip = req.file.originalname;
-  const nombreBase = path.basename(nombreZip, ".zip");
-
-  // Se espera que el nombre venga como: idCartera_YYYY-MM-DD_algo.zip
-  const partesNombre = nombreBase.split("_");
-  const idCartera = partesNombre[0];
-  const fecha = partesNombre[1];
-
-  if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
-    return res.status(400).json({
-      ok: false,
-      error:
-        "El nombre del archivo ZIP debe incluir una fecha en formato YYYY-MM-DD.",
-    });
+  const nombreBase = path.basename(req.file.originalname, ".zip");
+  const [idCartera, fecha] = nombreBase.split("_");
+  if (!idCartera || !fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+    await discardUpload();
+    return res.status(400).json({ ok: false, error: "El ZIP debe iniciar con cartera_YYYY-MM-DD." });
   }
-
-  const color = obtenerColorPorIdCartera(idCartera);
-  const dbConexion = obtenerConexionPorColor(color);
-
-  console.log(`📄 ZIP cargado: ${zipPath}`);
-  console.log(`🗓️ Fecha extraída: ${fecha}`);
-  console.log(`🎯 ID Cartera: ${idCartera}`);
-
   const form = new FormData();
-
-  // Datos a mandar a python process
-  form.append("file", fs.createReadStream(zipPath));
+  form.append("file", fs.createReadStream(req.file.path));
   form.append("id_cartera", idCartera);
-
-  const usuario = req.body.usuario || null;
-
-  console.log("Archivos a evaluar enviados por:", usuario);
-
+  form.append("version_roles", "v2");
   try {
-    console.log("📡 Enviando ZIP al servidor Python...");
+    const { data } = await axios.post(`http://${servidorPython}:8000/api/v1/jobs`, form, { headers: form.getHeaders(), maxBodyLength: Infinity, maxContentLength: Infinity, timeout: 30000 });
+    if (!data?.job_id) throw new Error("La cola no devolvió un identificador de trabajo.");
+    const jobDir = path.join(speechJobsDir, data.job_id);
+    await fs.promises.mkdir(jobDir, { recursive: true });
+    await fs.promises.writeFile(path.join(jobDir, "node-context.json"), JSON.stringify({ idCartera, fecha, nombreBase, usuario: req.body.usuario || null, color: obtenerColorPorIdCartera(idCartera) }), "utf8");
+    await fs.promises.unlink(req.file.path).catch(() => {});
+    return res.status(202).json({ ok: true, jobId: data.job_id, status: "queued" });
+  } catch (error) {
+    await fs.promises.unlink(req.file.path).catch(() => {});
+    return res.status(502).json({ ok: false, error: "No se pudo encolar el lote de audios." });
+  }
+};
 
-    const response = await axios.post(
-      `http://${servidorPython}:8000/api/v1/procesar`,
-      form,
-      {
-        headers: form.getHeaders(),
-        maxBodyLength: Infinity,
-      },
-    );
+const finalizeSpeechJob = async (jobId, result) => {
+  const jobDir = path.join(speechJobsDir, jobId);
+  const marker = path.join(jobDir, "node-result.json");
+  if (fs.existsSync(marker)) return JSON.parse(await fs.promises.readFile(marker, "utf8"));
+  const lockPath = `${marker}.lock`;
+  let lock;
+  try {
+    lock = await fs.promises.open(lockPath, "wx");
+  } catch (error) {
+    if (error.code === "EEXIST") return null;
+    throw error;
+  }
+  try {
+  const context = JSON.parse(await fs.promises.readFile(path.join(jobDir, "node-context.json"), "utf8"));
+  const outputDir = esProduccion ? "/app/server/audios" : path.join(__dirname, "../audios");
+  const resultDir = esProduccion ? path.join("/app/server/resultados", context.fecha) : path.resolve(__dirname, "../resultados", context.fecha);
+  await fs.promises.mkdir(outputDir, { recursive: true });
+  await fs.promises.mkdir(resultDir, { recursive: true });
+  const dbConexion = obtenerConexionPorColor(context.color);
+  const exitosos = [];
+  for (const item of result.exitosos || []) {
+    await fs.promises.copyFile(path.join(jobDir, item.audio_path), path.join(outputDir, path.basename(item.archivo)));
+    const { campaña, anexo } = item.metadatos || {};
+    const full_name = campaña && anexo && dbConexion ? await obtenerNombreAgente(dbConexion, campaña, anexo) : null;
+    exitosos.push({ ...item, audio_path: undefined, metadatos: { ...item.metadatos, idCartera: context.idCartera, color: context.color, full_name } });
+  }
+  const completed = { ok: true, exitosos, fallidos: result.fallidos || [], duracion_total: result.duracion_total };
+  await fs.promises.writeFile(path.join(resultDir, `resultados_${context.nombreBase}.json`), JSON.stringify({ usuario: context.usuario, ...completed }, null, 2), "utf8");
+  await fs.promises.writeFile(marker, JSON.stringify(completed), "utf8");
+  return completed;
+  } finally {
+    await lock.close();
+    await fs.promises.unlink(lockPath).catch(() => {});
+  }
+};
 
-    console.log("✅ Respuesta recibida");
-
-    // const outputDir = path.join(__dirname, "../audios");
-    // const outputDir = "/app/server/audios";
-
-    // Audios
-    const outputDir = esProduccion
-      ? "/app/server/audios"
-      : path.join(__dirname, "../audios");
-
-    if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
-
-    const data = response.data;
-    const exitosos = Array.isArray(data) ? data : data.exitosos || [];
-    const fallidos = data.fallidos || [];
-
-    const procesados = [];
-
-    for (const item of exitosos) {
-      const {
-        archivo,
-        audio_base64,
-        transcripcion,
-        metadatos,
-        error_diarizacion,
-        evaluacion,
-      } = item;
-
-      const { campaña, anexo } = metadatos;
-      let full_name = null;
-
-      if (campaña && anexo && dbConexion) {
-        full_name = await obtenerNombreAgente(dbConexion, campaña, anexo);
-      }
-
-      const audioPath = path.join(outputDir, archivo);
-      const buffer = Buffer.from(audio_base64, "base64");
-      fs.writeFileSync(audioPath, buffer);
-
-      procesados.push({
-        archivo,
-        transcripcion,
-        evaluacion,
-        metadatos: {
-          ...metadatos,
-          idCartera,
-          color,
-          full_name,
-        },
-        error_diarizacion,
-      });
-    }
-
-    // === GUARDAR ===
-    // const carpetaFecha = path.resolve(__dirname, "../resultados", fecha);
-    // const carpetaFecha = path.join("/app/server/resultados", fecha);
-
-    const carpetaFecha = esProduccion
-      ? path.join("/app/server/resultados", fecha)
-      : path.resolve(__dirname, "../resultados", fecha);
-
-    if (!fs.existsSync(carpetaFecha)) {
-      fs.mkdirSync(carpetaFecha, { recursive: true });
-    }
-
-    const resultadoPath = path.join(
-      carpetaFecha,
-      `resultados_${nombreBase}.json`,
-    );
-    fs.writeFileSync(
-      resultadoPath,
-      JSON.stringify({ usuario, exitosos: procesados, fallidos }, null, 2),
-      "utf-8",
-    );
-
-    fs.unlink(zipPath, () => {
-      console.log("🗑️ ZIP temporal eliminado");
-    });
-
-    res.status(200).json({
-      ok: true,
-      exitosos: procesados,
-      fallidos,
-    });
-  } catch (err) {
-    console.error("⛔ Error del servidor Python:", err.message);
-    res.status(500).json({
-      ok: false,
-      error: "Error en el servidor de transcripción",
-      detalle: err.message,
-    });
+const getSpeechJob = async (req, res) => {
+  if (!/^[a-f0-9-]{36}$/i.test(req.params.jobId)) return res.status(400).json({ ok: false, error: "Identificador de trabajo inválido." });
+  try {
+    const { data } = await axios.get(`http://${servidorPython}:8000/api/v1/jobs/${req.params.jobId}`, { params: { include_result: true }, timeout: 15000 });
+    if (data.status !== "completed") return res.json(data);
+    const completed = await finalizeSpeechJob(data.job_id, data.result);
+    if (!completed) return res.json({ ok: true, jobId: data.job_id, status: "finalizing" });
+    return res.json({ jobId: data.job_id, status: "completed", ...completed });
+  } catch (error) {
+    return res.status(502).json({ ok: false, error: "No se pudo consultar el estado del lote." });
   }
 };
 
@@ -1389,7 +1320,8 @@ module.exports = {
   createTipoLlamada,
   updateTipoLlamada,
   getAllEfectos,
-  processZip,
+  enqueueSpeechJob,
+  getSpeechJob,
   obtenerResultadosPorFechaCartera,
   getAllCarteras,
   // obtenerFechasDisponibles,

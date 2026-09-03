@@ -22,7 +22,8 @@ const {
   updateTipoLlamada,
   getAllEfectos,
   obtenerResultadosPorFechaCartera,
-  processZip,
+  enqueueSpeechJob,
+  getSpeechJob,
   getAllCarteras,
   // obtenerFechasDisponibles,
   obtenerDetalleEvaluacion,
@@ -40,6 +41,13 @@ const { listModelos, getModelo, createModelo, updateModelo, deactivateModelo } =
 
 const upload = multer({
   dest: path.join(__dirname, "..", "uploads"),
+  limits: { fileSize: Number(process.env.MAX_ZIP_UPLOAD_BYTES || 1024 * 1024 * 1024) },
+  fileFilter: (_req, file, callback) => {
+    if (path.extname(file.originalname).toLowerCase() !== ".zip") {
+      return callback(new Error("Solo se permiten archivos ZIP."));
+    }
+    return callback(null, true);
+  },
 });
 
 const criteriosEvaluacionRouter = express.Router();
@@ -121,7 +129,8 @@ criteriosEvaluacionRouter.put("/llamadas/update", updateTipoLlamada);
 criteriosEvaluacionRouter.get("/efectos", getAllEfectos);
 
 // PROCESAR AUDIOS
-criteriosEvaluacionRouter.post("/audios", upload.single("zip"), processZip);
+criteriosEvaluacionRouter.post("/audios", upload.single("zip"), enqueueSpeechJob);
+criteriosEvaluacionRouter.get("/audios/:jobId", getSpeechJob);
 
 // AUDITORIA
 criteriosEvaluacionRouter.get("/auditoria", obtenerResultadosPorFechaCartera);

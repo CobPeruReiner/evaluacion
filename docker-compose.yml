@@ -11,14 +11,26 @@ services:
     volumes:
       - ./server/resultados:/app/server/resultados
       - ./server/audios:/app/server/audios
+      - speech-jobs:/data/jobs
+    depends_on:
+      fastapi_backend:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
   fastapi_backend:
+    image: cyc_calidad-fastapi
     build:
       context: ./fastapi
-      args:
-        HF_AUTH_TOKEN_BUILD: "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"
-        DEVICE_BUILD: "cpu"
-        MODEL_SIZE_BUILD: "medium"
     ports:
       - "8000:8000"
     environment:
@@ -30,5 +42,49 @@ services:
       MODEL_SIZE: "medium"
       COMPUTE_TYPE: "int8"
       HF_AUTH_TOKEN: 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
-    volumes: []
+      JOB_STORAGE: /data/jobs
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+    volumes:
+      - speech-jobs:/data/jobs
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=2)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  fastapi_worker:
+    image: cyc_calidad-fastapi
+    environment:
+      DB_HOST: 192.168.1.31
+      DB_USER: cycwebcob
+      DB_PASS: k4&{'Ba7Np1
+      DB_NAME: CALIDAD
+      DEVICE: "cpu"
+      MODEL_SIZE: "medium"
+      COMPUTE_TYPE: "int8"
+      HF_AUTH_TOKEN: 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
+      JOB_STORAGE: /data/jobs
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      HF_HOME: /root/.cache/huggingface
+      TORCH_HOME: /root/.cache/torch
+    command: ["celery", "-A", "app.tasks", "worker", "--loglevel=INFO", "--concurrency=1", "--prefetch-multiplier=1"]
+    volumes:
+      - speech-jobs:/data/jobs
+      - huggingface-cache:/root/.cache/huggingface
+      - torch-cache:/root/.cache/torch
+    depends_on:
+      redis:
+        condition: service_healthy
+
+volumes:
+  speech-jobs:
+  redis-data:
+  huggingface-cache:
+  torch-cache:
 

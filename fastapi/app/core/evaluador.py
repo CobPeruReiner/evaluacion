@@ -29,14 +29,16 @@ def _invocar_evaluador(fn, texto_norm, acciones, id_cartera, tipificaciones):
 
 
 def evaluar_item(
-    texto_norm: str, id_item: int, id_cartera: str, tipificaciones=None, conn=None
+    texto_norm: str, id_item: int, id_cartera: str, tipificaciones=None, conn=None,
+    cartera_tipo: str | None = None, criterios_preloaded: list | None = None,
+    acciones_preloaded: dict | None = None,
 ) -> dict:
-    criterios = obtener_criterios_por_item(conn, id_item)
+    criterios = criterios_preloaded if criterios_preloaded is not None else obtener_criterios_por_item(conn, id_item)
     resultados, peso_total, peso_obtenido = {}, 0.0, 0.0
 
     for c in criterios:
         key = (c.get("EVALUADOR_KEY") or "").strip()
-        acciones = obtener_acciones_por_criterio(conn, c["ID_CRITERIO"])
+        acciones = acciones_preloaded.get(c["ID_CRITERIO"], []) if acciones_preloaded is not None else obtener_acciones_por_criterio(conn, c["ID_CRITERIO"])
 
         if not key or key not in EVALUATORS:
             logger.warning(
@@ -70,8 +72,16 @@ def evaluar_item(
 
     pct = (peso_obtenido / peso_total) * 100 if peso_total else 0.0
 
-    cartera = SyS_Sistemagest()
-    tipo = obtener_tipo_cartera(cartera, id_cartera)
+    # La cartera es igual para todos los ítems del mismo audio. El llamador
+    # puede entregarla ya resuelta para no abrir una conexión por cada ítem.
+    if cartera_tipo is None:
+        cartera = SyS_Sistemagest()
+        try:
+            tipo = obtener_tipo_cartera(cartera, id_cartera)
+        finally:
+            cartera.close()
+    else:
+        tipo = cartera_tipo
     resultado = aprobado_observado(pct, tipo)
 
     return {
