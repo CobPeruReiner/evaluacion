@@ -10,5 +10,8 @@ def convertir_a_wav_mono_16k(ruta_origen: Path, carpeta_destino: Path) -> Path:
         stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE,
         text=True,
+        # Un audio corrupto/truncado puede colgar ffmpeg indefinidamente y
+        # bloquear el worker completo (mismo incidente ya sufrido en Ares).
+        timeout=120,
     )
     return ruta_salida
