@@ -59,6 +59,10 @@ services:
 
   fastapi_worker:
     image: cyc_calidad-fastapi
+    # Comparte la misma imagen con la API; al declarar build no se intenta
+    # descargar `cyc_calidad-fastapi` desde Docker Hub.
+    build:
+      context: ./fastapi
     environment:
       DB_HOST: 192.168.1.31
       DB_USER: cycwebcob
