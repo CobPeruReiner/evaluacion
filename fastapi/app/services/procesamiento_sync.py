@@ -90,6 +90,7 @@ def procesar_archivo_sync(zip_path: Path, job_dir: Path, version_roles: str, id_
                 result = asignar_hablantes(result, diarization)
                 stages["alineacion_diarizacion"] = round(time.perf_counter() - step, 3)
 
+                progress("Evaluando criterios", current, total, original.name)
                 step = time.perf_counter()
                 transcript = [{"start": segment["start"], "end": segment["end"], "speaker": segment.get("speaker"), "text": segment["text"]} for segment in result["segments"] if segment.get("speaker")]
                 transcript = etiquetar_roles_v2(transcript)

@@ -1621,6 +1621,11 @@ export const CriteriosProvider = ({ children }) => {
   });
   const speechPollingRef = useRef(false);
 
+  const saveSpeechJob = (job) => {
+    window.localStorage.setItem("speech-audio-job", JSON.stringify(job));
+    setSpeechJob(job);
+  };
+
   // Almacenar .zip y mostrar audios
   const [archivos, setArchivos] = useState([]);
   const [zipFile, setZipFile] = useState(null);
@@ -1796,17 +1801,39 @@ export const CriteriosProvider = ({ children }) => {
         await new Promise((resolve) => setTimeout(resolve, 2500));
         const { data } = await axios.get(`${API_URL}/criteriosEvaluacion/audios/${jobId}`);
         if (data.status === "completed") {
-          window.localStorage.removeItem("speech-audio-job");
-          setSpeechJob(null);
+          setSpeechJob((current) => {
+            const completedJob = {
+              ...current,
+              status: "completed",
+              completedAt: new Date().toISOString(),
+              summary: {
+                successful: (data.exitosos || []).length,
+                failed: (data.fallidos || []).length,
+              },
+            };
+            window.localStorage.setItem("speech-audio-job", JSON.stringify(completedJob));
+            return completedJob;
+          });
           setprocessResultSuccess(data.exitosos || []);
           setProcessResultFailed(data.fallidos || []);
-          toast.success(`Lote terminado: ${(data.exitosos || []).length} exitosos, ${(data.fallidos || []).length} fallidos.`);
+          toast.success("El procesamiento del archivo ha finalizado. Ya puedes revisar los resultados.");
           return;
         }
         if (data.status === "failed") {
-          throw new Error(data.error || "El procesamiento del lote falló");
+          setSpeechJob((current) => {
+            const failedJob = { ...current, status: "failed", error: data.error || "No fue posible procesar el archivo." };
+            window.localStorage.setItem("speech-audio-job", JSON.stringify(failedJob));
+            return failedJob;
+          });
+          toast.error("No fue posible procesar el archivo. Revisa los datos y vuelve a intentarlo.");
+          return;
         }
-        setSpeechJob((current) => current?.jobId === jobId ? { ...current, status: data.status, progress: data.progress } : current);
+        setSpeechJob((current) => {
+          if (current?.jobId !== jobId) return current;
+          const updatedJob = { ...current, status: data.status, progress: data.progress };
+          window.localStorage.setItem("speech-audio-job", JSON.stringify(updatedJob));
+          return updatedJob;
+        });
       }
     } catch (error) {
       console.error("Error consultando el lote de audios", error);
@@ -1817,7 +1844,7 @@ export const CriteriosProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (speechJob?.jobId) pollSpeechJob(speechJob.jobId);
+    if (speechJob?.jobId && !["completed", "failed"].includes(speechJob.status)) pollSpeechJob(speechJob.jobId);
   }, [speechJob?.jobId]);
 
   // Encola el ZIP. El procesamiento y sus consultas no bloquean la interfaz.
@@ -1850,16 +1877,21 @@ export const CriteriosProvider = ({ children }) => {
         throw new Error(queuedJob.error || "No se pudo encolar el lote de audios");
       }
 
-      const nextJob = { jobId: queuedJob.jobId, status: "queued" };
-      window.localStorage.setItem("speech-audio-job", JSON.stringify(nextJob));
-      setSpeechJob(nextJob);
-      toast.success("Lote recibido y puesto en cola. Puedes seguir trabajando mientras se procesa.");
+      const nextJob = {
+        jobId: queuedJob.jobId,
+        status: "queued",
+        fileName: zipFile.name,
+        audioCount: archivos.length,
+        submittedAt: new Date().toISOString(),
+      };
+      saveSpeechJob(nextJob);
+      toast.success("Archivo recibido. El avance estará disponible en esta pantalla.");
       setArchivos([]);
       setZipFile(null);
       setMProcesados(false);
     } catch (error) {
       console.log(error);
-      toast.error("Error al procesar audios");
+      toast.error(error.response?.data?.error || "No fue posible registrar el archivo para su procesamiento.");
     } finally {
       setIsPostingAudiosProcess(false);
     }
