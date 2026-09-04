@@ -8,6 +8,9 @@ services:
       - "4001:4001"
     env_file:
       - ./server/.env.production
+    environment:
+      # `localhost` dentro del contenedor es el mismo servidor Node, no FastAPI.
+      PATH_SERVAPLICACIONES: fastapi_backend
     volumes:
       - ./server/resultados:/app/server/resultados
       - ./server/audios:/app/server/audios

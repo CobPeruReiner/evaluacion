@@ -1071,7 +1071,12 @@ const enqueueSpeechJob = async (req, res) => {
     return res.status(400).json({ ok: false, error: "El ZIP debe iniciar con cartera_YYYY-MM-DD." });
   }
   const form = new FormData();
-  form.append("file", fs.createReadStream(req.file.path));
+  // Multer guarda el temporal sin extensión. Conservamos el nombre real para
+  // que FastAPI pueda validar que se trata de un ZIP.
+  form.append("file", fs.createReadStream(req.file.path), {
+    filename: req.file.originalname,
+    contentType: "application/zip",
+  });
   form.append("id_cartera", idCartera);
   form.append("version_roles", "v2");
   try {
@@ -1084,7 +1089,13 @@ const enqueueSpeechJob = async (req, res) => {
     return res.status(202).json({ ok: true, jobId: data.job_id, status: "queued" });
   } catch (error) {
     await fs.promises.unlink(req.file.path).catch(() => {});
-    return res.status(502).json({ ok: false, error: "No se pudo encolar el lote de audios." });
+    const upstreamStatus = error.response?.status;
+    const detail = error.response?.data?.detail || error.response?.data?.error;
+    console.error("No se pudo encolar el lote de audios:", upstreamStatus || error.code, detail || error.message);
+    return res.status(upstreamStatus && upstreamStatus < 500 ? upstreamStatus : 502).json({
+      ok: false,
+      error: detail || "No se pudo encolar el lote de audios.",
+    });
   }
 };
 
