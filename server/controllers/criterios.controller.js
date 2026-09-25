@@ -1,5 +1,5 @@
 const { QueryTypes } = require("sequelize");
-const { db, dbWeb } = require("../utils/database.util");
+const { db } = require("../utils/database.util");
 const axios = require("axios");
 const FormData = require("form-data");
 const fs = require("fs");
@@ -1245,7 +1245,7 @@ const getAllCarteras = async (req, res) => {
       SELECT id, cartera AS nombre FROM SISTEMAGEST.cartera WHERE estado = 1 ORDER BY cartera;
     `;
 
-    const [results] = await dbWeb.query(query);
+    const [results] = await db.query(query);
 
     res.status(200).json({
       ok: true,

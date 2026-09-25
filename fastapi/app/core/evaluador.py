@@ -1,5 +1,5 @@
 from logging import getLogger
-from app.core.registry import EVALUATORS
+from app.core.registry import EVALUATORS, obtener_clave_evaluador
 from app.core.scoring import aprobado_observado
 from app.data.dao import (
     obtener_criterios_por_item,
@@ -7,9 +7,11 @@ from app.data.dao import (
     obtener_tipo_cartera,
 )
 
-from app.db.session import SyS_Sistemagest
-
 logger = getLogger(__name__)
+
+
+class CriterioSinEvaluadorError(ValueError):
+    pass
 
 
 def _accion_default_negativa(acciones: list) -> dict:
@@ -37,23 +39,21 @@ def evaluar_item(
     resultados, peso_total, peso_obtenido = {}, 0.0, 0.0
 
     for c in criterios:
-        key = (c.get("EVALUADOR_KEY") or "").strip()
+        key = obtener_clave_evaluador(c["NOMBRE"])
         acciones = acciones_preloaded.get(c["ID_CRITERIO"], []) if acciones_preloaded is not None else obtener_acciones_por_criterio(conn, c["ID_CRITERIO"])
 
         if not key or key not in EVALUATORS:
-            logger.warning(
-                f"[EVALUADOR] Key no registrada o vacía: '{key}' en criterio {c.get('ID_CRITERIO')}"
+            raise CriterioSinEvaluadorError(
+                "El criterio activo no tiene una regla de calificación registrada: "
+                f"{c['NOMBRE']} (ID {c['ID_CRITERIO']})."
             )
+        try:
+            fn = EVALUATORS[key]
+            accion = _invocar_evaluador(fn, texto_norm, acciones, id_cartera, tipificaciones)
+        except Exception as error:
+            raise RuntimeError(f"No se pudo calificar el criterio '{c['NOMBRE']}'.") from error
+        if not accion:
             accion = _accion_default_negativa(acciones)
-        else:
-            try:
-                fn = EVALUATORS[key]
-                accion = _invocar_evaluador(
-                    fn, texto_norm, acciones, id_cartera, tipificaciones
-                )
-            except Exception as e:
-                logger.exception(f"[EVALUADOR] Error invocando '{key}': {e}")
-                accion = _accion_default_negativa(acciones)
 
         pa = float(accion.get("PESO", 0.0) if accion else 0.0)
         pc = float(c.get("PESO", 0.0))
@@ -66,22 +66,15 @@ def evaluar_item(
                 if accion
                 else "NO DETECTADO"
             ),
-            "PESO": pa,
-            "PESO": pc,
+            "PESO_ACCION": pa,
+            "PESO_CRITERIO": pc,
         }
 
     pct = (peso_obtenido / peso_total) * 100 if peso_total else 0.0
 
-    # La cartera es igual para todos los ítems del mismo audio. El llamador
-    # puede entregarla ya resuelta para no abrir una conexión por cada ítem.
     if cartera_tipo is None:
-        cartera = SyS_Sistemagest()
-        try:
-            tipo = obtener_tipo_cartera(cartera, id_cartera)
-        finally:
-            cartera.close()
-    else:
-        tipo = cartera_tipo
+        raise ValueError("El tipo de cartera debe resolverse antes de calificar los ítems.")
+    tipo = cartera_tipo
     resultado = aprobado_observado(pct, tipo)
 
     return {

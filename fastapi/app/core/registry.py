@@ -67,3 +67,40 @@ EVALUATORS = {
     "uso.sigue_guion": seleccionar_accion_sigue_guion_politicas,
     "uso.registro_gestion": seleccionar_accion_registra_gestion,
 }
+
+# El nuevo modelo no persiste una clave técnica de evaluador. La asociación es
+# exacta por nombre; un criterio sin regla detiene la calificación en vez de
+# producir una nota aproximada.
+CRITERION_EVALUATOR_KEYS = {
+    "SALUDO": "apertura.saludo",
+    "CONTACTAR CON LA PERSONA ADECUADA": "apertura.contacto",
+    "IDENTIFICACION DEL GESTOR": "apertura.identificacion",
+    "BRINDAR INFORMACION": "indagacion.info_producto",
+    "INDAGAR MOTIVO NO PAGO": "indagacion.indagar_pago",
+    "INDAGAR MOTIVO DE NO PAGO": "indagacion.indagar_pago",
+    "ASESORAR": "indagacion.asesorar",
+    "MANTIENE SENTIDO DE URGENCIA": "manejo.compromiso",
+    "PERSEVERANCIA OBJETIVO": "manejo.perseverancia",
+    "PERSEVERANCIA EN EL OBJETIVO": "manejo.perseverancia",
+    "REAFIRMAR ACUERDOS": "cierre.reafirmar",
+    "DESPEDIDA CLIENTE": "cierre.despedida",
+    "DESPEDIDA AL CLIENTE": "cierre.despedida",
+    "ESCUCHA ACTIVA": "habilidades.escucha",
+    "COMUNICACION CLIENTE": "habilidades.comunicacion",
+    "COMUNICACION CON EL CLIENTE": "habilidades.comunicacion",
+    "AMABILIDAD CLIENTE": "habilidades.amabilidad",
+    "AMABILIDAD CON EL CLIENTE": "habilidades.amabilidad",
+    "USO HERRAMIENTAS": "uso.sigue_guion",
+    "USO DE HERRAMIENTAS": "uso.sigue_guion",
+    "REGISTRO GESTIONES": "uso.registro_gestion",
+    "REGISTRO DE GESTIONES": "uso.registro_gestion",
+}
+
+
+def obtener_clave_evaluador(nombre_criterio: str) -> str | None:
+    normalizado = " ".join(
+        (nombre_criterio or "").upper()
+        .translate(str.maketrans("ÁÉÍÓÚÜ", "AEIOUU"))
+        .split()
+    )
+    return CRITERION_EVALUATOR_KEYS.get(normalizado)

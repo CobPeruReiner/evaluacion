@@ -2,10 +2,20 @@ import mysql.connector
 from app.core.config import settings
 
 
-def SyS_Calidad():
-    """
-    Crea una nueva conexión a la base de datos MySQL usando los parámetros del archivo config.
-    """
+def get_database_connection():
+    """Abre la única conexión MySQL del entorno actual."""
+    missing = [
+        name
+        for name, value in {
+            "DB_HOST": settings.DB_HOST,
+            "DB_USER": settings.DB_USER,
+            "DB_PASS": settings.DB_PASS,
+            "DB_NAME": settings.DB_NAME,
+        }.items()
+        if not value
+    ]
+    if missing:
+        raise RuntimeError(f"Faltan variables de conexión: {', '.join(missing)}")
     return mysql.connector.connect(
         host=settings.DB_HOST,
         user=settings.DB_USER,
@@ -14,13 +24,10 @@ def SyS_Calidad():
     )
 
 
+# Compatibilidad temporal: ambos nombres comparten la única configuración.
+def SyS_Calidad():
+    return get_database_connection()
+
+
 def SyS_Sistemagest():
-    """
-    Crea una nueva conexión a la base de datos MySQL usando los parámetros del archivo config.
-    """
-    return mysql.connector.connect(
-        host=settings.DB_HOST_SISTEMAGEST,
-        user=settings.DB_USER_SISTEMAGEST,
-        password=settings.DB_PASS_SISTEMAGEST,
-        database=settings.DB_NAME_SISTEMAGEST,
-    )
+    return get_database_connection()

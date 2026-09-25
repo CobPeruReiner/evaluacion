@@ -40,7 +40,7 @@ services:
       DB_HOST: 192.168.1.31
       DB_USER: cycwebcob
       DB_PASS: k4&{'Ba7Np1
-      DB_NAME: CALIDAD
+      DB_NAME: SISTEMAGEST
       DEVICE: "cpu"
       MODEL_SIZE: "medium"
       COMPUTE_TYPE: "int8"
@@ -70,7 +70,7 @@ services:
       DB_HOST: 192.168.1.31
       DB_USER: cycwebcob
       DB_PASS: k4&{'Ba7Np1
-      DB_NAME: CALIDAD
+      DB_NAME: SISTEMAGEST
       DEVICE: "cpu"
       MODEL_SIZE: "medium"
       COMPUTE_TYPE: "int8"

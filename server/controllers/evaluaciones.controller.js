@@ -1,5 +1,5 @@
 const { QueryTypes } = require("sequelize");
-const { db, dbWeb } = require("../utils/database.util");
+const { db } = require("../utils/database.util");
 
 const number = (value) => Number(value);
 const mysqlDateTime = (value) => {
@@ -10,7 +10,7 @@ const mysqlDateTime = (value) => {
 };
 
 async function getMonitorId(dni) {
-  const people = await dbWeb.query(
+  const people = await db.query(
     "SELECT IDPERSONAL FROM personal WHERE DOC=:dni LIMIT 1",
     { replacements: { dni }, type: QueryTypes.SELECT },
   );

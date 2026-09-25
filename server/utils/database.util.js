@@ -15,16 +15,4 @@ const db = new Sequelize({
     },
 });
 
-const dbWeb = new Sequelize({
-    dialect: 'mysql',
-    host: process.env.DB_HOST_WEB,
-    username: process.env.DB_USER_WEB,
-    password: process.env.DB_PASSWORD_WEB,
-    database: process.env.DB_WEB,
-    logging: false,
-    define: {
-        timestamps: false
-    },
-});
-
-module.exports = { db, dbWeb, DataTypes };
+module.exports = { db, DataTypes };

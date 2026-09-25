@@ -1,5 +1,5 @@
 const { QueryTypes } = require("sequelize");
-const { db, dbWeb } = require("../utils/database.util");
+const { db } = require("../utils/database.util");
 
 const number = (value) => Number(value);
 
@@ -66,7 +66,7 @@ function validateTree(items) {
 }
 
 async function getPersonalId(dni) {
-  const people = await dbWeb.query(
+  const people = await db.query(
     "SELECT IDPERSONAL FROM personal WHERE DOC = :dni LIMIT 1",
     { replacements: { dni }, type: QueryTypes.SELECT },
   );

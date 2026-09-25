@@ -1,5 +1,5 @@
 const { User } = require("../models/user.model");
-const { dbWeb } = require("../utils/database.util");
+const { db } = require("../utils/database.util");
 const bcrypt = require("bcryptjs");
 const { QueryTypes } = require("sequelize");
 const { AppError } = require("../utils/appError.util");
@@ -39,7 +39,7 @@ const login = async (req, res, next) => {
   console.log(" =================INICIANDO SESION =================");
   console.log("Credenciales: ", req.body);
 
-  const results = await dbWeb.query(
+  const results = await db.query(
     `SELECT tb1.*, tb2.nombre
      FROM personal tb1
      LEFT JOIN cargo tb2
@@ -117,7 +117,7 @@ const updateUser = catchAsync(async (req, res, next) => {
 });
 
 const getSupervisores = catchAsync(async (req, res, next) => {
-  const supervisores = await dbWeb.query(
+  const supervisores = await db.query(
     "SELECT IDPERSONAL, APELLIDOS, NOMBRES, DOC FROM personal WHERE cargo = 16 AND idestado = 1 ORDER BY APELLIDOS",
     {
       type: QueryTypes.SELECT,
@@ -132,7 +132,7 @@ const getSupervisores = catchAsync(async (req, res, next) => {
 const getAsesorCarteras = catchAsync(async (req, res, next) => {
   const { doc } = req.query;
 
-  const carteras = await dbWeb.query(
+  const carteras = await db.query(
     `
             SELECT tl.id_cartera AS id, ca.cartera
             FROM tabla_log tl
@@ -171,7 +171,7 @@ const compareUserPersonal = async (req, res) => {
     `;
 
   try {
-    const personal = await dbWeb.query(query, {
+    const personal = await db.query(query, {
       replacements: { nombreUser },
       type: QueryTypes.SELECT,
     });

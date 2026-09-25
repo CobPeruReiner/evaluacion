@@ -1,5 +1,5 @@
 const { QueryTypes } = require("sequelize");
-const { dbWeb, db } = require("../utils/database.util");
+const { db } = require("../utils/database.util");
 const moment = require("moment");
 
 const getAllCycGestions = async (req, res) => {
@@ -8,7 +8,7 @@ const getAllCycGestions = async (req, res) => {
   const cliente = req.query.cliente;
   const cartera = req.query.cartera;
 
-  const cycGestions = await dbWeb.query(
+  const cycGestions = await db.query(
     `
         SELECT a.id ID, fecha_tmk FECHA,x.nombre as CLIENTE,d.cartera AS CARTERA,a.IDENTIFICADOR,j.ACCION ACCION,
         e.EFECTO as EFECTO,f.MOTIVO as MOTIVO,a.OBSERVACION as OBSERVACION,i.NUMERO as TELEFONO,
@@ -67,7 +67,7 @@ const getFilteredCycGestions = async (req, res) => {
   const fechaFinMasUno = moment(p_fecha_fin).add(1, "day").format("YYYY-MM-DD");
 
   try {
-    const gestiones = await dbWeb.query(
+    const gestiones = await db.query(
       `CALL SP_REPORTE_GESTION_CALIDAD(
         :p_id_cartera,
         :p_fecha_inicio,
@@ -100,7 +100,7 @@ const getFilteredCycGestions = async (req, res) => {
 };
 
 const getClientesAndCarteras = async (_req, res) => {
-  const clientesYcarteras = await dbWeb.query(
+  const clientesYcarteras = await db.query(
     `
             SELECT ca.id AS 'id_cartera', ca.cartera, cli.id AS 'id_cliente', cli.nombre AS 'cliente' FROM cartera ca
             INNER JOIN cliente cli
@@ -121,7 +121,7 @@ const getClientesAndCarteras = async (_req, res) => {
 const getEfectosByCartera = async (req, res) => {
   const cartera = req.query.cartera;
 
-  const efectos = await dbWeb.query(
+  const efectos = await db.query(
     `
       SELECT DISTINCT
         IDEFECTO,
@@ -168,7 +168,7 @@ const getMotivoNoPagCartera = async (req, res) => {
       });
     }
 
-    const carteraDb = await dbWeb.query(
+    const carteraDb = await db.query(
       `
         SELECT id
         FROM cartera
@@ -237,7 +237,7 @@ const getTipoGestionCartera = async (req, res) => {
       });
     }
 
-    const carteraDb = await dbWeb.query(
+    const carteraDb = await db.query(
       `
         SELECT id
         FROM cartera
@@ -290,7 +290,7 @@ const getTipoGestionCartera = async (req, res) => {
 
 const getPersonalAsesor = async (_req, res) => {
   try {
-    const personales = await dbWeb.query(
+    const personales = await db.query(
       `
         SELECT
           IDPERSONAL,

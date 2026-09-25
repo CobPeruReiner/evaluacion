@@ -1,7 +1,7 @@
 const { QueryTypes } = require("sequelize");
 const { Ficha } = require("../models/ficha.model");
 const { catchAsync } = require("../utils/catchAsync.util");
-const { dbWeb } = require("../utils/database.util");
+const { db } = require("../utils/database.util");
 const { Op, Sequelize, literal } = require("sequelize");
 const { AppError } = require("../utils/appError.util");
 const { subHours, addHours, format, parse } = require("date-fns");
@@ -258,7 +258,7 @@ const getTypeOfFicha = async (req, res, next) => {
     console.log("📦 Bytes:", Buffer.from(req.query.cartera));
 
     const cartera = req.query.cartera;
-    const fichas = await dbWeb.query(
+    const fichas = await db.query(
       `
             SELECT c.id, c.cartera, tc.nombre AS 'tramo', c.tipo,
             CASE
