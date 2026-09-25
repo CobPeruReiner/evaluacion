@@ -1,5 +1,5 @@
 const { QueryTypes } = require("sequelize");
-const { dbWeb, db } = require("../utils/database.util");
+const { db } = require("../utils/database.util");
 const moment = require("moment");
 
 const getAllCycGestions = async (req, res) => {
@@ -8,21 +8,21 @@ const getAllCycGestions = async (req, res) => {
   const cliente = req.query.cliente;
   const cartera = req.query.cartera;
 
-  const cycGestions = await dbWeb.query(
+  const cycGestions = await db.query(
     `
         SELECT a.id ID, fecha_tmk FECHA,x.nombre as CLIENTE,d.cartera AS CARTERA,a.IDENTIFICADOR,j.ACCION ACCION,
         e.EFECTO as EFECTO,f.MOTIVO as MOTIVO,a.OBSERVACION as OBSERVACION,i.NUMERO as TELEFONO,
         concat(b.APELLIDOS,', ',b.NOMBRES) as GESTOR, b.DOC as GESTOR_DNI, b.IDPERSONAL, a.ESTADO_REVISION as ESTADO
-                FROM gestion_tmk a 
-                    LEFT JOIN personal b on a.IDPERSONAL=b.IDPERSONAL 
+                FROM SISTEMAGEST.gestion_tmk a
+                    LEFT JOIN SISTEMAGEST.personal b on a.IDPERSONAL=b.IDPERSONAL
 --                    left join tabla_log c on c.id=a.id_table
-                    left join cartera d on d.id=c.id_cartera
-                    left join cliente x on x.id=d.idcliente
-                    left join efecto e on e.IDEFECTO=a.IDEFECTO 
-                    left join motivo f on f.IDMOTIVO=a.IDMOTIVO 
+                    left join SISTEMAGEST.cartera d on d.id=c.id_cartera
+                    left join SISTEMAGEST.cliente x on x.id=d.idcliente
+                    left join SISTEMAGEST.efecto e on e.IDEFECTO=a.IDEFECTO
+                    left join SISTEMAGEST.motivo f on f.IDMOTIVO=a.IDMOTIVO
 --                    left join telefonos i on i.IDTELEFONO=a.IDTELEFONO
-                    left join telefonos_actual i on i.IDTELEFONO=a.IDTELEFONO
-                    left join accion j on j.IDACCION=e.IDACCION
+                    left join SISTEMAGEST.telefonos_actual i on i.IDTELEFONO=a.IDTELEFONO
+                    left join SISTEMAGEST.accion j on j.IDACCION=e.IDACCION
                 
                 where x.nombre = :cliente
                      AND d.cartera = :cartera
@@ -67,8 +67,8 @@ const getFilteredCycGestions = async (req, res) => {
   const fechaFinMasUno = moment(p_fecha_fin).add(1, "day").format("YYYY-MM-DD");
 
   try {
-    const gestiones = await dbWeb.query(
-      `CALL SP_REPORTE_GESTION_CALIDAD(
+    const gestiones = await db.query(
+      `CALL SISTEMAGEST.SP_REPORTE_GESTION_CALIDAD(
         :p_id_cartera,
         :p_fecha_inicio,
         :p_fecha_fin,
@@ -100,10 +100,10 @@ const getFilteredCycGestions = async (req, res) => {
 };
 
 const getClientesAndCarteras = async (_req, res) => {
-  const clientesYcarteras = await dbWeb.query(
+  const clientesYcarteras = await db.query(
     `
-            SELECT ca.id AS 'id_cartera', ca.cartera, cli.id AS 'id_cliente', cli.nombre AS 'cliente' FROM cartera ca
-            INNER JOIN cliente cli
+            SELECT ca.id AS 'id_cartera', ca.cartera, cli.id AS 'id_cliente', cli.nombre AS 'cliente' FROM SISTEMAGEST.cartera ca
+            INNER JOIN SISTEMAGEST.cliente cli
             ON ca.idcliente = cli.id
             AND cli.estado = 1 AND ca.estado = 1;
         `,
@@ -121,15 +121,15 @@ const getClientesAndCarteras = async (_req, res) => {
 const getEfectosByCartera = async (req, res) => {
   const cartera = req.query.cartera;
 
-  const efectos = await dbWeb.query(
+  const efectos = await db.query(
     `
       SELECT DISTINCT
         IDEFECTO,
         EFECTO
-      FROM efecto
+      FROM SISTEMAGEST.efecto
       WHERE IDACCION IN (
         SELECT IDACCION
-        FROM accion
+        FROM SISTEMAGEST.accion
         WHERE TIPO = 1
           AND idcartera = :cartera
           AND IDESTADO = 1
@@ -168,10 +168,10 @@ const getMotivoNoPagCartera = async (req, res) => {
       });
     }
 
-    const carteraDb = await dbWeb.query(
+    const carteraDb = await db.query(
       `
         SELECT id
-        FROM cartera
+        FROM SISTEMAGEST.cartera
         WHERE id = ?
           AND estado = 1
         LIMIT 1
@@ -194,7 +194,7 @@ const getMotivoNoPagCartera = async (req, res) => {
         SELECT
           ID_MOTIVO_NO_PAGO,
           NOMBRE_MOTIVO_NO_PAGO
-        FROM MOTIVO_NO_PAGO
+        FROM CALIDAD.MOTIVO_NO_PAGO
         WHERE ID_CARTERA = ?
           AND ID_ESTADO = 1
         ORDER BY NOMBRE_MOTIVO_NO_PAGO ASC
@@ -237,10 +237,10 @@ const getTipoGestionCartera = async (req, res) => {
       });
     }
 
-    const carteraDb = await dbWeb.query(
+    const carteraDb = await db.query(
       `
         SELECT id
-        FROM cartera
+        FROM SISTEMAGEST.cartera
         WHERE id = ?
           AND estado = 1
         LIMIT 1
@@ -263,7 +263,7 @@ const getTipoGestionCartera = async (req, res) => {
         SELECT
           ID_TIPO_GESTION,
           NOMBRE_TIPO_GESTION
-        FROM TIPO_GESTION
+        FROM CALIDAD.TIPO_GESTION
         WHERE ID_CARTERA = ?
           AND ID_ESTADO = 1
         ORDER BY NOMBRE_TIPO_GESTION ASC
@@ -290,13 +290,13 @@ const getTipoGestionCartera = async (req, res) => {
 
 const getPersonalAsesor = async (_req, res) => {
   try {
-    const personales = await dbWeb.query(
+    const personales = await db.query(
       `
         SELECT
           IDPERSONAL,
           DOC as DNI,
           concat(TRIM(APELLIDOS), ", ", TRIM(NOMBRES)) AS 'ASESOR'
-        FROM personal
+        FROM SISTEMAGEST.personal
         WHERE cargo IN (11,12)
           AND TIPO_PERSONAL = 'HUMANO'
           AND IDESTADO = 1
@@ -324,7 +324,7 @@ const getResponsableNoFCR = async (_req, res) => {
         SELECT
           ID_RESPONSABLE_NO_FCR,
           NOMBRE_RESPONSABLE_NO_FCR
-        FROM RESPONSABLE_NO_FCR
+        FROM CALIDAD.RESPONSABLE_NO_FCR
         WHERE ID_ESTADO = 1
         ORDER BY NOMBRE_RESPONSABLE_NO_FCR ASC
       `,
@@ -367,7 +367,7 @@ const getMotivoNoFCR = async (req, res) => {
     const existe = await db.query(
       `
         SELECT ID_RESPONSABLE_NO_FCR
-        FROM RESPONSABLE_NO_FCR
+        FROM CALIDAD.RESPONSABLE_NO_FCR
         WHERE ID_RESPONSABLE_NO_FCR = ?
           AND ID_ESTADO = 1
         LIMIT 1
@@ -390,7 +390,7 @@ const getMotivoNoFCR = async (req, res) => {
         SELECT
           ID_MOTIVO_NO_FCR,
           NOMBRE_MOTIVO_NO_FCR
-        FROM MOTIVO_NO_FCR
+        FROM CALIDAD.MOTIVO_NO_FCR
         WHERE ID_RESPONSABLE_NO_FCR = ?
           AND ID_ESTADO = 1
         ORDER BY NOMBRE_MOTIVO_NO_FCR ASC
@@ -422,7 +422,7 @@ const getMotivoAlerta = async (_req, res) => {
         SELECT
           ID_MOTIVO_ALERTA,
           NOMBRE_MOTIVO_ALERTA
-        FROM MOTIVO_ALERTA
+        FROM CALIDAD.MOTIVO_ALERTA
         WHERE ID_ESTADO = 1
         ORDER BY NOMBRE_MOTIVO_ALERTA ASC
       `,

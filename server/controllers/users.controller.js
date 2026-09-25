@@ -1,5 +1,5 @@
 const { User } = require("../models/user.model");
-const { dbWeb } = require("../utils/database.util");
+const { db } = require("../utils/database.util");
 const bcrypt = require("bcryptjs");
 const { QueryTypes } = require("sequelize");
 const { AppError } = require("../utils/appError.util");
@@ -39,10 +39,10 @@ const login = async (req, res, next) => {
   console.log(" =================INICIANDO SESION =================");
   console.log("Credenciales: ", req.body);
 
-  const results = await dbWeb.query(
+  const results = await db.query(
     `SELECT tb1.*, tb2.nombre
-     FROM personal tb1
-     LEFT JOIN cargo tb2
+     FROM SISTEMAGEST.personal tb1
+     LEFT JOIN SISTEMAGEST.cargo tb2
      ON tb1.CARGO = tb2.id
      WHERE DOC = :usuario AND IDESTADO = 1`,
     {
@@ -117,8 +117,8 @@ const updateUser = catchAsync(async (req, res, next) => {
 });
 
 const getSupervisores = catchAsync(async (req, res, next) => {
-  const supervisores = await dbWeb.query(
-    "SELECT IDPERSONAL, APELLIDOS, NOMBRES, DOC FROM personal WHERE cargo = 16 AND idestado = 1 ORDER BY APELLIDOS",
+  const supervisores = await db.query(
+    "SELECT IDPERSONAL, APELLIDOS, NOMBRES, DOC FROM SISTEMAGEST.personal WHERE cargo = 16 AND idestado = 1 ORDER BY APELLIDOS",
     {
       type: QueryTypes.SELECT,
     },
@@ -132,13 +132,13 @@ const getSupervisores = catchAsync(async (req, res, next) => {
 const getAsesorCarteras = catchAsync(async (req, res, next) => {
   const { doc } = req.query;
 
-  const carteras = await dbWeb.query(
+  const carteras = await db.query(
     `
             SELECT tl.id_cartera AS id, ca.cartera
-            FROM tabla_log tl
-            JOIN asignacion_tabla a ON tl.id = a.id_tabla
-            JOIN cartera ca ON tl.id_cartera = ca.id
-            JOIN personal p ON a.id_usuario = p.IDPERSONAL
+            FROM SISTEMAGEST.tabla_log tl
+            JOIN SISTEMAGEST.asignacion_tabla a ON tl.id = a.id_tabla
+            JOIN SISTEMAGEST.cartera ca ON tl.id_cartera = ca.id
+            JOIN SISTEMAGEST.personal p ON a.id_usuario = p.IDPERSONAL
             WHERE p.DOC = :doc
             order by ca.cartera  asc;
         `,
@@ -166,12 +166,12 @@ const compareUserPersonal = async (req, res) => {
 
   const query = `
       SELECT IDPERSONAL
-      FROM PERSONAL
+      FROM SISTEMAGEST.PERSONAL
       WHERE LOWER(CONCAT(TRIM(APELLIDOS), ', ', TRIM(NOMBRES))) = LOWER(:nombreUser)
     `;
 
   try {
-    const personal = await dbWeb.query(query, {
+    const personal = await db.query(query, {
       replacements: { nombreUser },
       type: QueryTypes.SELECT,
     });

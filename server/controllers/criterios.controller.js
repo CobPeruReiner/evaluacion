@@ -1,5 +1,5 @@
 const { QueryTypes } = require("sequelize");
-const { db, dbWeb } = require("../utils/database.util");
+const { db } = require("../utils/database.util");
 const axios = require("axios");
 const FormData = require("form-data");
 const fs = require("fs");
@@ -350,7 +350,7 @@ const createCriterio = async (req, res) => {
     // 4. Insertar si todo está bien
     await db.query(
       `
-      INSERT INTO CALIDAD.CRITERIO 
+      INSERT INTO CALIDAD.CRITERIO
       (NOMBRE, PESO, FE_ACTUALIZACION, USUARIO_ACTUALIZACION, ID_ITEM, ID_ESTADO)
       VALUES 
       (:nombreCriterio, :pesoCriterio, :fechaActualizacion, :idUsuarioActualizacion, :idItem, 1);
@@ -1234,7 +1234,7 @@ const getAllCarteras = async (req, res) => {
       SELECT id, cartera AS nombre FROM SISTEMAGEST.cartera WHERE estado = 1 ORDER BY cartera;
     `;
 
-    const [results] = await dbWeb.query(query);
+    const [results] = await db.query(query);
 
     res.status(200).json({
       ok: true,

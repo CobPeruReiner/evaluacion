@@ -1,403 +1,122 @@
 const { QueryTypes } = require("sequelize");
-const { Ficha } = require("../models/ficha.model");
 const { catchAsync } = require("../utils/catchAsync.util");
-const { dbWeb } = require("../utils/database.util");
-const { Op, Sequelize, literal } = require("sequelize");
+const { db } = require("../utils/database.util");
 const { AppError } = require("../utils/appError.util");
-const { subHours, addHours, format, parse } = require("date-fns");
 
-const createFicha = async (req, res, next) => {
-  const {
-    id_evaluacion,
-    cartera,
-    tramo,
-    agente,
-    agente_dni,
-    mes_llamada,
-    fecha_llamada,
-    semana_llamada,
-    telefono,
-    dni_cliente,
-    resultado,
-    hora_llamada,
-    tmo_segundos,
-    tipo_llamada,
-    tipo_gestion,
-    alerta,
-    descripcion_alerta,
-    motivo_no_pago,
-    responsabilidad_no_fcr,
-    motivo_no_fcr,
-    audio_nombre,
-    fecha_monitoreo,
-    nombre_monitor,
-    rol,
-    hora_inicio,
-    hora_fin,
-    duracion_monitoreo,
-    saludo_11,
-    contactar_con_persona_12,
-    identificacion_gestor_13,
-    brindar_informacion_21,
-    indagar_motivo_no_pago_22,
-    asesorar_23,
-    mantiene_sentido_urgencia_31,
-    perseverancia_objetivo_32,
-    reafirmar_acuerdos_41,
-    despedida_cliente_42,
-    escucha_activa_51,
-    comunicacion_cliente_52,
-    amabilidad_cliente_53,
-    uso_herramientas_61,
-    registro_gestiones_62,
-    calificacion_final,
-    observaciones,
-    supervisor,
-    tramo_estandar,
-    tipo_ficha,
-    apertura,
-    indagacion,
-    manejo,
-    cierre,
-    habilidades,
-    herramientas,
-    apertura_completado,
-    indagacion_completado,
-    manejo_completado,
-    cierre_completado,
-    habilidades_completado,
-    herramientas_completado,
-  } = req.body;
+// `fichas` is an existing, manually managed table. Keep its schema in SQL
+// rather than registering a Sequelize model, so db.sync() cannot create it.
+const FICHA_COLUMNS = [
+  "id_evaluacion", "cartera", "tramo", "agente", "agente_dni", "mes_llamada",
+  "fecha_llamada", "semana_llamada", "telefono", "dni_cliente", "resultado",
+  "hora_llamada", "tmo_segundos", "tipo_llamada", "tipo_gestion", "alerta",
+  "descripcion_alerta", "motivo_no_pago", "responsabilidad_no_fcr", "motivo_no_fcr",
+  "fecha_monitoreo", "nombre_monitor", "rol", "hora_inicio", "hora_fin",
+  "duracion_monitoreo", "saludo_11", "contactar_con_persona_12",
+  "identificacion_gestor_13", "apertura", "apertura_completado",
+  "brindar_informacion_21", "indagar_motivo_no_pago_22", "asesorar_23",
+  "indagacion", "indagacion_completado", "mantiene_sentido_urgencia_31",
+  "perseverancia_objetivo_32", "manejo", "manejo_completado", "reafirmar_acuerdos_41",
+  "despedida_cliente_42", "cierre", "cierre_completado", "escucha_activa_51",
+  "comunicacion_cliente_52", "amabilidad_cliente_53", "habilidades",
+  "habilidades_completado", "uso_herramientas_61", "registro_gestiones_62",
+  "herramientas", "herramientas_completado", "calificacion_final", "observaciones",
+  "tipo_ficha", "feedback_compromiso", "feedback_recibido",
+];
 
-  const newFicha = await Ficha.create({
-    id_evaluacion,
-    cartera,
-    tramo,
-    agente,
-    agente_dni,
-    mes_llamada,
-    fecha_llamada,
-    semana_llamada,
-    telefono,
-    dni_cliente,
-    resultado,
-    hora_llamada,
-    tmo_segundos,
-    tipo_llamada,
-    tipo_gestion,
-    alerta,
-    descripcion_alerta,
-    motivo_no_pago,
-    responsabilidad_no_fcr,
-    motivo_no_fcr,
-    audio_nombre,
-    fecha_monitoreo,
-    nombre_monitor,
-    rol,
-    hora_inicio,
-    hora_fin,
-    duracion_monitoreo,
-    saludo_11,
-    contactar_con_persona_12,
-    identificacion_gestor_13,
-    brindar_informacion_21,
-    indagar_motivo_no_pago_22,
-    asesorar_23,
-    mantiene_sentido_urgencia_31,
-    perseverancia_objetivo_32,
-    reafirmar_acuerdos_41,
-    despedida_cliente_42,
-    escucha_activa_51,
-    comunicacion_cliente_52,
-    amabilidad_cliente_53,
-    uso_herramientas_61,
-    registro_gestiones_62,
-    calificacion_final,
-    observaciones,
-    supervisor,
-    tramo_estandar,
-    tipo_ficha,
-    apertura,
-    indagacion,
-    manejo,
-    cierre,
-    habilidades,
-    herramientas,
-    apertura_completado,
-    indagacion_completado,
-    manejo_completado,
-    cierre_completado,
-    habilidades_completado,
-    herramientas_completado,
-  });
+const selectFichas = (where = "", replacements = {}) =>
+  db.query(`SELECT * FROM CALIDAD.fichas ${where}`, { replacements, type: QueryTypes.SELECT });
 
-  res.status(201).json({
-    status: "success",
-    newFicha,
-  });
-};
-
-const getAllFichas = catchAsync(async (req, res, next) => {
-  const { firstDate, secondDate } = req.query;
-
-  // Convertimos las fechas de formato "dd/mm/yyyy" a Date válido
-  const startDate = parse(firstDate, "yyyy-MM-dd", new Date());
-  const endDate = parse(secondDate, "yyyy-MM-dd", new Date());
-
-  // Formateamos las fechas para incluir horas
-  const formattedStartDate = format(startDate, "yyyy-MM-dd 00:00:00");
-  const formattedEndDate = format(endDate, "yyyy-MM-dd 23:59:59");
-
-  const fichas = await Ficha.findAll({
-    attributes: { exclude: ["agente_dni"] },
-    // where: {
-    //     fecha_monitoreo: {
-    //         [Op.between]: [formattedStartDate, formattedEndDate],
-    //     },
-    // },
-    where: {
-      [Op.and]: [
-        literal(
-          `STR_TO_DATE(fecha_monitoreo, '%d/%m/%Y') BETWEEN '${formattedStartDate}' AND '${formattedEndDate}'`,
-        ),
-      ],
-    },
-  });
-
-  console.log(fichas);
-
-  res.status(200).json({
-    status: "success",
-    fichas,
-  });
+const createFicha = catchAsync(async (req, res) => {
+  const values = Object.fromEntries(FICHA_COLUMNS.map((column) => [
+    column,
+    column === "feedback_recibido" ? (req.body[column] ?? 0) : (req.body[column] ?? null),
+  ]));
+  const columns = FICHA_COLUMNS.map((column) => `\`${column}\``).join(", ");
+  const parameters = FICHA_COLUMNS.map((column) => `:${column}`).join(", ");
+  const [insertResult] = await db.query(
+    `INSERT INTO CALIDAD.fichas (${columns}) VALUES (${parameters})`, { replacements: values },
+  );
+  const [newFicha] = await selectFichas("WHERE id = :id", { id: insertResult.insertId });
+  res.status(201).json({ status: "success", newFicha });
 });
 
-const getFilteredlFichas = catchAsync(async (req, res, next) => {
-  console.log(" ======== FUNCTION FILTERED FICHAS ================");
+const getAllFichas = catchAsync(async (req, res) => {
+  const fichas = await selectFichas(
+    "WHERE STR_TO_DATE(fecha_monitoreo, '%d/%m/%Y') BETWEEN :firstDate AND :secondDate",
+    { firstDate: req.query.firstDate, secondDate: req.query.secondDate },
+  );
+  const safeFichas = fichas.map(({ agente_dni, ...ficha }) => ficha);
+  res.status(200).json({ status: "success", fichas: safeFichas });
+});
 
+const getFilteredlFichas = catchAsync(async (req, res) => {
   const { cliente, tramo, firstDate, secondDate, asesor } = req.query;
-
-  const condiciones = [];
-
-  // Condición para fechas, si están presentes
+  const conditions = [];
+  const replacements = {};
   if (firstDate && secondDate) {
-    console.log("Buscando por:", {
-      firstDate,
-      secondDate,
-      asesor,
-      cliente,
-      tramo,
-    });
-
-    // Convertimos las fechas de formato "dd/mm/yyyy" a Date válido
-    const startDate = parse(firstDate, "yyyy-MM-dd", new Date());
-    const endDate = parse(secondDate, "yyyy-MM-dd", new Date());
-
-    // Formateamos las fechas para incluir horas
-    const formattedStartDate = format(startDate, "yyyy-MM-dd 00:00:00");
-    const formattedEndDate = format(endDate, "yyyy-MM-dd 23:59:59");
-
-    condiciones.push(
-      literal(
-        `STR_TO_DATE(fecha_monitoreo, '%d/%m/%Y') BETWEEN '${formattedStartDate}' AND '${formattedEndDate}'`,
-      ),
-    );
+    conditions.push("STR_TO_DATE(fecha_monitoreo, '%d/%m/%Y') BETWEEN :firstDate AND :secondDate");
+    replacements.firstDate = firstDate;
+    replacements.secondDate = secondDate;
   }
-
-  // Agrega condiciones dinámicas
-  if (cliente) {
-    // condiciones[Op.and].push({ cartera: cliente });
-    condiciones.push({ cartera: cliente });
-  }
-
-  if (tramo && tramo !== "TODOS") {
-    condiciones.push({ tramo });
-  }
-
-  if (asesor) {
-    condiciones.push({ agente_dni: asesor });
-  }
-
-  // Verifica que haya al menos una condición
-  if (condiciones.length === 0) {
-    throw new Error("Debe proporcionar al menos un filtro.");
-  }
-
-  // Construye el objeto `where` final con [Op.and]
-  const fichas = await Ficha.findAll({
-    where: {
-      [Op.and]: condiciones,
-    },
-  });
-
-  res.status(200).json({
-    status: "success",
-    fichas,
-  });
+  if (cliente) { conditions.push("cartera = :cliente"); replacements.cliente = cliente; }
+  if (tramo && tramo !== "TODOS") { conditions.push("tramo = :tramo"); replacements.tramo = tramo; }
+  if (asesor) { conditions.push("agente_dni = :asesor"); replacements.asesor = asesor; }
+  if (!conditions.length) throw new AppError("Debe proporcionar al menos un filtro.", 400);
+  const fichas = await selectFichas(`WHERE ${conditions.join(" AND ")}`, replacements);
+  res.status(200).json({ status: "success", fichas });
 });
 
-const getFichasByUser = catchAsync(async (req, res, next) => {
-  const { monitor } = req.params;
-
-  const fichas = await Ficha.findAll({
-    where: { agente_dni: monitor },
-  });
-
-  res.status(200).json({
-    status: "success",
-    fichas,
-  });
+const getFichasByUser = catchAsync(async (req, res) => {
+  const fichas = await selectFichas("WHERE agente_dni = :monitor", { monitor: req.params.monitor });
+  res.status(200).json({ status: "success", fichas });
 });
 
-const getTypeOfFicha = async (req, res, next) => {
+const getTypeOfFicha = async (req, res) => {
   try {
-    console.log(" =========== OBTENIENDO TIPO DE FICHA ===========");
-    console.log(req.query);
-    console.log("📦 Valor recibido (raw):", req.query.cartera);
-    console.log("📦 Longitud:", req.query.cartera.length);
-    console.log("📦 Bytes:", Buffer.from(req.query.cartera));
-
-    const cartera = req.query.cartera;
-    const fichas = await dbWeb.query(
-      `
-            SELECT c.id, c.cartera, tc.nombre AS 'tramo', c.tipo,
-            CASE
-                when tipo IN (1,4) then 'ficha02'
-                when tipo = 3 then 'ficha02'
-                ELSE 'ficha00'
-            END
-            AS 'ficha'
-            FROM cartera c
-            INNER JOIN tipo_cartera tc ON c.tipo = tc.id
-            WHERE cartera = :cartera AND c.estado = 1;
-        `,
-      {
-        replacements: { cartera },
-        type: QueryTypes.SELECT,
-      },
+    const fichas = await db.query(
+      `SELECT c.id, c.cartera, tc.nombre AS tramo, c.tipo,
+       CASE WHEN tipo IN (1, 3, 4) THEN 'ficha02' ELSE 'ficha00' END AS ficha
+       FROM SISTEMAGEST.cartera c INNER JOIN SISTEMAGEST.tipo_cartera tc ON c.tipo = tc.id
+       WHERE cartera = :cartera AND c.estado = 1`,
+      { replacements: { cartera: req.query.cartera }, type: QueryTypes.SELECT },
     );
-
     res.status(200).json({ status: "success", fichas });
-  } catch (err) {
-    console.error("❌ ERROR DETALLADO:");
-    console.error("Mensaje:", err.message);
-    console.error("SQL:", err.sql);
-    console.error("SQL Message:", err.original?.sqlMessage);
-    res.status(500).json({ status: "error", message: err.message });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
   }
 };
 
-const getAsesorEvaluaciones = catchAsync(async (req, res, next) => {
-  const { dni, month } = req.query;
-  // const currentYear = new Date().getFullYear();
-  const currentYear = 2024;
-  console.log(currentYear);
-
-  const fichas = await Ficha.findAll({
-    where: {
-      agente_dni: dni,
-      mes_llamada: month,
-      [Op.and]: [
-        Sequelize.where(
-          Sequelize.fn(
-            "YEAR",
-            Sequelize.fn(
-              "STR_TO_DATE",
-              Sequelize.col("fecha_llamada"),
-              "%d/%m/%Y",
-            ),
-          ),
-          currentYear,
-        ),
-      ],
-    },
-  });
-
-  res.status(200).json({
-    status: "success",
-    fichas,
-  });
+const getAsesorEvaluaciones = catchAsync(async (req, res) => {
+  const fichas = await selectFichas(
+    `WHERE agente_dni = :dni AND mes_llamada = :month
+     AND YEAR(STR_TO_DATE(fecha_llamada, '%d/%m/%Y')) = 2024`,
+    { dni: req.query.dni, month: req.query.month },
+  );
+  res.status(200).json({ status: "success", fichas });
 });
 
-const getPromedioAnualCalificacion = async (req, res) => {
-  // Resta 5 horas a la fecha objetivo
-  // const startDate = subHours(new Date(2024, 5, 1), 5);
-  const startDate = new Date(2024, 5, 1);
-  const formattedDate = format(startDate, "dd/MM/yyyy");
-  // need to parse to make it a date type, 'cause not working with string formattedDate
-  const parsedDate = parse(formattedDate, "dd/MM/yyyy", new Date());
-
-  try {
-    const { dni } = req.query;
-
-    const promedio = await Ficha.findOne({
-      attributes: [
-        [
-          Sequelize.fn("AVG", Sequelize.col("calificacion_final")),
-          "promedioCalificacionFinal",
-        ],
-      ],
-      where: {
-        agente_dni: dni,
-        [Op.and]: [
-          Sequelize.where(
-            Sequelize.fn(
-              "STR_TO_DATE",
-              Sequelize.col("fecha_llamada"),
-              "%d/%m/%Y",
-            ),
-            {
-              [Op.gt]: parsedDate,
-            },
-          ),
-        ],
-      },
-    });
-
-    res.status(200).json({
-      status: "success",
-      promedio: promedio ? promedio.get("promedioCalificacionFinal") : null,
-    });
-  } catch (error) {
-    console.error("Error al obtener el promedio de calificación:", error);
-    res.status(500).json({
-      status: "error",
-      message: "Error al obtener el promedio de calificación",
-      error: error.message,
-    });
-  }
-};
+const getPromedioAnualCalificacion = catchAsync(async (req, res) => {
+  const [promedio] = await db.query(
+    `SELECT AVG(calificacion_final) AS promedioCalificacionFinal FROM CALIDAD.fichas
+     WHERE agente_dni = :dni
+     AND STR_TO_DATE(fecha_llamada, '%d/%m/%Y') > '2024-06-01'`,
+    { replacements: { dni: req.query.dni }, type: QueryTypes.SELECT },
+  );
+  res.status(200).json({ status: "success", promedio: promedio.promedioCalificacionFinal });
+});
 
 const addFeedbackData = catchAsync(async (req, res, next) => {
   const { idevaluacion, isFeedbackCompleted, compromiso } = req.body;
-
-  const ficha = await Ficha.findByPk(idevaluacion);
-
-  if (!ficha) {
-    // Si no se encuentra el registro, enviamos una respuesta adecuada
-    return next(
-      new AppError(`Evaluación con id ${idevaluacion} no encontrado`, 404),
-    );
-  }
-
-  // Si el registro existe, procedemos a la actualización
-  await ficha.update({
-    feedback_recibido: isFeedbackCompleted,
-    feedback_compromiso: compromiso,
-  });
-
-  res.status(200).json({
-    status: "success",
-  });
+  const [updateResult] = await db.query(
+    `UPDATE CALIDAD.fichas SET feedback_recibido = :feedback_recibido,
+     feedback_compromiso = :feedback_compromiso WHERE id = :id`,
+    { replacements: { id: idevaluacion, feedback_recibido: isFeedbackCompleted, feedback_compromiso: compromiso } },
+  );
+  if (!updateResult.affectedRows) return next(new AppError(`Evaluación con id ${idevaluacion} no encontrado`, 404));
+  res.status(200).json({ status: "success" });
 });
 
 module.exports = {
-  createFicha,
-  getAllFichas,
-  getFilteredlFichas,
-  getFichasByUser,
-  getTypeOfFicha,
-  getAsesorEvaluaciones,
-  getPromedioAnualCalificacion,
-  addFeedbackData,
+  createFicha, getAllFichas, getFilteredlFichas, getFichasByUser, getTypeOfFicha,
+  getAsesorEvaluaciones, getPromedioAnualCalificacion, addFeedbackData,
 };

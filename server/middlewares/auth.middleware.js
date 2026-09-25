@@ -5,7 +5,7 @@ const { User } = require("../models/user.model");
 
 const { catchAsync } = require("../utils/catchAsync.util");
 const { AppError } = require("../utils/appError.util");
-const { dbWeb } = require("../utils/database.util");
+const { db } = require("../utils/database.util");
 const { QueryTypes } = require("sequelize");
 
 dotenv.config({ path: "./config.env" });
@@ -35,10 +35,10 @@ const protectSession = catchAsync(async (req, res, next) => {
   // 	where: { id: decoded.id, status: 'active' },
   // });
 
-  const results = await dbWeb.query(
+  const results = await db.query(
     `SELECT tb1.*, tb2.nombre
-     FROM personal tb1
-     LEFT JOIN cargo tb2
+     FROM SISTEMAGEST.personal tb1
+     LEFT JOIN SISTEMAGEST.cargo tb2
      ON tb1.CARGO = tb2.id
     WHERE IDPERSONAL = :id AND IDESTADO = 1`,
     {
