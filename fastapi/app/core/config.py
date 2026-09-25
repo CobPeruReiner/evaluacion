@@ -20,17 +20,12 @@ class Settings:
     OMP_NUM_THREADS: str = "2"
     TOKENIZERS_PARALLELISM: str = "false"
 
-    # SYS CALIDAD
+    # Una sola conexión por entorno. Las consultas califican las tablas como
+    # CALIDAD.* y SISTEMAGEST.* para no depender de una base por defecto.
     DB_HOST: str = os.getenv("DB_HOST", "192.168.1.36")
-    DB_USER: str = os.getenv("DB_USER", "cob_bd")
-    DB_PASS: str = os.getenv("DB_PASS", "33nKVs4@nC")
-    DB_NAME: str = os.getenv("DB_NAME", "CALIDAD")
-
-    # SYS SISTEMAGEST
-    DB_HOST_SISTEMAGEST: str = os.getenv("DB_HOST_SISTEMAGEST", "192.168.1.31")
-    DB_USER_SISTEMAGEST: str = os.getenv("DB_USER_SISTEMAGEST", "cycwebcob")
-    DB_PASS_SISTEMAGEST: str = os.getenv("DB_PASS_SISTEMAGEST", "k4&{'Ba7Np1")
-    DB_NAME_SISTEMAGEST: str = os.getenv("DB_NAME_SISTEMAGEST", "SISTEMAGEST")
+    DB_USER: str = os.getenv("DB_USER", "")
+    DB_PASS: str = os.getenv("DB_PASS", "")
+    DB_NAME: str = os.getenv("DB_NAME", "SISTEMAGEST")
 
 
 settings = Settings()
