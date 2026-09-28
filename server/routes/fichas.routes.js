@@ -3,7 +3,6 @@ const express = require('express');
 const {
 	createFicha,
 	getAllFichas,
-	deleteFicha,
 	getFichasByUser,
 	getTypeOfFicha,
 	getAsesorEvaluaciones,

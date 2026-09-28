@@ -3,120 +3,166 @@ const { catchAsync } = require("../utils/catchAsync.util");
 const { db } = require("../utils/database.util");
 const { AppError } = require("../utils/appError.util");
 
-// `fichas` is an existing, manually managed table. Keep its schema in SQL
-// rather than registering a Sequelize model, so db.sync() cannot create it.
-const FICHA_COLUMNS = [
-  "id_evaluacion", "cartera", "tramo", "agente", "agente_dni", "mes_llamada",
-  "fecha_llamada", "semana_llamada", "telefono", "dni_cliente", "resultado",
-  "hora_llamada", "tmo_segundos", "tipo_llamada", "tipo_gestion", "alerta",
-  "descripcion_alerta", "motivo_no_pago", "responsabilidad_no_fcr", "motivo_no_fcr",
-  "fecha_monitoreo", "nombre_monitor", "rol", "hora_inicio", "hora_fin",
-  "duracion_monitoreo", "saludo_11", "contactar_con_persona_12",
-  "identificacion_gestor_13", "apertura", "apertura_completado",
-  "brindar_informacion_21", "indagar_motivo_no_pago_22", "asesorar_23",
-  "indagacion", "indagacion_completado", "mantiene_sentido_urgencia_31",
-  "perseverancia_objetivo_32", "manejo", "manejo_completado", "reafirmar_acuerdos_41",
-  "despedida_cliente_42", "cierre", "cierre_completado", "escucha_activa_51",
-  "comunicacion_cliente_52", "amabilidad_cliente_53", "habilidades",
-  "habilidades_completado", "uso_herramientas_61", "registro_gestiones_62",
-  "herramientas", "herramientas_completado", "calificacion_final", "observaciones",
-  "tipo_ficha", "feedback_compromiso", "feedback_recibido",
-];
+// Compatibilidad de las rutas históricas /fichas con el modelo normalizado.
+// La fuente única de evaluaciones es CALIDAD.EVALUACION; no consultar la tabla
+// heredada que ya fue eliminada.
+const evaluationProjection = `
+  SELECT
+    e.ID_EVALUACION AS id,
+    e.ID_EVALUACION,
+    e.FE_GESTION AS fecha_llamada,
+    e.ID_GESTION AS id_gestion,
+    e.ID_GESTOR,
+    e.ID_DEUDOR AS dni_cliente,
+    e.TELEFONO AS telefono,
+    e.RESULTADO AS resultado,
+    e.IN_CALIDAD AS calificacion_final,
+    e.IN_FEEDBACK AS feedback_recibido,
+    e.DE_FEEDBACK AS feedback_compromiso,
+    e.FE_REGISTRO AS fecha_monitoreo,
+    modelo.NOMBRE AS modelo,
+    cartera.cartera AS cartera,
+    CONCAT_WS(' ', gestor.NOMBRES, gestor.APELLIDOS) AS agente,
+    gestor.DOC AS agente_dni,
+    CONCAT_WS(' ', monitor.NOMBRES, monitor.APELLIDOS) AS nombre_monitor
+  FROM CALIDAD.EVALUACION AS e
+  INNER JOIN CALIDAD.MODELO_EVALUACION AS modelo ON modelo.ID_MODELO = e.ID_MODELO
+  LEFT JOIN SISTEMAGEST.cartera AS cartera ON cartera.id = modelo.ID_CARTERA
+  LEFT JOIN SISTEMAGEST.personal AS gestor ON gestor.IDPERSONAL = e.ID_GESTOR
+  LEFT JOIN SISTEMAGEST.personal AS monitor ON monitor.IDPERSONAL = e.ID_MONITOR
+`;
 
-const selectFichas = (where = "", replacements = {}) =>
-  db.query(`SELECT * FROM CALIDAD.fichas ${where}`, { replacements, type: QueryTypes.SELECT });
+const selectEvaluaciones = (where = "", replacements = {}) =>
+  db.query(`${evaluationProjection} ${where}`, {
+    replacements,
+    type: QueryTypes.SELECT,
+  });
 
-const createFicha = catchAsync(async (req, res) => {
-  const values = Object.fromEntries(FICHA_COLUMNS.map((column) => [
-    column,
-    column === "feedback_recibido" ? (req.body[column] ?? 0) : (req.body[column] ?? null),
-  ]));
-  const columns = FICHA_COLUMNS.map((column) => `\`${column}\``).join(", ");
-  const parameters = FICHA_COLUMNS.map((column) => `:${column}`).join(", ");
-  const [insertResult] = await db.query(
-    `INSERT INTO CALIDAD.fichas (${columns}) VALUES (${parameters})`, { replacements: values },
+// El formulario antiguo enviaba columnas que ya no existen en el modelo
+// normalizado. Las evaluaciones manuales se registran por POST /evaluaciones.
+const createFicha = catchAsync(async (_req, _res, next) => {
+  return next(
+    new AppError(
+      "El registro heredado fue retirado. Usa POST /api/v1/evaluaciones.",
+      410,
+    ),
   );
-  const [newFicha] = await selectFichas("WHERE id = :id", { id: insertResult.insertId });
-  res.status(201).json({ status: "success", newFicha });
 });
 
 const getAllFichas = catchAsync(async (req, res) => {
-  const fichas = await selectFichas(
-    "WHERE STR_TO_DATE(fecha_monitoreo, '%d/%m/%Y') BETWEEN :firstDate AND :secondDate",
-    { firstDate: req.query.firstDate, secondDate: req.query.secondDate },
+  const { firstDate, secondDate } = req.query;
+  if (!firstDate || !secondDate)
+    throw new AppError("Debe indicar firstDate y secondDate.", 400);
+  const fichas = await selectEvaluaciones(
+    "WHERE DATE(e.FE_GESTION) BETWEEN :firstDate AND :secondDate ORDER BY e.FE_GESTION DESC",
+    { firstDate, secondDate },
   );
-  const safeFichas = fichas.map(({ agente_dni, ...ficha }) => ficha);
-  res.status(200).json({ status: "success", fichas: safeFichas });
+  res.status(200).json({ status: "success", fichas });
 });
 
 const getFilteredlFichas = catchAsync(async (req, res) => {
-  const { cliente, tramo, firstDate, secondDate, asesor } = req.query;
+  const { cliente, firstDate, secondDate, asesor } = req.query;
   const conditions = [];
   const replacements = {};
   if (firstDate && secondDate) {
-    conditions.push("STR_TO_DATE(fecha_monitoreo, '%d/%m/%Y') BETWEEN :firstDate AND :secondDate");
+    conditions.push("DATE(e.FE_GESTION) BETWEEN :firstDate AND :secondDate");
     replacements.firstDate = firstDate;
     replacements.secondDate = secondDate;
   }
-  if (cliente) { conditions.push("cartera = :cliente"); replacements.cliente = cliente; }
-  if (tramo && tramo !== "TODOS") { conditions.push("tramo = :tramo"); replacements.tramo = tramo; }
-  if (asesor) { conditions.push("agente_dni = :asesor"); replacements.asesor = asesor; }
-  if (!conditions.length) throw new AppError("Debe proporcionar al menos un filtro.", 400);
-  const fichas = await selectFichas(`WHERE ${conditions.join(" AND ")}`, replacements);
+  if (cliente) {
+    conditions.push("cartera.cartera = :cliente");
+    replacements.cliente = cliente;
+  }
+  if (asesor) {
+    conditions.push("gestor.DOC = :asesor");
+    replacements.asesor = asesor;
+  }
+  if (!conditions.length)
+    throw new AppError("Debe proporcionar al menos un filtro compatible.", 400);
+  const fichas = await selectEvaluaciones(
+    `WHERE ${conditions.join(" AND ")} ORDER BY e.FE_GESTION DESC`,
+    replacements,
+  );
   res.status(200).json({ status: "success", fichas });
 });
 
 const getFichasByUser = catchAsync(async (req, res) => {
-  const fichas = await selectFichas("WHERE agente_dni = :monitor", { monitor: req.params.monitor });
+  const fichas = await selectEvaluaciones(
+    "WHERE gestor.DOC = :monitor ORDER BY e.FE_GESTION DESC",
+    { monitor: req.params.monitor },
+  );
   res.status(200).json({ status: "success", fichas });
 });
 
-const getTypeOfFicha = async (req, res) => {
-  try {
-    const fichas = await db.query(
-      `SELECT c.id, c.cartera, tc.nombre AS tramo, c.tipo,
-       CASE WHEN tipo IN (1, 3, 4) THEN 'ficha02' ELSE 'ficha00' END AS ficha
-       FROM SISTEMAGEST.cartera c INNER JOIN SISTEMAGEST.tipo_cartera tc ON c.tipo = tc.id
-       WHERE cartera = :cartera AND c.estado = 1`,
-      { replacements: { cartera: req.query.cartera }, type: QueryTypes.SELECT },
-    );
-    res.status(200).json({ status: "success", fichas });
-  } catch (error) {
-    res.status(500).json({ status: "error", message: error.message });
-  }
-};
+const getTypeOfFicha = catchAsync(async (req, res) => {
+  const fichas = await db.query(
+    `SELECT c.id, c.cartera, tc.nombre AS tramo, c.tipo,
+       CASE WHEN c.tipo IN (1, 3, 4) THEN 'ficha02' ELSE 'ficha00' END AS ficha
+     FROM SISTEMAGEST.cartera AS c
+     INNER JOIN SISTEMAGEST.tipo_cartera AS tc ON tc.id = c.tipo
+     WHERE c.cartera = :cartera AND c.estado = 1`,
+    { replacements: { cartera: req.query.cartera }, type: QueryTypes.SELECT },
+  );
+  res.status(200).json({ status: "success", fichas });
+});
 
 const getAsesorEvaluaciones = catchAsync(async (req, res) => {
-  const fichas = await selectFichas(
-    `WHERE agente_dni = :dni AND mes_llamada = :month
-     AND YEAR(STR_TO_DATE(fecha_llamada, '%d/%m/%Y')) = 2024`,
-    { dni: req.query.dni, month: req.query.month },
+  const month = Number(req.query.month);
+  const year = Number(req.query.year || new Date().getFullYear());
+  if (!req.query.dni || !Number.isInteger(month) || month < 1 || month > 12)
+    throw new AppError("DNI y mes numérico (1-12) son obligatorios.", 400);
+  const fichas = await selectEvaluaciones(
+    `WHERE gestor.DOC = :dni
+       AND MONTH(e.FE_GESTION) = :month
+       AND YEAR(e.FE_GESTION) = :year
+     ORDER BY e.FE_GESTION DESC, e.ID_EVALUACION DESC`,
+    { dni: req.query.dni, month, year },
   );
   res.status(200).json({ status: "success", fichas });
 });
 
 const getPromedioAnualCalificacion = catchAsync(async (req, res) => {
+  const year = Number(req.query.year || new Date().getFullYear());
+  if (!req.query.dni) throw new AppError("El DNI es obligatorio.", 400);
   const [promedio] = await db.query(
-    `SELECT AVG(calificacion_final) AS promedioCalificacionFinal FROM CALIDAD.fichas
-     WHERE agente_dni = :dni
-     AND STR_TO_DATE(fecha_llamada, '%d/%m/%Y') > '2024-06-01'`,
-    { replacements: { dni: req.query.dni }, type: QueryTypes.SELECT },
+    `SELECT AVG(e.IN_CALIDAD) AS promedioCalificacionFinal
+     FROM CALIDAD.EVALUACION AS e
+     INNER JOIN SISTEMAGEST.personal AS gestor ON gestor.IDPERSONAL = e.ID_GESTOR
+     WHERE gestor.DOC = :dni AND YEAR(e.FE_GESTION) = :year`,
+    { replacements: { dni: req.query.dni, year }, type: QueryTypes.SELECT },
   );
-  res.status(200).json({ status: "success", promedio: promedio.promedioCalificacionFinal });
+  res.status(200).json({
+    status: "success",
+    promedio: promedio.promedioCalificacionFinal,
+  });
 });
 
 const addFeedbackData = catchAsync(async (req, res, next) => {
   const { idevaluacion, isFeedbackCompleted, compromiso } = req.body;
   const [updateResult] = await db.query(
-    `UPDATE CALIDAD.fichas SET feedback_recibido = :feedback_recibido,
-     feedback_compromiso = :feedback_compromiso WHERE id = :id`,
-    { replacements: { id: idevaluacion, feedback_recibido: isFeedbackCompleted, feedback_compromiso: compromiso } },
+    `UPDATE CALIDAD.EVALUACION
+     SET IN_FEEDBACK = :feedbackRecibido, DE_FEEDBACK = :feedbackCompromiso
+     WHERE ID_EVALUACION = :idEvaluacion`,
+    {
+      replacements: {
+        idEvaluacion: idevaluacion,
+        feedbackRecibido: isFeedbackCompleted ? 1 : 0,
+        feedbackCompromiso: compromiso?.trim() || null,
+      },
+    },
   );
-  if (!updateResult.affectedRows) return next(new AppError(`Evaluación con id ${idevaluacion} no encontrado`, 404));
+  if (!updateResult.affectedRows)
+    return next(new AppError(`Evaluación ${idevaluacion} no encontrada.`, 404));
   res.status(200).json({ status: "success" });
 });
 
 module.exports = {
-  createFicha, getAllFichas, getFilteredlFichas, getFichasByUser, getTypeOfFicha,
-  getAsesorEvaluaciones, getPromedioAnualCalificacion, addFeedbackData,
+  createFicha,
+  getAllFichas,
+  getFilteredlFichas,
+  getFichasByUser,
+  getTypeOfFicha,
+  getAsesorEvaluaciones,
+  getPromedioAnualCalificacion,
+  addFeedbackData,
 };
