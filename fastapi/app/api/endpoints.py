@@ -48,7 +48,11 @@ async def create_job(
     zip_path = job_dir / "source.zip"
     try:
         await save_upload(file, zip_path)
-        process_zip_task.delay(job_id, str(zip_path), id_cartera, version_roles)
+        # El identificador del lote también es el identificador de Celery. Así el
+        # cliente puede consultar un único ID y no queda en "pending" tras acabar.
+        process_zip_task.apply_async(
+            args=(job_id, str(zip_path), id_cartera, version_roles), task_id=job_id
+        )
         return {"ok": True, "job_id": job_id, "status": "queued"}
     except Exception:
         shutil.rmtree(job_dir, ignore_errors=True)
@@ -65,15 +69,26 @@ def get_job(job_id: str, include_result: bool = False):
         raise HTTPException(status_code=404, detail="Trabajo no encontrado.")
     result = AsyncResult(job_id, app=celery_app)
     response = {"ok": True, "job_id": job_id, "status": result.status.lower()}
+    result_path = JOB_STORAGE / job_id / "result.json"
     if result.status == "PROGRESS":
         response["progress"] = result.info or {}
     elif result.status == "SUCCESS":
         response["status"] = "completed"
         response["summary"] = result.result
         result_path = Path(result.result["result_path"])
-        if include_result and result_path.is_file():
-            response["result"] = json.loads(result_path.read_text(encoding="utf-8"))
     elif result.status == "FAILURE":
         response["status"] = "failed"
         response["error"] = "El lote no pudo procesarse. Revisa el registro del worker."
+    # Compatibilidad con trabajos creados antes de unificar el ID del lote y
+    # el ID de Celery. El archivo solo se escribe cuando el worker terminó.
+    elif result_path.is_file():
+        completed_result = json.loads(result_path.read_text(encoding="utf-8"))
+        response["status"] = "completed"
+        response["summary"] = {
+            "exitosos": len(completed_result.get("exitosos", [])),
+            "fallidos": len(completed_result.get("fallidos", [])),
+            "duracion_total": completed_result.get("duracion_total"),
+        }
+    if response["status"] == "completed" and include_result and result_path.is_file():
+        response["result"] = json.loads(result_path.read_text(encoding="utf-8"))
     return JSONResponse(content=response)
