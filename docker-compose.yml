@@ -33,11 +33,9 @@ services:
       context: ./fastapi
     ports:
       - "8000:8000"
+    env_file:
+      - ./server/.env.production
     environment:
-      DB_HOST: 192.168.1.31
-      DB_USER: cycwebcob
-      DB_PASS: k4&{'Ba7Np1
-      DB_NAME: SISTEMAGEST
       DEVICE: "cpu"
       MODEL_SIZE: "medium"
       COMPUTE_TYPE: "int8"
@@ -75,11 +73,9 @@ services:
 
   fastapi_worker:
     image: cyc_calidad-fastapi
+    env_file:
+      - ./server/.env.production
     environment:
-      DB_HOST: 192.168.1.31
-      DB_USER: cycwebcob
-      DB_PASS: k4&{'Ba7Np1
-      DB_NAME: SISTEMAGEST
       DEVICE: "cpu"
       MODEL_SIZE: "medium"
       COMPUTE_TYPE: "int8"
