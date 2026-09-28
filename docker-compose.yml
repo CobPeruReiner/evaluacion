@@ -41,18 +41,34 @@ services:
       DEVICE: "cpu"
       MODEL_SIZE: "medium"
       COMPUTE_TYPE: "int8"
-      HF_AUTH_TOKEN: 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
+      HF_AUTH_TOKEN: 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
       JOB_STORAGE: /data/jobs
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+    command:
+      [
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--workers",
+        "1",
+      ]
     volumes:
       - speech-jobs:/data/jobs
     depends_on:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=2)"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=2)",
+        ]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -67,13 +83,22 @@ services:
       DEVICE: "cpu"
       MODEL_SIZE: "medium"
       COMPUTE_TYPE: "int8"
-      HF_AUTH_TOKEN: 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
+      HF_AUTH_TOKEN: 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
       JOB_STORAGE: /data/jobs
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1
       HF_HOME: /root/.cache/huggingface
       TORCH_HOME: /root/.cache/torch
-    command: ["celery", "-A", "app.tasks", "worker", "--loglevel=INFO", "--concurrency=1", "--prefetch-multiplier=1"]
+    command:
+      [
+        "celery",
+        "-A",
+        "app.tasks",
+        "worker",
+        "--loglevel=INFO",
+        "--concurrency=1",
+        "--prefetch-multiplier=1",
+      ]
     volumes:
       - speech-jobs:/data/jobs
       - huggingface-cache:/root/.cache/huggingface
@@ -87,4 +112,3 @@ volumes:
   redis-data:
   huggingface-cache:
   torch-cache:
-
