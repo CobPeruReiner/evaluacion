@@ -194,7 +194,7 @@ const getMotivoNoPagCartera = async (req, res) => {
         SELECT
           ID_MOTIVO_NO_PAGO,
           NOMBRE_MOTIVO_NO_PAGO
-        FROM MOTIVO_NO_PAGO
+        FROM CALIDAD.MOTIVO_NO_PAGO
         WHERE ID_CARTERA = ?
           AND ID_ESTADO = 1
         ORDER BY NOMBRE_MOTIVO_NO_PAGO ASC
@@ -263,7 +263,7 @@ const getTipoGestionCartera = async (req, res) => {
         SELECT
           ID_TIPO_GESTION,
           NOMBRE_TIPO_GESTION
-        FROM TIPO_GESTION
+        FROM CALIDAD.TIPO_GESTION
         WHERE ID_CARTERA = ?
           AND ID_ESTADO = 1
         ORDER BY NOMBRE_TIPO_GESTION ASC
@@ -324,7 +324,7 @@ const getResponsableNoFCR = async (_req, res) => {
         SELECT
           ID_RESPONSABLE_NO_FCR,
           NOMBRE_RESPONSABLE_NO_FCR
-        FROM RESPONSABLE_NO_FCR
+        FROM CALIDAD.RESPONSABLE_NO_FCR
         WHERE ID_ESTADO = 1
         ORDER BY NOMBRE_RESPONSABLE_NO_FCR ASC
       `,
@@ -367,7 +367,7 @@ const getMotivoNoFCR = async (req, res) => {
     const existe = await db.query(
       `
         SELECT ID_RESPONSABLE_NO_FCR
-        FROM RESPONSABLE_NO_FCR
+        FROM CALIDAD.RESPONSABLE_NO_FCR
         WHERE ID_RESPONSABLE_NO_FCR = ?
           AND ID_ESTADO = 1
         LIMIT 1
@@ -390,7 +390,7 @@ const getMotivoNoFCR = async (req, res) => {
         SELECT
           ID_MOTIVO_NO_FCR,
           NOMBRE_MOTIVO_NO_FCR
-        FROM MOTIVO_NO_FCR
+        FROM CALIDAD.MOTIVO_NO_FCR
         WHERE ID_RESPONSABLE_NO_FCR = ?
           AND ID_ESTADO = 1
         ORDER BY NOMBRE_MOTIVO_NO_FCR ASC
@@ -422,7 +422,7 @@ const getMotivoAlerta = async (_req, res) => {
         SELECT
           ID_MOTIVO_ALERTA,
           NOMBRE_MOTIVO_ALERTA
-        FROM MOTIVO_ALERTA
+        FROM CALIDAD.MOTIVO_ALERTA
         WHERE ID_ESTADO = 1
         ORDER BY NOMBRE_MOTIVO_ALERTA ASC
       `,
