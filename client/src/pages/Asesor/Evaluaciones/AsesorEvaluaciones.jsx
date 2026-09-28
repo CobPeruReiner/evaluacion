@@ -30,10 +30,7 @@ const optionsMeses = [
 
 const getCurrentMonth = () => {
   const mes = optionsMeses.find((x) => x.value === new Date().getMonth() + 1);
-  if (mes) {
-    const currentMonth = mes.label.toLowerCase();
-    return currentMonth;
-  } else return;
+  return mes?.value;
 };
 
 export const AsesorEvaluaciones = () => {
@@ -48,8 +45,8 @@ export const AsesorEvaluaciones = () => {
 
   const navigate = useNavigate();
 
-  const getCurrentEvaluaciones = async (dni, mes) => {
-    const evaluaciones = await getAsesorEvaluaciones(dni, mes);
+  const getCurrentEvaluaciones = async (dni, month) => {
+    const evaluaciones = await getAsesorEvaluaciones(dni, month);
     setCurrentEvaluaciones(evaluaciones);
 
     const promedioAnualCalificacion = await getAsesorPromedioCalificacion(dni);
@@ -103,7 +100,8 @@ export const AsesorEvaluaciones = () => {
           <Select
             placeholder="Seleccionar"
             className="text-sm"
-            onChange={(e) => setCurrentMonth(e.label.toLowerCase())}
+            value={optionsMeses.find((option) => option.value === currentMonth)}
+            onChange={(e) => setCurrentMonth(e.value)}
             options={optionsMeses}
           />
         </div>
@@ -113,7 +111,7 @@ export const AsesorEvaluaciones = () => {
           <p className="text-sm text-gray-600">Nota de calidad general:</p>
           <span className="text-lg font-bold text-blue-600">
             {currentAnualCalificacion
-              ? (parseFloat(currentAnualCalificacion) * 100).toFixed(2)
+              ? parseFloat(currentAnualCalificacion).toFixed(2)
               : "0.00"}
             %
           </span>
@@ -146,7 +144,7 @@ export const AsesorEvaluaciones = () => {
                   </div>
                   <div>Evaluación {index + 1}</div>
                   <div className="font-semibold text-gray-800">
-                    {(parseFloat(e.calificacion_final) * 100).toFixed(2)}%
+                    {parseFloat(e.calificacion_final).toFixed(2)}%
                   </div>
                 </div>
               ))}
@@ -159,11 +157,11 @@ export const AsesorEvaluaciones = () => {
         {/* Promedio mensual */}
         <div className="flex justify-between items-center bg-gray-50 border border-gray-200 rounded-md px-4 py-2">
           <p className="text-sm text-gray-600">
-            Promedio de Nota {currentMonth}:
+            Promedio de Nota {optionsMeses.find((option) => option.value === currentMonth)?.label}:
           </p>
           <span className="text-lg font-bold text-blue-600">
             {currentEvaluaciones &&
-              (calcularPromedio(currentEvaluaciones) * 100).toFixed(2)}
+              calcularPromedio(currentEvaluaciones).toFixed(2)}
             %
           </span>
         </div>

@@ -13,6 +13,17 @@ const servidorPython = process.env.PATH_SERVAPLICACIONES || "fastapi_backend";
 // Entorno
 const esProduccion = process.env.NODE_ENV === "production";
 
+const getModeloActivoPorCartera = async (idCartera) => {
+  const modelos = await db.query(
+    `SELECT ID_MODELO FROM CALIDAD.MODELO_EVALUACION
+     WHERE ID_CARTERA = :idCartera AND ESTADO = 1 LIMIT 1`,
+    { replacements: { idCartera }, type: QueryTypes.SELECT },
+  );
+  if (!modelos.length)
+    throw new Error("La cartera seleccionada no tiene una plantilla activa.");
+  return modelos[0].ID_MODELO;
+};
+
 // ======================== ITEMS ========================
 const getAllItems = async (_req, res) => {
   console.log("===================== OBTENIENDO ITEMS =====================");
@@ -22,21 +33,23 @@ const getAllItems = async (_req, res) => {
       `
         SELECT
           tb1.ID_ITEM,
-          tb1.NOMBRE_ITEM,
-          tb1.PESO_ITEM,
-          tb1.ID_CARTERA,
+          tb1.NOMBRE AS NOMBRE_ITEM,
+          tb1.PESO AS PESO_ITEM,
+          tb4.ID_CARTERA,
           tb2.cartera AS NOMBRE_CARTERA,
           tb1.FE_ACTUALIZACION,
-          tb1.USUARIO_ACTUALIZACION,
+          tb1.IDPERSONAL AS USUARIO_ACTUALIZACION,
           CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION,
-          tb1.ID_ESTADO
+          tb1.ESTADO AS ID_ESTADO
         FROM CALIDAD.ITEM tb1
+        INNER JOIN CALIDAD.MODELO_EVALUACION tb4
+          ON tb4.ID_MODELO = tb1.ID_MODELO AND tb4.ESTADO = 1
         LEFT JOIN SISTEMAGEST.cartera tb2
-        ON tb1.ID_CARTERA = tb2.id
+        ON tb4.ID_CARTERA = tb2.id
         LEFT JOIN SISTEMAGEST.personal tb3
-        ON tb1.USUARIO_ACTUALIZACION = tb3.IDPERSONAL
+        ON tb1.IDPERSONAL = tb3.IDPERSONAL
         WHERE tb2.estado = 1
-          AND tb1.ID_ESTADO = 1
+          AND tb1.ESTADO = 1
         ORDER BY tb1.FE_ACTUALIZACION DESC;
       `,
       {
@@ -101,23 +114,26 @@ const createItem = async (req, res) => {
     const nombreItemUppercase = nombreItem.toUpperCase();
 
     for (const idCartera of idCarteras) {
+      const idModelo = await getModeloActivoPorCartera(idCartera);
       await db.query(
         `
         INSERT INTO CALIDAD.ITEM (
-          NOMBRE_ITEM,
-          PESO_ITEM,
-          FE_ACTUALIZACION,
-          USUARIO_ACTUALIZACION,
-          ID_CARTERA,
-          ID_ESTADO
+          ID_MODELO,
+          IDPERSONAL,
+          NOMBRE,
+          PESO,
+          ESTADO,
+          FE_REGISTRO,
+          FE_ACTUALIZACION
         )
         VALUES (
+          :idModelo,
+          :usuarioActualizacion,
           :nombreItem,
           :pesoItem,
-          :fechaActualizacion,
-          :usuarioActualizacion,
-          :idCartera,
-          1
+          1,
+          NOW(),
+          :fechaActualizacion
         );
         `,
         {
@@ -126,7 +142,7 @@ const createItem = async (req, res) => {
             pesoItem,
             fechaActualizacion,
             usuarioActualizacion: idUsuarioActualizacion,
-            idCartera,
+            idModelo,
           },
           type: QueryTypes.INSERT,
         },
@@ -194,15 +210,16 @@ const updateItem = async (req, res) => {
   try {
     const nombreItemUppercase = nombreItem.toUpperCase();
 
+    const idModelo = await getModeloActivoPorCartera(idCartera);
     await db.query(
       `
         UPDATE CALIDAD.ITEM
-        SET NOMBRE_ITEM = :nombreItem,
-            PESO_ITEM = :pesoItem,
+        SET ID_MODELO = :idModelo,
+            IDPERSONAL = :usuarioActualizacion,
+            NOMBRE = :nombreItem,
+            PESO = :pesoItem,
             FE_ACTUALIZACION = :fechaActualizacion,
-            USUARIO_ACTUALIZACION = :usuarioActualizacion,
-            ID_CARTERA = :idCartera,
-            ID_ESTADO = :idEstado
+            ESTADO = :idEstado
         WHERE ID_ITEM = :idItem;
       `,
       {
@@ -212,7 +229,7 @@ const updateItem = async (req, res) => {
           pesoItem,
           fechaActualizacion,
           usuarioActualizacion: idUsuarioActualizacion,
-          idCartera,
+          idModelo,
           idEstado,
         },
         type: QueryTypes.UPDATE,
@@ -246,21 +263,23 @@ const getAllCriterios = async (_req, res) => {
           tb1.NOMBRE,
           tb1.PESO,
           tb1.ID_ITEM,
-          tb2.NOMBRE_ITEM,
+          tb2.NOMBRE AS NOMBRE_ITEM,
           tb1.FE_ACTUALIZACION,
-          tb1.USUARIO_ACTUALIZACION,
+          tb1.IDPERSONAL AS USUARIO_ACTUALIZACION,
           CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION,
           tb4.cartera AS NOMBRE_CARTERA,
-          tb1.ID_ESTADO
+          tb1.ESTADO AS ID_ESTADO
         FROM CALIDAD.CRITERIO tb1
         INNER JOIN CALIDAD.ITEM tb2
-          ON tb1.ID_ITEM = tb2.ID_ITEM AND tb2.ID_ESTADO = 1
+          ON tb1.ID_ITEM = tb2.ID_ITEM AND tb2.ESTADO = 1
         LEFT JOIN SISTEMAGEST.personal tb3
-          ON tb1.USUARIO_ACTUALIZACION = tb3.IDPERSONAL
+          ON tb1.IDPERSONAL = tb3.IDPERSONAL
+        LEFT JOIN CALIDAD.MODELO_EVALUACION tb5
+          ON tb2.ID_MODELO = tb5.ID_MODELO AND tb5.ESTADO = 1
         LEFT JOIN SISTEMAGEST.cartera tb4
-          ON tb2.ID_CARTERA = tb4.id AND tb4.estado = 1
-        WHERE tb1.ID_ESTADO = 1
-          AND tb2.ID_ESTADO = 1
+          ON tb5.ID_CARTERA = tb4.id AND tb4.estado = 1
+        WHERE tb1.ESTADO = 1
+          AND tb2.ESTADO = 1
           AND tb4.estado = 1
           AND tb4.id IS NOT NULL
         ORDER BY tb1.FE_ACTUALIZACION DESC;
@@ -311,7 +330,7 @@ const createCriterio = async (req, res) => {
   try {
     // 1. Obtener peso total actual de los criterios del ítem
     const [suma] = await db.query(
-      `SELECT COALESCE(SUM(PESO), 0) AS total FROM CALIDAD.CRITERIO WHERE ID_ITEM = :idItem AND ID_ESTADO = 1`,
+       `SELECT COALESCE(SUM(PESO), 0) AS total FROM CALIDAD.CRITERIO WHERE ID_ITEM = :idItem AND ESTADO = 1`,
       {
         replacements: { idItem },
         type: QueryTypes.SELECT,
@@ -320,7 +339,7 @@ const createCriterio = async (req, res) => {
 
     // 2. Obtener peso del ítem
     const [item] = await db.query(
-      `SELECT PESO_ITEM FROM CALIDAD.ITEM WHERE ID_ITEM = :idItem AND ID_ESTADO = 1`,
+       `SELECT PESO FROM CALIDAD.ITEM WHERE ID_ITEM = :idItem AND ESTADO = 1`,
       {
         replacements: { idItem },
         type: QueryTypes.SELECT,
@@ -335,7 +354,7 @@ const createCriterio = async (req, res) => {
     }
 
     const pesoRestante =
-      Math.round((item.PESO_ITEM - suma.total) * 10000) / 10000;
+      Math.round((item.PESO - suma.total) * 10000) / 10000;
 
     // 3. Validar que no se exceda
     if (pesoCriterio > pesoRestante) {
@@ -351,9 +370,9 @@ const createCriterio = async (req, res) => {
     await db.query(
       `
       INSERT INTO CALIDAD.CRITERIO 
-      (NOMBRE, PESO, FE_ACTUALIZACION, USUARIO_ACTUALIZACION, ID_ITEM, ID_ESTADO)
+      (NOMBRE, PESO, FE_REGISTRO, FE_ACTUALIZACION, IDPERSONAL, ID_ITEM, ESTADO)
       VALUES 
-      (:nombreCriterio, :pesoCriterio, :fechaActualizacion, :idUsuarioActualizacion, :idItem, 1);
+      (:nombreCriterio, :pesoCriterio, NOW(), :fechaActualizacion, :idUsuarioActualizacion, :idItem, 1);
       `,
       {
         replacements: {
@@ -418,8 +437,8 @@ const updateCriterio = async (req, res) => {
       SET NOMBRE = :nombreCriterio,
       PESO = :pesoCriterio,
       FE_ACTUALIZACION = :fechaActualizacion,
-      USUARIO_ACTUALIZACION = :idUsuarioActualizacion,
-      ID_ESTADO = :idEstado,
+      IDPERSONAL = :idUsuarioActualizacion,
+      ESTADO = :idEstado,
       ID_ITEM = :idItem
       WHERE ID_CRITERIO = :idCriterio;
       `,
@@ -464,26 +483,28 @@ const getAllAcciones = async (_req, res) => {
           tb1.NOMBRE,
           tb1.PESO,
           tb1.ID_CRITERIO,
-          tb2.NOMBRE,
-          tb2.PESO,
+          tb2.NOMBRE AS NOMBRE_CRITERIO,
+          tb2.PESO AS PESO_CRITERIO,
           tb1.FE_ACTUALIZACION,
-          tb1.USUARIO_ACTUALIZACION,
+          tb1.IDPERSONAL AS USUARIO_ACTUALIZACION,
           CONCAT(tb3.NOMBRES, ' ', tb3.APELLIDOS) AS NOMBRE_USUARIO_ACTUALIZACION,
           tb4.ID_ITEM,
-          tb4.NOMBRE_ITEM,
-          tb4.PESO_ITEM,
+          tb4.NOMBRE AS NOMBRE_ITEM,
+          tb4.PESO AS PESO_ITEM,
           tb5.cartera AS NOMBRE_CARTERA,
-          tb1.ESTADO_ACCION
+          tb1.ESTADO AS ESTADO_ACCION
         FROM CALIDAD.ACCION_CRITERIO tb1
         INNER JOIN CALIDAD.CRITERIO tb2
-          ON tb1.ID_CRITERIO = tb2.ID_CRITERIO AND tb2.ID_ESTADO = 1
+          ON tb1.ID_CRITERIO = tb2.ID_CRITERIO AND tb2.ESTADO = 1
         INNER JOIN CALIDAD.ITEM tb4
-          ON tb2.ID_ITEM = tb4.ID_ITEM AND tb4.ID_ESTADO = 1
+          ON tb2.ID_ITEM = tb4.ID_ITEM AND tb4.ESTADO = 1
+        INNER JOIN CALIDAD.MODELO_EVALUACION tb6
+          ON tb4.ID_MODELO = tb6.ID_MODELO AND tb6.ESTADO = 1
         INNER JOIN SISTEMAGEST.cartera tb5
-          ON tb4.ID_CARTERA = tb5.id AND tb5.estado = 1
+          ON tb6.ID_CARTERA = tb5.id AND tb5.estado = 1
         LEFT JOIN SISTEMAGEST.personal tb3
-          ON tb1.USUARIO_ACTUALIZACION = tb3.IDPERSONAL
-        WHERE tb1.ESTADO_ACCION = 1
+          ON tb1.IDPERSONAL = tb3.IDPERSONAL
+        WHERE tb1.ESTADO = 1
         ORDER BY tb1.FE_ACTUALIZACION DESC;
       `,
       {
@@ -534,8 +555,8 @@ const createAccion = async (req, res) => {
   try {
     await db.query(
       `
-        INSERT INTO CALIDAD.ACCION_CRITERIO (NOMBRE, PESO, FE_ACTUALIZACION, USUARIO_ACTUALIZACION, ID_CRITERIO, ESTADO_ACCION)
-        VALUES (:nombreAccionUpper, :pesoAccion, :fechaActualizacion, :idUsuarioActualizacion, :idCriterio, 1);
+        INSERT INTO CALIDAD.ACCION_CRITERIO (NOMBRE, PESO, FE_REGISTRO, FE_ACTUALIZACION, IDPERSONAL, ID_CRITERIO, ESTADO)
+        VALUES (:nombreAccionUpper, :pesoAccion, NOW(), :fechaActualizacion, :idUsuarioActualizacion, :idCriterio, 1);
       `,
       {
         replacements: {
@@ -603,9 +624,9 @@ const updateAccion = async (req, res) => {
         NOMBRE = :nombreAccionUpper,
         PESO = :pesoAccion,
         FE_ACTUALIZACION = :fechaActualizacion,
-        USUARIO_ACTUALIZACION = :idUsuarioActualizacion,
+        IDPERSONAL = :idUsuarioActualizacion,
         ID_CRITERIO = :idCriterio,
-        ESTADO_ACCION = :idEstado
+        ESTADO = :idEstado
       WHERE ID_ACCION = :idAccion;
       `,
       {

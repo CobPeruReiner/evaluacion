@@ -11,7 +11,7 @@ const mysqlDateTime = (value) => {
 
 async function getMonitorId(dni) {
   const people = await db.query(
-    "SELECT IDPERSONAL FROM personal WHERE DOC=:dni LIMIT 1",
+    "SELECT IDPERSONAL FROM SISTEMAGEST.personal WHERE DOC=:dni LIMIT 1",
     { replacements: { dni }, type: QueryTypes.SELECT },
   );
   if (!people.length)
@@ -307,7 +307,7 @@ const getHistoryDetail = async (req, res) => {
         `SELECT e.ID_EVALUACION,e.ID_GESTION,e.FE_GESTION,e.ID_GESTOR,e.ID_MONITOR,e.TELEFONO,e.ID_DEUDOR,
           e.RESULTADO,e.TMO_SEG,e.IN_ALERTA,e.ID_TIPO_LLAMADA,e.ID_TIPO_GESTION,e.ID_MOTIVO_NPG,
           e.ID_MOTIVO_ALERTA,e.ID_RESP_NO_FCR,e.ID_MOTIVO_NO_FCR,e.FE_REGISTRO,e.FE_INICIO,e.FE_FIN,
-          e.IN_CALIDAD,e.TI_TIPO,m.NOMBRE AS MODELO,tl.NOMBRE_TIPO_LLAMADA,
+          e.IN_CALIDAD,e.TI_TIPO,e.IN_FEEDBACK,e.DE_FEEDBACK,m.NOMBRE AS MODELO,tl.NOMBRE_TIPO_LLAMADA,
           tg.NOMBRE_TIPO_GESTION,mnp.NOMBRE_MOTIVO_NO_PAGO,ma.NOMBRE_MOTIVO_ALERTA,
           r.NOMBRE_RESPONSABLE_NO_FCR,mf.NOMBRE_MOTIVO_NO_FCR,
           CONCAT(TRIM(gestor.APELLIDOS), ', ', TRIM(gestor.NOMBRES)) AS GESTOR_NOMBRE,
