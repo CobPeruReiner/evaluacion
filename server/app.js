@@ -12,6 +12,8 @@ const { viewsRouter } = require("./routes/views.routes");
 const { gestionesCycWebRouter } = require("./routes/gestionesCycWeb.routes");
 const { criteriosEvaluacionRouter } = require("./routes/criterios.routes");
 const { evaluacionesRouter } = require("./routes/evaluaciones.routes");
+const { protectSession } = require("./middlewares/auth.middleware");
+const { enforceAccessSchedule } = require("./middlewares/accessSchedule.middleware");
 
 const app = express();
 
@@ -27,7 +29,7 @@ const rutaAudios = esProduccion
 // app.use("/audios", express.static(path.join(__dirname, "./audios")));
 // app.use("/audios", express.static("/app/server/audios"));
 
-app.use("/audios", express.static(rutaAudios));
+app.use("/audios", enforceAccessSchedule, protectSession, express.static(rutaAudios));
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -40,7 +42,10 @@ process.on("uncaughtException", function (err) {
   console.log(err);
 });
 
+// Toda consulta o modificación de las vistas vigentes pasa primero por horario Lima.
+app.use("/api/v1", enforceAccessSchedule);
 app.use("/api/v1/users", usersRouter);
+app.use("/api/v1", protectSession);
 app.use("/api/v1/fichas", fichasRouter);
 app.use("/api/v1/base", baseRouter);
 app.use("/api/v1/carteras", carterasRouter);

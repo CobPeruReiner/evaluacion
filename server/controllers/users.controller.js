@@ -37,7 +37,6 @@ const login = async (req, res, next) => {
   const { usuario, password } = req.body;
 
   console.log(" =================INICIANDO SESION =================");
-  console.log("Credenciales: ", req.body);
 
   const results = await db.query(
     `SELECT tb1.*, tb2.nombre

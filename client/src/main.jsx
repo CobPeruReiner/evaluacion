@@ -8,12 +8,24 @@ import { SideBarProvider } from "./Context/SidebarProvider";
 import { Toaster } from "sonner";
 import { PrimeReactProvider } from "primereact/api";
 import { addLocale } from "primereact/api";
+import axios from "axios";
 import "./styles/tailwind-base.css";
 import "primereact/resources/themes/lara-light-indigo/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 import "./styles/tailwind-utilities.css";
 import "./index.css";
+
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+
+  if (token && !config.headers?.Authorization && !config.headers?.authorization) {
+    config.headers = config.headers ?? {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
 
 addLocale("es", {
   firstDayOfWeek: 1,

@@ -13,20 +13,29 @@ dotenv.config({ path: "./config.env" });
 const protectSession = catchAsync(async (req, res, next) => {
   let token;
 
-  // Extract the token from headers
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    token = req.headers.authorization.split(" ")[1];
+  const authorization = req.headers.authorization;
+  if (authorization && /^Bearer\s+\S+$/i.test(authorization)) {
+    token = authorization.replace(/^Bearer\s+/i, "");
   }
 
   if (!token) {
-    return next(new AppError("Invalid session", 403));
+    return res.status(401).json({
+      ok: false,
+      code: "INVALID_SESSION",
+      message: "Sesión inválida o vencida.",
+    });
   }
 
-  // Ask JWT (library), if the token is still valid
-  const decoded = await jwt.verify(token, process.env.JWT_SECRET);
+  let decoded;
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (_error) {
+    return res.status(401).json({
+      ok: false,
+      code: "INVALID_SESSION",
+      message: "Sesión inválida o vencida.",
+    });
+  }
 
   // { id, ... }
 
@@ -50,9 +59,11 @@ const protectSession = catchAsync(async (req, res, next) => {
   const user = results[0];
 
   if (!user) {
-    return next(
-      new AppError("The owner of this token doesnt exist anymore", 403)
-    );
+    return res.status(401).json({
+      ok: false,
+      code: "INVALID_SESSION",
+      message: "La cuenta ya no está activa.",
+    });
   }
 
   // Grant access
