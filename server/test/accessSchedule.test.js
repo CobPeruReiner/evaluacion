@@ -14,7 +14,9 @@ const schedule = {
 
 test("respeta el horario base en Lima", () => {
   assert.equal(evaluateSchedule({ schedule, now: new Date("2026-10-05T12:00:00Z") }).allowed, true);
-  assert.equal(evaluateSchedule({ schedule, now: new Date("2026-10-06T01:00:00Z") }).allowed, false);
+  const outsideSchedule = evaluateSchedule({ schedule, now: new Date("2026-10-06T01:00:00Z") });
+  assert.equal(outsideSchedule.allowed, false);
+  assert.match(outsideSchedule.message, /7:00 AM.*8:00 PM.*8:30 AM.*1:00 PM/);
   assert.equal(evaluateSchedule({ schedule, now: new Date("2026-10-10T13:30:00Z") }).allowed, true);
   assert.equal(evaluateSchedule({ schedule, now: new Date("2026-10-11T17:00:00Z") }).allowed, false);
 });

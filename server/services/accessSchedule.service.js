@@ -4,7 +4,7 @@ const { db } = require("../utils/database.util");
 const PLATFORM_CODE = "CALIDAD";
 
 const accessScheduleMessage =
-  "El sistema no está disponible en este momento según el horario autorizado.";
+  "No podemos validar tu horario. Intenta nuevamente.";
 
 const normalizeTimeToMinutes = (value) => {
   const match = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(String(value ?? ""));
@@ -23,6 +23,30 @@ const isTimeWithinRange = (minutes, start, end) => {
 
   // También cubre excepciones válidas que cruzan medianoche.
   return minutes >= start || minutes < end;
+};
+
+const formatTime = (value) => {
+  const minutes = normalizeTimeToMinutes(value);
+  if (minutes === null) return "";
+
+  const hours = Math.floor(minutes / 60);
+  const minute = String(minutes % 60).padStart(2, "0");
+  const period = hours >= 12 ? "PM" : "AM";
+  const hour = hours % 12 || 12;
+  return `${hour}:${minute} ${period}`;
+};
+
+const baseScheduleMessage = (schedule) =>
+  `Horario: lun. a vie. ${formatTime(schedule.HORA_INICIO_LUN_VIE)}–${formatTime(schedule.HORA_FIN_LUN_VIE)}; sáb. ${formatTime(schedule.HORA_INICIO_SABADO)}–${formatTime(schedule.HORA_FIN_SABADO)}.`;
+
+const customScheduleMessage = (exceptions) => {
+  const ranges = exceptions
+    .map((exception) => `${formatTime(exception.HORA_INICIO)}–${formatTime(exception.HORA_FIN)}`)
+    .filter((range) => !range.startsWith("–"));
+
+  return ranges.length > 0
+    ? `Tu horario autorizado: ${ranges.join(" / ")}.`
+    : "Tu horario personalizado no permite el acceso ahora.";
 };
 
 const getZonedDateTime = (date, timeZone) => {
@@ -86,7 +110,11 @@ const evaluateSchedule = ({ schedule, exceptions = [], now = new Date() }) => {
 
   const activeExceptions = exceptions.filter((exception) => Number(exception.ESTADO) === 1);
   if (activeExceptions.some((exception) => exception.TIPO_EXCEPCION === "BLOQUEAR_ACCESO")) {
-    return { allowed: false, code: "ACCESS_BLOCKED_BY_EXCEPTION", message: accessScheduleMessage };
+    return {
+      allowed: false,
+      code: "ACCESS_BLOCKED_BY_EXCEPTION",
+      message: "Tu acceso está restringido. Contacta a tu supervisor.",
+    };
   }
 
   const customSchedules = activeExceptions.filter(
@@ -104,7 +132,7 @@ const evaluateSchedule = ({ schedule, exceptions = [], now = new Date() }) => {
     return {
       allowed,
       code: allowed ? "ACCESS_GRANTED_BY_CUSTOM_SCHEDULE" : "ACCESS_OUTSIDE_CUSTOM_SCHEDULE",
-      message: accessScheduleMessage,
+      message: customScheduleMessage(customSchedules),
     };
   }
 
@@ -115,7 +143,7 @@ const evaluateSchedule = ({ schedule, exceptions = [], now = new Date() }) => {
   return {
     allowed: isBaseScheduleAllowed(schedule, now),
     code: "ACCESS_OUTSIDE_SCHEDULE",
-    message: accessScheduleMessage,
+    message: baseScheduleMessage(schedule),
   };
 };
 
@@ -161,6 +189,7 @@ const getAccessDecision = async (idPersonal, now = new Date()) => {
 module.exports = {
   accessScheduleMessage,
   evaluateSchedule,
+  formatTime,
   getAccessDecision,
   isTimeWithinRange,
 };
