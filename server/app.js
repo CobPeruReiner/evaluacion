@@ -12,6 +12,8 @@ const { viewsRouter } = require("./routes/views.routes");
 const { gestionesCycWebRouter } = require("./routes/gestionesCycWeb.routes");
 const { criteriosEvaluacionRouter } = require("./routes/criterios.routes");
 const { evaluacionesRouter } = require("./routes/evaluaciones.routes");
+const { protectSession } = require("./middlewares/auth.middleware");
+const { enforceAccessSchedule } = require("./middlewares/accessSchedule.middleware");
 
 const app = express();
 
@@ -27,7 +29,7 @@ const rutaAudios = esProduccion
 // app.use("/audios", express.static(path.join(__dirname, "./audios")));
 // app.use("/audios", express.static("/app/server/audios"));
 
-app.use("/audios", express.static(rutaAudios));
+app.use("/audios", protectSession, enforceAccessSchedule, express.static(rutaAudios));
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -41,6 +43,8 @@ process.on("uncaughtException", function (err) {
 });
 
 app.use("/api/v1/users", usersRouter);
+// Todas las rutas de negocio requieren una sesión vigente y horario autorizado.
+app.use("/api/v1", protectSession, enforceAccessSchedule);
 app.use("/api/v1/fichas", fichasRouter);
 app.use("/api/v1/base", baseRouter);
 app.use("/api/v1/carteras", carterasRouter);

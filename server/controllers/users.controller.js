@@ -7,6 +7,7 @@ const { catchAsync } = require("../utils/catchAsync.util");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 const md5 = require("md5");
+const { getAccessDecision, accessScheduleMessage } = require("../services/accessSchedule.service");
 
 const createUser = catchAsync(async (req, res, next) => {
   const { apellidos, nombres, dni, cargo, usuario, password, supervisor } =
@@ -37,7 +38,6 @@ const login = async (req, res, next) => {
   const { usuario, password } = req.body;
 
   console.log(" =================INICIANDO SESION =================");
-  console.log("Credenciales: ", req.body);
 
   const results = await db.query(
     `SELECT tb1.*, tb2.nombre
@@ -70,6 +70,24 @@ const login = async (req, res, next) => {
   if (!isPasswordValid) {
     console.log("Login fallido: ", usuario);
     return next(new AppError("Invalid password", 400));
+  }
+
+  try {
+    const decision = await getAccessDecision(user.IDPERSONAL);
+    if (!decision.allowed) {
+      return res.status(decision.code === "ACCESS_POLICY_UNAVAILABLE" ? 503 : 403).json({
+        ok: false,
+        code: decision.code,
+        message: decision.message || accessScheduleMessage,
+      });
+    }
+  } catch (error) {
+    console.error("No se pudo validar la política de horario al iniciar sesión:", error.message);
+    return res.status(503).json({
+      ok: false,
+      code: "ACCESS_POLICY_UNAVAILABLE",
+      message: accessScheduleMessage,
+    });
   }
 
   const token = await jwt.sign(
