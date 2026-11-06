@@ -2,6 +2,7 @@ import os
 import shutil
 import time
 import zipfile
+import logging
 from pathlib import Path
 from typing import Callable
 from app.services.helpers.audio_converter import convertir_a_wav_mono_16k
@@ -12,6 +13,7 @@ from app.services.evaluator import evaluar_llamada
 MAX_FILES = int(os.getenv("MAX_AUDIO_FILES_PER_JOB", "250"))
 MAX_UNCOMPRESSED_BYTES = int(os.getenv("MAX_UNCOMPRESSED_BYTES", str(4 * 1024 * 1024 * 1024)))
 AUDIO_EXTENSIONS = {".wav", ".mp3"}
+logger = logging.getLogger(__name__)
 
 
 def _extract_audio(zip_path: Path, destination: Path) -> list[Path]:
@@ -68,12 +70,16 @@ def procesar_archivo_sync(zip_path: Path, job_dir: Path, version_roles: str, id_
         total = len(files)
         for current, original in enumerate(files, start=1):
             stages = {}
+            stage = "Preparando audio"
+            wav_path = None
             try:
+                stage = "Convirtiendo audio"
                 progress("Convirtiendo audio", current, total, original.name)
                 step = time.perf_counter()
                 wav_path = convertir_a_wav_mono_16k(original, work_dir)
                 stages["conversion"] = round(time.perf_counter() - step, 3)
 
+                stage = "Transcribiendo"
                 progress("Transcribiendo", current, total, original.name)
                 step = time.perf_counter()
                 result = transcribir_audio(str(wav_path))
@@ -82,6 +88,7 @@ def procesar_archivo_sync(zip_path: Path, job_dir: Path, version_roles: str, id_
                     raise ValueError("Audio sin segmentos útiles.")
                 stages["transcripcion"] = round(time.perf_counter() - step, 3)
 
+                stage = "Alineando y diarizando"
                 progress("Alineando y diarizando", current, total, original.name)
                 step = time.perf_counter()
                 aligned = alinear_segmentos(result, str(wav_path))
@@ -90,21 +97,48 @@ def procesar_archivo_sync(zip_path: Path, job_dir: Path, version_roles: str, id_
                 result = asignar_hablantes(result, diarization)
                 stages["alineacion_diarizacion"] = round(time.perf_counter() - step, 3)
 
+                stage = "Evaluando criterios"
                 progress("Evaluando criterios", current, total, original.name)
                 step = time.perf_counter()
                 transcript = [{"start": segment["start"], "end": segment["end"], "speaker": segment.get("speaker"), "text": segment["text"]} for segment in result["segments"] if segment.get("speaker")]
                 transcript = etiquetar_roles_v2(transcript)
-                evaluation = evaluar_llamada(transcript, id_cartera)
+                try:
+                    evaluation = evaluar_llamada(transcript, id_cartera)
+                except Exception as error:
+                    # Transcribir y diarizar son resultados válidos por sí mismos.
+                    # Una plantilla mal configurada no debe descartar el audio.
+                    logger.exception(
+                        "No se pudo calificar '%s'; se conservará la transcripción.",
+                        original.name,
+                    )
+                    evaluation = {
+                        "estado": "pendiente",
+                        "mensaje": "Transcripción disponible; la calificación automática no pudo aplicarse.",
+                        "detalle": str(error) or "Error de configuración de evaluación.",
+                    }
                 stages["evaluacion"] = round(time.perf_counter() - step, 3)
 
                 stored_audio = audio_dir / original.name
                 shutil.copy2(original, stored_audio)
                 successful.append({"archivo": original.name, "audio_path": f"audio/{stored_audio.name}", "transcripcion": transcript, "metadatos": _metadata(original.name), "evaluacion": evaluation, "timings": stages})
             except Exception as error:
-                failed.append({"archivo": original.name, "error": str(error), "timings": stages})
+                # El resultado conserva un mensaje breve para la interfaz y el
+                # registro del worker mantiene el traceback para soporte.
+                logger.exception(
+                    "No se pudo procesar '%s' durante la etapa '%s'.",
+                    original.name,
+                    stage,
+                )
+                failed.append({
+                    "archivo": original.name,
+                    "etapa": stage,
+                    "error": str(error) or "No se pudo completar esta etapa.",
+                    "tipo_error": type(error).__name__,
+                    "timings": stages,
+                })
             finally:
-                wav_path = work_dir / f"{original.stem}.16k.wav"
-                wav_path.unlink(missing_ok=True)
+                if wav_path is not None:
+                    wav_path.unlink(missing_ok=True)
         return {"exitosos": successful, "fallidos": failed, "duracion_total": round(time.perf_counter() - started, 3)}
     finally:
         zip_path.unlink(missing_ok=True)

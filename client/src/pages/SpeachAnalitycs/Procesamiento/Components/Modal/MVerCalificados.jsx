@@ -5,14 +5,11 @@ import { Close, Pause, Play } from "../../../../../Icons/Iconos";
 import moment from "moment";
 
 const getEvaluacion = (item) => {
-  if (item?.metadatos?.idCartera == 70) {
-    return (
-      item?.evaluacion?.scotiabank_evaluacion?.resumen_final ||
-      item?.evaluacion?.resumen_final
-    );
-  }
-
-  return item?.evaluacion?.resumen_final;
+  return (
+    item?.evaluacion?.resumen_final ||
+    item?.evaluacion?.scotiabank_evaluacion?.resumen_final ||
+    null
+  );
 };
 
 export const MVerCalificados = () => {
@@ -97,8 +94,8 @@ export const MVerCalificados = () => {
                     const full_name = item.metadatos?.full_name || "Asesor";
 
                     const calificacion =
-                      getEvaluacion(item)?.cumplimiento_total || 0;
-                    const estado = getEvaluacion(item)?.estado_global || "";
+                      getEvaluacion(item)?.cumplimiento_total;
+                    const estado = getEvaluacion(item)?.estado_global || item?.evaluacion?.estado;
 
                     // Fecha y hora
                     const hora =
@@ -118,7 +115,9 @@ export const MVerCalificados = () => {
                       >
                         <div className="font-semibold text-sm">{full_name}</div>
                         <div className="text-xs text-gray-600">
-                          Calificación: {calificacion} - {estado}
+                          {calificacion !== undefined && calificacion !== null
+                            ? `Calificación: ${calificacion} - ${estado || "Sin estado"}`
+                            : item?.evaluacion?.mensaje || "Transcripción disponible"}
                         </div>
                         <div className="text-xs flex items-center justify-between space-x-2">
                           <span>{hora}</span>
@@ -145,6 +144,7 @@ export const MVerCalificados = () => {
                       {processResultFailed.map((item, index) => (
                         <p key={`${item.archivo || "audio"}-${index}`} className="mt-2 text-amber-900">
                           <strong>{item.archivo || `Audio ${index + 1}`}:</strong> {item.error || "No se pudo completar el procesamiento."}
+                          {item.etapa ? <span className="block text-xs">Etapa: {item.etapa}</span> : null}
                         </p>
                       ))}
                     </div>
@@ -244,6 +244,7 @@ export const MVerCalificados = () => {
                   <article key={`${item.archivo || "audio"}-${index}`} className="rounded-md border border-amber-200 bg-amber-50 p-4">
                     <p className="font-medium text-gray-800">{item.archivo || `Audio ${index + 1}`}</p>
                     <p className="mt-1 text-sm text-gray-600">{item.error || "No se pudo completar el procesamiento."}</p>
+                    {item.etapa ? <p className="mt-1 text-xs text-gray-500">Etapa: {item.etapa}</p> : null}
                   </article>
                 ))}
               </div>
