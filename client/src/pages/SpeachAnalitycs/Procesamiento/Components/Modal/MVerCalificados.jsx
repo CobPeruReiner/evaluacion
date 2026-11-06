@@ -18,6 +18,7 @@ const getEvaluacion = (item) => {
 export const MVerCalificados = () => {
   const {
     processResultSucces,
+    processResultFailed,
     audioActivo,
     seleccionarAudio,
     refMVerCalificacion,
@@ -31,7 +32,7 @@ export const MVerCalificados = () => {
     reproducirAudio,
   } = useContext(CriteriosContext);
 
-  if (!processResultSucces) return null;
+  if (!processResultSucces || !processResultFailed) return null;
 
   const rawFecha = processResultSucces[0]?.metadatos?.fecha;
   const fechaGlobal = rawFecha
@@ -39,6 +40,7 @@ export const MVerCalificados = () => {
     : "Sin fecha";
 
   const cantidadAudios = processResultSucces.length;
+  const cantidadFallidos = processResultFailed.length;
 
   // console.log("Process Result: ", processResultSucces);
 
@@ -56,7 +58,7 @@ export const MVerCalificados = () => {
       >
         <div className="header-modal-ver-calificados relative w-full text-left">
           <h1 className="relative text-[#344767] text-xl font-bold">
-            Evaluados
+            Resultados del procesamiento
           </h1>
 
           <Close
@@ -66,6 +68,12 @@ export const MVerCalificados = () => {
         </div>
 
         <hr />
+
+        {cantidadFallidos > 0 && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {cantidadFallidos} audio{cantidadFallidos === 1 ? "" : "s"} no pudo{cantidadFallidos === 1 ? "" : "ieron"} procesarse.
+          </div>
+        )}
 
         <div className="flex w-full gap-4 overflow-hidden h-full">
           {processResultSucces.length > 0 ? (
@@ -131,6 +139,16 @@ export const MVerCalificados = () => {
                       </div>
                     );
                   })}
+                  {cantidadFallidos > 0 && (
+                    <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm">
+                      <p className="font-semibold text-amber-900">Incidencias</p>
+                      {processResultFailed.map((item, index) => (
+                        <p key={`${item.archivo || "audio"}-${index}`} className="mt-2 text-amber-900">
+                          <strong>{item.archivo || `Audio ${index + 1}`}:</strong> {item.error || "No se pudo completar el procesamiento."}
+                        </p>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Tabs */}
@@ -218,6 +236,18 @@ export const MVerCalificados = () => {
                 )}
               </div>
             </>
+          ) : cantidadFallidos > 0 ? (
+            <div className="w-full overflow-y-auto rounded-lg border border-gray-200 bg-white p-5">
+              <h2 className="text-base font-semibold text-gray-800">Detalle de incidencias</h2>
+              <div className="mt-4 space-y-3">
+                {processResultFailed.map((item, index) => (
+                  <article key={`${item.archivo || "audio"}-${index}`} className="rounded-md border border-amber-200 bg-amber-50 p-4">
+                    <p className="font-medium text-gray-800">{item.archivo || `Audio ${index + 1}`}</p>
+                    <p className="mt-1 text-sm text-gray-600">{item.error || "No se pudo completar el procesamiento."}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
           ) : (
             <Loader height="h-20" width="w-20" />
           )}

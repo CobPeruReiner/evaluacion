@@ -17,6 +17,15 @@ const steps = [
 
 const getJobPresentation = (job) => {
   if (job?.status === "completed") {
+    if ((job.summary?.failed || 0) > 0) {
+      const onlyFailures = (job.summary?.successful || 0) === 0;
+      return {
+        index: 5,
+        title: onlyFailures ? "El archivo terminó con incidencias" : "Archivo procesado con incidencias",
+        description: "Revisa el detalle de los audios procesados.",
+        tone: "warning",
+      };
+    }
     return { index: 5, title: "Archivo procesado", description: "Los resultados de la evaluación están disponibles.", tone: "success" };
   }
   if (job?.status === "failed") {
@@ -32,7 +41,7 @@ const getJobPresentation = (job) => {
 };
 
 export const Procesamiento = () => {
-  const { handleZip, inputRef, openMVerCalificacion, speechJob, processResultSucces } =
+  const { handleZip, inputRef, openMVerCalificacion, speechJob, processResultSucces, processResultFailed } =
     useContext(CriteriosContext);
   const jobPresentation = speechJob ? getJobPresentation(speechJob) : null;
 
@@ -81,8 +90,8 @@ export const Procesamiento = () => {
                 <h2 className="mt-1 truncate text-base font-bold text-brand-dark">{speechJob.fileName || "Archivo cargado"}</h2>
                 <p className="mt-1 text-sm text-stone-600">{jobPresentation.title}. {jobPresentation.description}</p>
               </div>
-              <span className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${jobPresentation.tone === "success" ? "bg-emerald-100 text-emerald-700" : jobPresentation.tone === "error" ? "bg-red-100 text-red-700" : "bg-red-100 text-brand-red"}`}>
-                {jobPresentation.tone === "success" ? "Completado" : jobPresentation.tone === "error" ? "Requiere atención" : "En proceso"}
+              <span className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${jobPresentation.tone === "success" ? "bg-emerald-100 text-emerald-700" : jobPresentation.tone === "warning" ? "bg-amber-100 text-amber-800" : jobPresentation.tone === "error" ? "bg-red-100 text-red-700" : "bg-red-100 text-brand-red"}`}>
+                {jobPresentation.tone === "success" ? "Completado" : jobPresentation.tone === "warning" ? "Con incidencias" : jobPresentation.tone === "error" ? "Requiere atención" : "En proceso"}
               </span>
             </div>
 
@@ -114,7 +123,7 @@ export const Procesamiento = () => {
             type="button"
             className={buttonSecondary}
             onClick={openMVerCalificacion}
-            disabled={processResultSucces.length === 0}
+            disabled={processResultSucces.length === 0 && processResultFailed.length === 0}
           >
             Ver resultados procesados
           </button>

@@ -1620,6 +1620,8 @@ export const CriteriosProvider = ({ children }) => {
     }
   });
   const speechPollingRef = useRef(false);
+  const speechResultsLoadingRef = useRef(false);
+  const speechResultsLoadedForRef = useRef(null);
 
   const saveSpeechJob = (job) => {
     window.localStorage.setItem("speech-audio-job", JSON.stringify(job));
@@ -1801,6 +1803,38 @@ export const CriteriosProvider = ({ children }) => {
     setMProcesados(false);
   };
 
+  const applySpeechJobResult = (data) => {
+    const exitosos = Array.isArray(data.exitosos) ? data.exitosos : [];
+    const fallidos = Array.isArray(data.fallidos) ? data.fallidos : [];
+
+    setSpeechJob((current) => {
+      const completedJob = {
+        ...current,
+        status: "completed",
+        completedAt: new Date().toISOString(),
+        summary: { successful: exitosos.length, failed: fallidos.length },
+      };
+      window.localStorage.setItem("speech-audio-job", JSON.stringify(completedJob));
+      return completedJob;
+    });
+    setprocessResultSuccess(exitosos);
+    setProcessResultFailed(fallidos);
+    speechResultsLoadedForRef.current = data.jobId || data.job_id || speechJob?.jobId;
+    return { exitosos, fallidos };
+  };
+
+  const loadSpeechJobResults = async (jobId) => {
+    if (!jobId || speechResultsLoadingRef.current) return null;
+    speechResultsLoadingRef.current = true;
+    try {
+      const { data } = await axios.get(`${API_URL}/criteriosEvaluacion/audios/${jobId}`);
+      if (data.status !== "completed") return null;
+      return applySpeechJobResult(data);
+    } finally {
+      speechResultsLoadingRef.current = false;
+    }
+  };
+
   const pollSpeechJob = async (jobId) => {
     if (speechPollingRef.current) return;
     speechPollingRef.current = true;
@@ -1809,22 +1843,12 @@ export const CriteriosProvider = ({ children }) => {
         await new Promise((resolve) => setTimeout(resolve, 2500));
         const { data } = await axios.get(`${API_URL}/criteriosEvaluacion/audios/${jobId}`);
         if (data.status === "completed") {
-          setSpeechJob((current) => {
-            const completedJob = {
-              ...current,
-              status: "completed",
-              completedAt: new Date().toISOString(),
-              summary: {
-                successful: (data.exitosos || []).length,
-                failed: (data.fallidos || []).length,
-              },
-            };
-            window.localStorage.setItem("speech-audio-job", JSON.stringify(completedJob));
-            return completedJob;
-          });
-          setprocessResultSuccess(data.exitosos || []);
-          setProcessResultFailed(data.fallidos || []);
-          toast.success("El procesamiento del archivo ha finalizado. Ya puedes revisar los resultados.");
+          const { exitosos, fallidos } = applySpeechJobResult(data);
+          if (exitosos.length > 0) {
+            toast.success("El procesamiento finalizó. Ya puedes revisar los resultados.");
+          } else {
+            toast.warning(`El procesamiento finalizó con ${fallidos.length} incidencia${fallidos.length === 1 ? "" : "s"}.`);
+          }
           return;
         }
         if (data.status === "failed") {
@@ -1854,6 +1878,20 @@ export const CriteriosProvider = ({ children }) => {
   useEffect(() => {
     if (speechJob?.jobId && !["completed", "failed"].includes(speechJob.status)) pollSpeechJob(speechJob.jobId);
   }, [speechJob?.jobId]);
+
+  // Al volver a esta vista, el trabajo queda guardado pero no sus transcripciones.
+  // Se recupera la respuesta real antes de habilitar la revisión.
+  useEffect(() => {
+    if (
+      speechJob?.status !== "completed" ||
+      !speechJob.jobId ||
+      speechResultsLoadedForRef.current === speechJob.jobId
+    ) return;
+
+    loadSpeechJobResults(speechJob.jobId).catch((error) => {
+      console.error("No se pudieron recuperar los resultados del lote", error);
+    });
+  }, [speechJob?.jobId, speechJob?.status]);
 
   // Encola el ZIP. El procesamiento y sus consultas no bloquean la interfaz.
   const sendAudiosProcess = async () => {
@@ -1892,6 +1930,9 @@ export const CriteriosProvider = ({ children }) => {
         audioCount: archivos.length,
         submittedAt: new Date().toISOString(),
       };
+      speechResultsLoadedForRef.current = null;
+      setprocessResultSuccess([]);
+      setProcessResultFailed([]);
       saveSpeechJob(nextJob);
       toast.success("Archivo recibido. El avance estará disponible en esta pantalla.");
       setArchivos([]);
@@ -1905,9 +1946,28 @@ export const CriteriosProvider = ({ children }) => {
     }
   };
 
-  const openMVerCalificacion = () => {
-    if (processResultSucces.length === 0) {
-      toast.info("No se han procesado audios");
+  const openMVerCalificacion = async () => {
+    let exitosos = processResultSucces;
+    let fallidos = processResultFailed;
+
+    if (
+      speechJob?.status === "completed" &&
+      speechJob?.jobId &&
+      speechResultsLoadedForRef.current !== speechJob.jobId
+    ) {
+      try {
+        const result = await loadSpeechJobResults(speechJob.jobId);
+        exitosos = result?.exitosos || [];
+        fallidos = result?.fallidos || [];
+      } catch (error) {
+        console.error("No se pudieron cargar los resultados", error);
+        toast.error("No se pudieron cargar los resultados. Inténtalo nuevamente.");
+        return;
+      }
+    }
+
+    if (exitosos.length === 0 && fallidos.length === 0) {
+      toast.info("Aún no hay resultados disponibles.");
       return;
     }
 
