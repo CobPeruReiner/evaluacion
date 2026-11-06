@@ -11,3 +11,6 @@ python-dotenv
 mysql-connector-python
 matplotlib==3.8.4
 celery[redis]==5.4.0
+# Kombu instalado por Celery usa Redis como broker y requiere redis-py >= 6.1.
+# Se fija el rango para que las reconstrucciones no resuelvan una versión incompatible.
+redis>=6.1,<7
