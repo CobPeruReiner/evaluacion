@@ -1136,8 +1136,11 @@ const finalizeSpeechJob = async (jobId, result) => {
   try {
     lock = await fs.promises.open(lockPath, "wx");
   } catch (error) {
-    if (error.code === "EEXIST") return null;
-    throw error;
+    if (error.code !== "EEXIST") throw error;
+    // Un candado de un proceso que murió a mitad de la copia bloquearía el lote para siempre.
+    const stat = await fs.promises.stat(lockPath).catch(() => null);
+    if (stat && Date.now() - stat.mtimeMs > 10 * 60 * 1000) await fs.promises.unlink(lockPath).catch(() => {});
+    return null;
   }
   try {
   const context = JSON.parse(await fs.promises.readFile(path.join(jobDir, "node-context.json"), "utf8"));
@@ -1154,13 +1157,48 @@ const finalizeSpeechJob = async (jobId, result) => {
     exitosos.push({ ...item, audio_path: undefined, metadatos: { ...item.metadatos, idCartera: context.idCartera, color: context.color, full_name } });
   }
   const completed = { ok: true, exitosos, fallidos: result.fallidos || [], duracion_total: result.duracion_total };
-  await fs.promises.writeFile(path.join(resultDir, `resultados_${context.nombreBase}.json`), JSON.stringify({ usuario: context.usuario, ...completed }, null, 2), "utf8");
+  // Un archivo por lote: dos ZIP de la misma cartera y fecha ya no se pisan entre sí.
+  await fs.promises.writeFile(path.join(resultDir, `resultados_${context.nombreBase}_${jobId.slice(0, 8)}.json`), JSON.stringify({ usuario: context.usuario, ...completed }, null, 2), "utf8");
   await fs.promises.writeFile(marker, JSON.stringify(completed), "utf8");
   return completed;
   } finally {
     await lock.close();
     await fs.promises.unlink(lockPath).catch(() => {});
   }
+};
+
+// Publica en la auditoría los lotes que el worker terminó aunque nadie tenga abierta la pantalla
+// de Procesamiento (antes la copia solo ocurría cuando el navegador consultaba el estado).
+let revisandoLotes = false;
+const lotesConError = new Set(); // no reintentar cada 30 s un lote roto (p. ej. sin audios); se limpia al reiniciar
+const finalizarLotesPendientes = async () => {
+  if (revisandoLotes) return;
+  revisandoLotes = true;
+  try {
+    const dirs = await fs.promises.readdir(speechJobsDir, { withFileTypes: true }).catch(() => []);
+    for (const dir of dirs) {
+      if (!dir.isDirectory() || !/^[a-f0-9-]{36}$/i.test(dir.name) || lotesConError.has(dir.name)) continue;
+      const jobDir = path.join(speechJobsDir, dir.name);
+      const resultPath = path.join(jobDir, "result.json");
+      if (fs.existsSync(path.join(jobDir, "node-result.json")) || !fs.existsSync(path.join(jobDir, "node-context.json"))) continue;
+      const stat = await fs.promises.stat(resultPath).catch(() => null);
+      if (!stat || Date.now() - stat.mtimeMs < 5000) continue; // el worker aún puede estar escribiéndolo
+      try {
+        const result = JSON.parse(await fs.promises.readFile(resultPath, "utf8"));
+        if (await finalizeSpeechJob(dir.name, result)) console.log(`Lote ${dir.name} publicado en auditoría.`);
+      } catch (error) {
+        lotesConError.add(dir.name);
+        console.error(`No se pudo publicar el lote ${dir.name}:`, error.message);
+      }
+    }
+  } finally {
+    revisandoLotes = false;
+  }
+};
+
+const iniciarFinalizadorLotes = (intervaloMs = 30000) => {
+  finalizarLotesPendientes();
+  return setInterval(finalizarLotesPendientes, intervaloMs).unref();
 };
 
 const getSpeechJob = async (req, res) => {
@@ -1288,7 +1326,8 @@ const getAllCarteras = async (req, res) => {
 const obtenerDetalleEvaluacion = async (req, res) => {
   const { archivo } = req.query;
 
-  if (!archivo) {
+  // Solo un nombre de archivo de resultados: impide leer otras rutas con "../".
+  if (!archivo || archivo !== path.basename(archivo) || !/^resultados_[\w-]+\.json$/.test(archivo)) {
     return res.status(400).json({
       ok: false,
       msg: "Debe proporcionar el nombre del archivo",
@@ -1361,6 +1400,7 @@ module.exports = {
   getAllEfectos,
   enqueueSpeechJob,
   getSpeechJob,
+  iniciarFinalizadorLotes,
   obtenerResultadosPorFechaCartera,
   getAllCarteras,
   // obtenerFechasDisponibles,
