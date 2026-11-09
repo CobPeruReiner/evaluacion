@@ -1080,6 +1080,9 @@ const getAllEfectos = async (req, res) => {
 
 const speechJobsDir = process.env.SPEECH_JOBS_DIR || "/data/jobs";
 
+// Fecha de hoy en Perú (YYYY-MM-DD), sin depender de la zona horaria del contenedor (suele ser UTC).
+const fechaPeru = (fecha = new Date()) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima" }).format(fecha);
+
 const enqueueSpeechJob = async (req, res) => {
   const discardUpload = () => req.file && fs.promises.unlink(req.file.path).catch(() => {});
   if (!req.file || path.extname(req.file.originalname).toLowerCase() !== ".zip") {
@@ -1112,7 +1115,7 @@ const enqueueSpeechJob = async (req, res) => {
     if (!data?.job_id) throw new Error("La cola no devolvió un identificador de trabajo.");
     const jobDir = path.join(speechJobsDir, data.job_id);
     await fs.promises.mkdir(jobDir, { recursive: true });
-    await fs.promises.writeFile(path.join(jobDir, "node-context.json"), JSON.stringify({ idCartera, fecha, nombreBase, usuario: req.body.usuario || null, color: obtenerColorPorIdCartera(idCartera) }), "utf8");
+    await fs.promises.writeFile(path.join(jobDir, "node-context.json"), JSON.stringify({ idCartera, fecha, fechaCarga: fechaPeru(), nombreBase, usuario: req.body.usuario || null, color: obtenerColorPorIdCartera(idCartera) }), "utf8");
     await fs.promises.unlink(req.file.path).catch(() => {});
     return res.status(202).json({ ok: true, jobId: data.job_id, status: "queued" });
   } catch (error) {
@@ -1145,7 +1148,10 @@ const finalizeSpeechJob = async (jobId, result) => {
   try {
   const context = JSON.parse(await fs.promises.readFile(path.join(jobDir, "node-context.json"), "utf8"));
   const outputDir = esProduccion ? "/app/server/audios" : path.join(__dirname, "../audios");
-  const resultDir = esProduccion ? path.join("/app/server/resultados", context.fecha) : path.resolve(__dirname, "../resultados", context.fecha);
+  // La auditoría se busca por el día en que se cargó el lote, no por la fecha del nombre del ZIP.
+  // Los lotes encolados antes de este cambio no traen fechaCarga y siguen usando la del nombre.
+  const carpetaFecha = context.fechaCarga || context.fecha;
+  const resultDir = esProduccion ? path.join("/app/server/resultados", carpetaFecha) : path.resolve(__dirname, "../resultados", carpetaFecha);
   await fs.promises.mkdir(outputDir, { recursive: true });
   await fs.promises.mkdir(resultDir, { recursive: true });
   const dbConexion = obtenerConexionPorColor(context.color);
