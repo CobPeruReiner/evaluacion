@@ -1650,7 +1650,6 @@ export const CriteriosProvider = ({ children }) => {
   const refMVerCalificacion = useRef(null);
   const [mVerCalificacion, setMVerCalificacion] = useState(false);
 
-  const [accionSeleccionada, setAccionSeleccionada] = useState("match");
 
   // Formulario
   const [formAuditoriaAudios, setFormAuditoriaAudios] = useState({
@@ -1675,10 +1674,7 @@ export const CriteriosProvider = ({ children }) => {
   const [loadingEvaluacionDetail, setLoadingEvaluacionDetail] = useState(false);
   const [evaluacionDetail, setEvaluacionDetail] = useState([]);
 
-  const calificacionRef = useRef(null);
   const [expandedAudio, setExpandedAudio] = useState(null);
-  const [showDetail, setShowDetail] = useState({});
-  const [expandedBloques, setExpandedBloques] = useState({});
 
   // PAGINADO
   const [audiosPaginated, setAudiosPaginated] = useState([]);
@@ -1986,12 +1982,6 @@ export const CriteriosProvider = ({ children }) => {
     setAudioActivo(index === audioActivo ? null : index);
   };
 
-  const seleccionarAccion = (accion) => {
-    setAccionSeleccionada(accion);
-
-    // TODO: Cagar las fichas que hicieron match con lo grabado en BD
-  };
-
   // Mostrar efectos
   const openSEfectoAudios = () => setSelectEfecto(!selectEfecto);
   useOutsideClick(sEfectoRef, () => setSelectEfecto(false));
@@ -2106,35 +2096,11 @@ export const CriteriosProvider = ({ children }) => {
     // console.log("Abriendo toggle audio");
 
     setExpandedAudio(expandedAudio === index ? null : index);
-    setShowDetail({});
-  };
-
-  const toggleDetail = (index) => {
-    console.log("Abriendo toggle detail");
-
-    setShowDetail((prev) => ({
-      ...prev,
-      [index]: !prev[index],
-    }));
   };
 
   const resetAuditoriaUIState = () => {
     setExpandedAudio(null);
-    setShowDetail({});
-    setExpandedBloques({});
   };
-
-  const toggleBloque = (audioIndex, bloqueKey) => {
-    setExpandedBloques((prev) => ({
-      ...prev,
-      [audioIndex]: {
-        ...prev[audioIndex],
-        [bloqueKey]: !prev[audioIndex]?.[bloqueKey],
-      },
-    }));
-  };
-
-  useOutsideClick(calificacionRef, resetAuditoriaUIState);
 
   // =============== PAGINACION AUDIOS EVALUADOS ===============
 
@@ -2768,8 +2734,6 @@ export const CriteriosProvider = ({ children }) => {
         obtenerDetalleEvaluacion,
         expandedAudio,
         toggleAudio,
-        showDetail,
-        toggleDetail,
         resetAuditoriaUIState,
         searchTelefono,
         handleInputSearchTelefono,
@@ -2795,15 +2759,10 @@ export const CriteriosProvider = ({ children }) => {
         refMVerCalificacion,
         openMVerCalificacion,
         closeMVerCalificacion,
-        accionSeleccionada,
-        seleccionarAccion,
         audioInstance,
         isPlaying,
         audioEnReproduccion,
         reproducirAudio,
-        calificacionRef,
-        expandedBloques,
-        toggleBloque,
         duraciones,
         setDuracionAudio,
 

@@ -39,9 +39,19 @@ async def create_job(
     file: UploadFile = File(...),
     version_roles: str = Form("v2"),
     id_cartera: str = Form(...),
+    palabras_clave: str = Form("[]"),
 ):
     if not file.filename or not file.filename.lower().endswith(".zip"):
         raise HTTPException(status_code=400, detail="Debes enviar un archivo ZIP válido.")
+    # Palabras clave activas de la cartera, enviadas por el server Node: [{categoria, termino}].
+    try:
+        terminos = [
+            {"categoria": str(t.get("categoria") or "GENERAL")[:60], "termino": str(t["termino"])[:120]}
+            for t in json.loads(palabras_clave or "[]")
+            if isinstance(t, dict) and t.get("termino")
+        ][:500]
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=400, detail="palabras_clave debe ser una lista JSON.")
     job_id = str(uuid.uuid4())
     job_dir = JOB_STORAGE / job_id
     job_dir.mkdir(parents=True, exist_ok=False)
@@ -51,7 +61,7 @@ async def create_job(
         # El identificador del lote también es el identificador de Celery. Así el
         # cliente puede consultar un único ID y no queda en "pending" tras acabar.
         process_zip_task.apply_async(
-            args=(job_id, str(zip_path), id_cartera, version_roles), task_id=job_id
+            args=(job_id, str(zip_path), id_cartera, version_roles, terminos), task_id=job_id
         )
         return {"ok": True, "job_id": job_id, "status": "queued"}
     except Exception:

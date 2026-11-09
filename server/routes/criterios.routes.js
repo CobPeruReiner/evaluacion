@@ -38,6 +38,7 @@ const {
   validarPesoMultiple,
 } = require("../middlewares/Criterios/validarPesoMultiple");
 const { listModelos, getModelo, createModelo, updateModelo, deactivateModelo } = require("../controllers/modelosEvaluacion.controller");
+const { getAllPalabrasClave, createPalabraClave, updatePalabraClave } = require("../controllers/palabrasClave.controller");
 
 const upload = multer({
   dest: path.join(__dirname, "..", "uploads"),
@@ -124,6 +125,11 @@ criteriosEvaluacionRouter.put("/gestiones/update", updateTipoGestion);
 criteriosEvaluacionRouter.get("/llamadas", getAllTiposLlamada);
 criteriosEvaluacionRouter.post("/llamadas/create", createTipoLlamada);
 criteriosEvaluacionRouter.put("/llamadas/update", updateTipoLlamada);
+
+// PALABRAS CLAVE (speech analytics)
+criteriosEvaluacionRouter.get("/palabras-clave", getAllPalabrasClave);
+criteriosEvaluacionRouter.post("/palabras-clave/create", createPalabraClave);
+criteriosEvaluacionRouter.put("/palabras-clave/update", updatePalabraClave);
 
 // EFECTOS
 criteriosEvaluacionRouter.get("/efectos", getAllEfectos);

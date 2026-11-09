@@ -7,6 +7,7 @@ const path = require("path");
 const { obtenerNombreAgente } = require("../utils/obtener-nombre-agente");
 const { obtenerConexionPorColor } = require("../utils/conexiones-vicidial");
 const { obtenerColorPorIdCartera } = require("../utils/obtener-color");
+const { terminosActivos } = require("./palabrasClave.controller");
 
 // Dentro de Docker el nombre del servicio evita depender de puertos publicados.
 const servidorPython = process.env.PATH_SERVAPLICACIONES || "fastapi_backend";
@@ -1100,6 +1101,12 @@ const enqueueSpeechJob = async (req, res) => {
   });
   form.append("id_cartera", idCartera);
   form.append("version_roles", "v2");
+  // Palabras clave activas de la cartera (archivo JSON del volumen compartido, sin BD).
+  try {
+    form.append("palabras_clave", JSON.stringify(await terminosActivos(idCartera)));
+  } catch (error) {
+    console.error("No se pudieron leer las palabras clave; el lote se procesa sin ellas:", error.message);
+  }
   try {
     const { data } = await axios.post(`http://${servidorPython}:8000/api/v1/jobs`, form, { headers: form.getHeaders(), maxBodyLength: Infinity, maxContentLength: Infinity, timeout: 30000 });
     if (!data?.job_id) throw new Error("La cola no devolvió un identificador de trabajo.");

@@ -5,7 +5,8 @@ from app.celery_app import celery_app
 
 
 @celery_app.task(bind=True, name="speech.process_zip")
-def process_zip_task(self, job_id: str, zip_path: str, id_cartera: str, version_roles: str):
+def process_zip_task(self, job_id: str, zip_path: str, id_cartera: str, version_roles: str,
+                     palabras_clave: list | None = None):
     from app.services.procesamiento_sync import procesar_archivo_sync
 
     job_dir = Path(os.getenv("JOB_STORAGE", "/data/jobs")) / job_id
@@ -23,6 +24,7 @@ def process_zip_task(self, job_id: str, zip_path: str, id_cartera: str, version_
         version_roles=version_roles,
         id_cartera=id_cartera,
         progress=report,
+        terminos_clave=palabras_clave or [],
     )
     result_path = job_dir / "result.json"
     result_path.write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")

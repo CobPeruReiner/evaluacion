@@ -10,6 +10,7 @@ import { InputText } from "primereact/inputtext";
 import { TabPanel, TabView } from "primereact/tabview";
 import { Tag } from "primereact/tag";
 import { toast } from "sonner";
+import { PalabrasClave } from "./PalabrasClave";
 
 const catalogs = [
   {
@@ -78,14 +79,15 @@ export function CatalogosEvaluacion({ carteras = [] }) {
           </p>
           <h2 className="mt-1 text-xl font-bold text-stone-900">Opciones de evaluación</h2>
           <p className="mt-1 text-sm text-stone-500">
-            Administra los motivos y tipos que el monitor podrá seleccionar al registrar una evaluación.
+            Administra los motivos y tipos que el monitor podrá seleccionar al registrar una evaluación, y las
+            palabras clave que el speech analytics marca en cada llamada.
           </p>
         </div>
       </div>
       <TabView activeIndex={activeIndex} onTabChange={(event) => setActiveIndex(event.index)}>
         {catalogs.map((catalog) => (
           <TabPanel key={catalog.key} header={catalog.title} leftIcon={`${catalog.icon} mr-2`}>
-            {catalog.key === config.key && (
+            {catalog.key === config?.key && (
               <CatalogTable
                 key={`${config.key}-${refresh}`}
                 api={api}
@@ -96,6 +98,9 @@ export function CatalogosEvaluacion({ carteras = [] }) {
             )}
           </TabPanel>
         ))}
+        <TabPanel header="Palabras clave" leftIcon="pi pi-tags mr-2">
+          {activeIndex === catalogs.length && <PalabrasClave api={api} carteras={carteras} />}
+        </TabPanel>
       </TabView>
     </section>
   );

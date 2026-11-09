@@ -23,11 +23,3 @@ def get_database_connection():
         database=settings.DB_NAME,
     )
 
-
-# Compatibilidad temporal: ambos nombres comparten la única configuración.
-def SyS_Calidad():
-    return get_database_connection()
-
-
-def SyS_Sistemagest():
-    return get_database_connection()

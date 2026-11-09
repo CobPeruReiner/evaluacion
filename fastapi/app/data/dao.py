@@ -1,8 +1,12 @@
+"""Lectura de la plantilla de evaluación y catálogos (CALIDAD.* / SISTEMAGEST.*)."""
+
+
 class ConfiguracionEvaluacionError(ValueError):
     """La plantilla activa no permite producir una calificación confiable."""
 
 
 def obtener_tipo_cartera(conn, id_cartera: str) -> str:
+    """'castigo' | 'vigente' según SISTEMAGEST (tipo_cartera.id = 3 es castigo)."""
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute(
@@ -24,7 +28,11 @@ def obtener_tipo_cartera(conn, id_cartera: str) -> str:
 
 
 def obtener_configuracion_evaluacion(conn, id_cartera: str) -> dict:
-    """Carga una única plantilla activa y todo su árbol en dos consultas."""
+    """Carga la única plantilla activa de la cartera y todo su árbol, validado.
+
+    {id_modelo, nombre_modelo, items: [{id_item, nombre, peso, criterios: [
+        {id_criterio, nombre, peso, acciones: [{id_accion, nombre, peso}]}]}]}
+    """
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute(
@@ -62,85 +70,55 @@ def obtener_configuracion_evaluacion(conn, id_cartera: str) -> dict:
         rows = cursor.fetchall()
     finally:
         cursor.close()
+    return construir_arbol(model["ID_MODELO"], model["NOMBRE"], rows)
 
+
+def construir_arbol(id_modelo, nombre_modelo, rows: list) -> dict:
+    """Árbol validado a partir de las filas planas del JOIN (separado para probarlo sin BD)."""
     if not rows:
-        raise ConfiguracionEvaluacionError(f"La plantilla {model['ID_MODELO']} no tiene ítems activos.")
-
-    items, criterios_por_item, acciones_por_criterio = {}, {}, {}
-    criterios_sin_acciones = set()
+        raise ConfiguracionEvaluacionError(f"La plantilla {id_modelo} no tiene ítems activos.")
+    items, idx_items, idx_crit = [], {}, {}
+    sin_acciones = set()
     for row in rows:
         item_id = row["ID_ITEM"]
-        if item_id not in items:
-            items[item_id] = {
-                "ID_ITEM": item_id,
-                "NOMBRE_ITEM": row["NOMBRE_ITEM"],
-                "PESO_ITEM": float(row["PESO_ITEM"] or 0),
-            }
-            criterios_por_item[item_id] = []
+        if item_id not in idx_items:
+            idx_items[item_id] = {"id_item": item_id, "nombre": row["NOMBRE_ITEM"],
+                                  "peso": float(row["PESO_ITEM"] or 0), "criterios": []}
+            items.append(idx_items[item_id])
         criterio_id = row["ID_CRITERIO"]
         if criterio_id is None:
             continue
-        criterios = criterios_por_item[item_id]
-        if not any(c["ID_CRITERIO"] == criterio_id for c in criterios):
-            criterios.append({
-                "ID_CRITERIO": criterio_id,
-                "NOMBRE": row["NOMBRE_CRITERIO"],
-                "PESO": float(row["PESO_CRITERIO"] or 0),
-                "ID_ITEM": item_id,
-            })
-            acciones_por_criterio[criterio_id] = []
+        if criterio_id not in idx_crit:
+            idx_crit[criterio_id] = {"id_criterio": criterio_id, "nombre": row["NOMBRE_CRITERIO"],
+                                     "peso": float(row["PESO_CRITERIO"] or 0), "acciones": []}
+            idx_items[item_id]["criterios"].append(idx_crit[criterio_id])
         if row["ID_ACCION"] is None:
-            criterios_sin_acciones.add(criterio_id)
+            sin_acciones.add(criterio_id)
             continue
-        acciones_por_criterio[criterio_id].append({
-            "ID_ACCION": row["ID_ACCION"],
-            "NOMBRE": row["NOMBRE_ACCION"],
-            "PESO": float(row["PESO_ACCION"] or 0),
-            "ID_CRITERIO": criterio_id,
-        })
+        idx_crit[criterio_id]["acciones"].append({"id_accion": row["ID_ACCION"], "nombre": row["NOMBRE_ACCION"],
+                                                  "peso": float(row["PESO_ACCION"] or 0)})
 
-    items_sin_criterios = [item_id for item_id, criterios in criterios_por_item.items() if not criterios]
+    items_sin_criterios = [str(i["id_item"]) for i in items if not i["criterios"]]
     if items_sin_criterios:
         raise ConfiguracionEvaluacionError(
-            "La plantilla tiene ítems sin criterios activos: " + ", ".join(map(str, items_sin_criterios))
-        )
-    if criterios_sin_acciones:
+            "La plantilla tiene ítems sin criterios activos: " + ", ".join(items_sin_criterios))
+    if sin_acciones:
         raise ConfiguracionEvaluacionError(
-            "La plantilla tiene criterios sin acciones activas: " + ", ".join(map(str, sorted(criterios_sin_acciones)))
-        )
-    return {
-        "id_modelo": model["ID_MODELO"],
-        "nombre_modelo": model["NOMBRE"],
-        "items": list(items.values()),
-        "criterios_por_item": criterios_por_item,
-        "acciones_por_criterio": acciones_por_criterio,
-    }
+            "La plantilla tiene criterios sin acciones activas: " + ", ".join(map(str, sorted(sin_acciones))))
+    if sum(i["peso"] for i in items) <= 0:
+        raise ConfiguracionEvaluacionError("La plantilla activa no tiene pesos válidos en sus ítems.")
+    return {"id_modelo": id_modelo, "nombre_modelo": nombre_modelo, "items": items}
 
 
-def obtener_criterios_por_item(conn, id_item: int) -> list:
+def obtener_motivos_no_pago(conn, id_cartera: str) -> list:
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute(
-            """SELECT ID_CRITERIO, NOMBRE, PESO, ID_ITEM
-               FROM CALIDAD.CRITERIO
-               WHERE ID_ITEM = %s AND ESTADO = 1
-               ORDER BY ID_CRITERIO""",
-            (id_item,),
-        )
-        return cursor.fetchall()
-    finally:
-        cursor.close()
-
-
-def obtener_acciones_por_criterio(conn, id_criterio: int) -> list:
-    cursor = conn.cursor(dictionary=True)
-    try:
-        cursor.execute(
-            """SELECT ID_ACCION, NOMBRE, PESO, ID_CRITERIO
-               FROM CALIDAD.ACCION_CRITERIO
-               WHERE ID_CRITERIO = %s AND ESTADO = 1
-               ORDER BY ID_ACCION""",
-            (id_criterio,),
+            """SELECT ID_MOTIVO_NO_PAGO AS id, NOMBRE_MOTIVO_NO_PAGO AS nombre
+               FROM CALIDAD.MOTIVO_NO_PAGO
+               WHERE ID_CARTERA = %s AND ID_ESTADO = 1
+               ORDER BY NOMBRE_MOTIVO_NO_PAGO""",
+            (id_cartera,),
         )
         return cursor.fetchall()
     finally:

@@ -33,8 +33,8 @@ const getJobPresentation = (job) => {
   }
 
   const stage = (job?.progress?.stage || "").toLowerCase();
-  if (stage.includes("evaluando")) return { index: 4, title: "Evaluando la llamada", description: "Estamos aplicando los criterios de evaluación definidos.", tone: "processing" };
-  if (stage.includes("diarizando") || stage.includes("alineando")) return { index: 3, title: "Identificando participantes", description: "Estamos organizando las intervenciones de la llamada.", tone: "processing" };
+  if (stage.includes("evaluando")) return { index: 4, title: "Evaluando la llamada", description: "El agente está aplicando los criterios de la plantilla activa de la cartera.", tone: "processing" };
+  if (stage.includes("diarizando") || stage.includes("alineando") || stage.includes("identificando")) return { index: 3, title: "Identificando participantes", description: "Estamos organizando las intervenciones de la llamada.", tone: "processing" };
   if (stage.includes("transcribiendo") || stage.includes("convirtiendo")) return { index: 2, title: "Transcribiendo el audio", description: "Estamos convirtiendo la conversación en texto.", tone: "processing" };
   if (stage.includes("extrayendo") || job?.status === "started") return { index: 1, title: "Preparando el archivo", description: "Estamos verificando los audios contenidos en el archivo.", tone: "processing" };
   return { index: 1, title: "Archivo en espera", description: "El archivo fue recibido y será procesado en cuanto esté disponible.", tone: "processing" };

@@ -127,3 +127,24 @@ def etiquetar_roles_v2(transcripcion: list) -> list:
         seg["speaker"] = roles_asignados.get(spk, "IGNORADO")
 
     return transcripcion
+
+
+def asignar_roles(transcripcion: list) -> tuple[list, str]:
+    """Etiqueta cada segmento como asesor ('000') o cliente ('001').
+
+    Primero el agente IA decide qué hablante del diarizador es el asesor (por el
+    contenido de sus frases); si no está configurado o falla, se usa la heurística
+    léxica `etiquetar_roles_v2`. Devuelve (transcripción, método).
+    """
+    from app.core import agente
+
+    if agente.configurado():
+        try:
+            asesor = agente.identificar_asesor(transcripcion)
+            if asesor:
+                for seg in transcripcion:
+                    seg["speaker"] = "000" if seg.get("speaker") == asesor else "001"
+                return transcripcion, "agente_ia"
+        except agente.AgenteNoDisponible as error:
+            logger.warning("Roles por agente no disponibles, se usa heurística: %s", error)
+    return etiquetar_roles_v2(transcripcion), "heuristica"

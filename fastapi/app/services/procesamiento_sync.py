@@ -7,8 +7,9 @@ from pathlib import Path
 from typing import Callable
 from app.services.helpers.audio_converter import convertir_a_wav_mono_16k
 from app.services.helpers.transcription import transcribir_audio, alinear_segmentos, obtener_diarizacion, asignar_hablantes
-from app.services.helpers.roles_classifier import etiquetar_roles_v2
-from app.services.evaluator import evaluar_llamada
+from app.services.helpers.roles_classifier import asignar_roles
+from app.services.evaluator import cargar_contexto, evaluar_llamada
+from app.core import palabras_clave
 
 MAX_FILES = int(os.getenv("MAX_AUDIO_FILES_PER_JOB", "250"))
 MAX_UNCOMPRESSED_BYTES = int(os.getenv("MAX_UNCOMPRESSED_BYTES", str(4 * 1024 * 1024 * 1024)))
@@ -56,7 +57,23 @@ def _metadata(filename: str) -> dict:
     return {"fecha": "", "hora": "", "telefono": "", "campaña": "", "anexo": ""}
 
 
-def procesar_archivo_sync(zip_path: Path, job_dir: Path, version_roles: str, id_cartera: str, progress: Callable):
+def _transcripcion_con_hablante(segments: list) -> list:
+    """WhisperX deja sin `speaker` los segmentos que no logra solapar con la
+    diarización (frases cortas, solapes). Antes se descartaban y se perdía texto de
+    la llamada: ahora heredan el hablante del segmento vecino más cercano."""
+    transcript = [{"start": s["start"], "end": s["end"], "speaker": s.get("speaker"), "text": s["text"].strip()}
+                  for s in segments if s.get("text", "").strip()]
+    ultimo = next((s["speaker"] for s in transcript if s["speaker"]), None)
+    for seg in transcript:
+        if seg["speaker"]:
+            ultimo = seg["speaker"]
+        else:
+            seg["speaker"] = ultimo
+    return [s for s in transcript if s["speaker"]]
+
+
+def procesar_archivo_sync(zip_path: Path, job_dir: Path, version_roles: str, id_cartera: str, progress: Callable,
+                          terminos_clave: list | None = None):
     started = time.perf_counter()
     source_dir = job_dir / "source"
     work_dir = job_dir / "work"
@@ -68,6 +85,8 @@ def procesar_archivo_sync(zip_path: Path, job_dir: Path, version_roles: str, id_
         progress("Extrayendo audios")
         files = _extract_audio(zip_path, source_dir)
         total = len(files)
+        # Plantilla y catálogos: una sola lectura por lote (solo lectura de CALIDAD).
+        contexto = cargar_contexto(id_cartera, terminos_clave)
         for current, original in enumerate(files, start=1):
             stages = {}
             stage = "Preparando audio"
@@ -97,30 +116,46 @@ def procesar_archivo_sync(zip_path: Path, job_dir: Path, version_roles: str, id_
                 result = asignar_hablantes(result, diarization)
                 stages["alineacion_diarizacion"] = round(time.perf_counter() - step, 3)
 
+                stage = "Identificando asesor y cliente"
+                progress("Identificando asesor y cliente", current, total, original.name)
+                step = time.perf_counter()
+                transcript = _transcripcion_con_hablante(result["segments"])
+                if not transcript:
+                    raise ValueError("La diarización no asignó hablantes a ningún segmento.")
+                transcript, metodo_roles = asignar_roles(transcript)
+                stages["roles"] = round(time.perf_counter() - step, 3)
+
                 stage = "Evaluando criterios"
                 progress("Evaluando criterios", current, total, original.name)
                 step = time.perf_counter()
-                transcript = [{"start": segment["start"], "end": segment["end"], "speaker": segment.get("speaker"), "text": segment["text"]} for segment in result["segments"] if segment.get("speaker")]
-                transcript = etiquetar_roles_v2(transcript)
+                metadatos = _metadata(original.name)
+                hallazgos = palabras_clave.detectar(transcript, contexto["palabras"])
                 try:
-                    evaluation = evaluar_llamada(transcript, id_cartera)
+                    evaluation = evaluar_llamada(transcript, contexto, metadatos["fecha"], hallazgos)
                 except Exception as error:
                     # Transcribir y diarizar son resultados válidos por sí mismos.
-                    # Una plantilla mal configurada no debe descartar el audio.
-                    logger.exception(
-                        "No se pudo calificar '%s'; se conservará la transcripción.",
-                        original.name,
-                    )
+                    logger.exception("No se pudo calificar '%s'; se conservará la transcripción.", original.name)
                     evaluation = {
+                        "version": 2,
                         "estado": "pendiente",
                         "mensaje": "Transcripción disponible; la calificación automática no pudo aplicarse.",
-                        "detalle": str(error) or "Error de configuración de evaluación.",
+                        "detalle": str(error) or "Error interno de evaluación.",
+                        "palabras_clave": palabras_clave.resumen(hallazgos),
                     }
                 stages["evaluacion"] = round(time.perf_counter() - step, 3)
 
                 stored_audio = audio_dir / original.name
                 shutil.copy2(original, stored_audio)
-                successful.append({"archivo": original.name, "audio_path": f"audio/{stored_audio.name}", "transcripcion": transcript, "metadatos": _metadata(original.name), "evaluacion": evaluation, "timings": stages})
+                successful.append({
+                    "archivo": original.name,
+                    "audio_path": f"audio/{stored_audio.name}",
+                    "transcripcion": transcript,
+                    "roles_metodo": metodo_roles,
+                    "palabras_clave": hallazgos,
+                    "metadatos": metadatos,
+                    "evaluacion": evaluation,
+                    "timings": stages,
+                })
             except Exception as error:
                 # El resultado conserva un mensaje breve para la interfaz y el
                 # registro del worker mantiene el traceback para soporte.
