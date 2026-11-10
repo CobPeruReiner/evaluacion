@@ -128,17 +128,19 @@ export function EvaluacionAgente({ evaluacion, transcripcion, onSeek, compacto =
       <div className="flex flex-col gap-2">
         {(evaluacion.items || []).map((it) => (
           <div key={it.id_item} className="overflow-hidden rounded-xl border border-stone-200 bg-white">
-            <button type="button" onClick={() => toggle(it.id_item)}
-              className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-stone-50">
+            <button type="button" onClick={() => toggle(it.id_item)} aria-expanded={abierto(it)}
+              className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors duration-200 hover:bg-stone-50">
               <span className="flex-1 text-sm font-bold uppercase tracking-wide text-brand-dark">{it.item}</span>
               <span className="hidden h-1.5 w-32 overflow-hidden rounded-full bg-stone-100 sm:block">
                 <span className="block h-full rounded-full" style={{ width: `${it.cumplimiento}%`, background: colorPuntaje(it.cumplimiento) }} />
               </span>
               <span className="w-12 text-right text-sm font-bold" style={{ color: colorPuntaje(it.cumplimiento) }}>{Math.round(it.cumplimiento)}%</span>
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${claseResultado(it.resultado)}`}>{it.resultado}</span>
-              <i className={`pi ${abierto(it) ? "pi-chevron-up" : "pi-chevron-down"} text-xs text-stone-400`} />
+              <i className={`pi pi-chevron-down text-xs text-stone-400 transition-transform duration-300 ${abierto(it) ? "rotate-180" : ""}`} />
             </button>
-            {abierto(it) && (
+            {/* La fila de grid pasa de 0fr a 1fr: anima la altura real del contenido sin medirla. */}
+            <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${abierto(it) ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+              <div className="min-h-0 overflow-hidden" inert={abierto(it) ? undefined : ""}>
               <div className="divide-y divide-stone-100 border-t border-stone-100">
                 {it.criterios.map((c) => (
                   <div key={c.id_criterio} className="flex gap-3 px-4 py-3">
@@ -155,7 +157,8 @@ export function EvaluacionAgente({ evaluacion, transcripcion, onSeek, compacto =
                   </div>
                 ))}
               </div>
-            )}
+              </div>
+            </div>
           </div>
         ))}
       </div>

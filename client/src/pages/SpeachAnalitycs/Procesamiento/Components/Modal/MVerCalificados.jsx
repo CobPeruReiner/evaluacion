@@ -1,4 +1,5 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import moment from "moment";
 import { CriteriosContext } from "../../../../../Context/Criterios/ItemContext";
 import { Loader } from "../../../../../components/Loader";
@@ -28,6 +29,24 @@ export const MVerCalificados = () => {
   } = useContext(CriteriosContext);
   const [pestana, setPestana] = useState("calificacion");
 
+  // Con el modal abierto: la página de fondo no se desplaza (se compensa el ancho de la barra
+  // de scroll para que la vista no salte) y Esc lo cierra.
+  useEffect(() => {
+    if (!mVerCalificacion) return undefined;
+    const html = document.documentElement;
+    const anchoBarra = window.innerWidth - html.clientWidth;
+    const previo = { overflow: html.style.overflow, paddingRight: document.body.style.paddingRight };
+    html.style.overflow = "hidden";
+    if (anchoBarra > 0) document.body.style.paddingRight = `${anchoBarra}px`;
+    const alPresionar = (e) => { if (e.key === "Escape") closeMVerCalificacion(); };
+    window.addEventListener("keydown", alPresionar);
+    return () => {
+      html.style.overflow = previo.overflow;
+      document.body.style.paddingRight = previo.paddingRight;
+      window.removeEventListener("keydown", alPresionar);
+    };
+  }, [mVerCalificacion]);
+
   if (!processResultSucces || !processResultFailed) return null;
 
   const rawFecha = processResultSucces[0]?.metadatos?.fecha;
@@ -39,11 +58,18 @@ export const MVerCalificados = () => {
     ? evaluados.reduce((s, r) => s + Number(r.cumplimiento_total || 0), 0) / evaluados.length : null;
   const promesas = processResultSucces.filter((i) => i.evaluacion?.promesa_pago?.hay_promesa).length;
 
-  return (
-    <div className={`fixed inset-0 z-[202] flex items-center justify-center bg-[rgba(0,0,0,0.4)] transition-all duration-500 ${mVerCalificacion ? "visible" : "invisible"}`}>
+  // Portal a <body> y z-index sobre el menú lateral (1000) y su botón (1102): cubre toda la pantalla.
+  return createPortal(
+    <div
+      aria-hidden={!mVerCalificacion}
+      className={`fixed inset-0 z-[1200] flex items-center justify-center bg-stone-950/45 p-3 backdrop-blur-[2px] transition-opacity duration-300 sm:p-6 ${mVerCalificacion ? "visible opacity-100" : "pointer-events-none invisible opacity-0"}`}
+    >
       <div
         ref={refMVerCalificacion}
-        className={`flex h-[88%] max-h-[92vh] w-[92%] max-w-7xl flex-col gap-3 rounded-2xl border border-stone-200 bg-white p-5 shadow-lg transition-transform duration-500 ${mVerCalificacion ? "translate-y-0" : "translate-y-[600%]"}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Resultados del procesamiento"
+        className={`flex h-full max-h-[920px] w-full max-w-7xl flex-col gap-3 overflow-hidden rounded-2xl border border-stone-200 bg-white p-4 shadow-2xl transition-[transform,opacity] duration-300 ease-out sm:p-5 ${mVerCalificacion ? "translate-y-0 scale-100 opacity-100" : "translate-y-4 scale-[.98] opacity-0"}`}
       >
         <div className="relative flex flex-wrap items-end justify-between gap-3 pr-8">
           <div>
@@ -56,15 +82,18 @@ export const MVerCalificados = () => {
             <span className="rounded-full bg-emerald-100 px-3 py-1 font-semibold text-emerald-700">{promesas} promesa{promesas === 1 ? "" : "s"} de pago</span>
             {cantidadFallidos > 0 && <span className="rounded-full bg-amber-100 px-3 py-1 font-semibold text-amber-800">{cantidadFallidos} con incidencia</span>}
           </div>
-          <Close onClick={closeMVerCalificacion} className="absolute right-0 top-0 cursor-pointer text-xl" />
+          <button type="button" onClick={closeMVerCalificacion} aria-label="Cerrar"
+            className="absolute right-0 top-0 grid h-8 w-8 place-items-center rounded-full text-xl text-stone-600 transition-colors hover:bg-stone-100 hover:text-brand-dark">
+            <Close />
+          </button>
         </div>
         <hr />
 
-        <div className="flex h-full w-full gap-4 overflow-hidden">
+        <div className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden md:flex-row">
           {processResultSucces.length > 0 ? (
             <>
               {/* Lista de audios */}
-              <div className="flex w-1/3 min-w-[260px] flex-col gap-2 rounded-xl border border-stone-200 p-3">
+              <div className="flex max-h-[35%] flex-col gap-2 rounded-xl border border-stone-200 p-3 md:max-h-none md:w-1/3 md:min-w-[260px]">
                 <div className="scroll flex flex-1 flex-col gap-2 overflow-y-auto pr-1">
                   {processResultSucces.map((item, index) => {
                     const resumen = resumenDe(item.evaluacion);
@@ -109,7 +138,7 @@ export const MVerCalificados = () => {
               </div>
 
               {/* Detalle del audio seleccionado */}
-              <div className="flex w-2/3 flex-col overflow-hidden rounded-xl border border-stone-200">
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-stone-200 md:w-2/3">
                 {activo ? (
                   <>
                     <div className="flex gap-2 border-b border-stone-200 px-3">
@@ -147,6 +176,7 @@ export const MVerCalificados = () => {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
