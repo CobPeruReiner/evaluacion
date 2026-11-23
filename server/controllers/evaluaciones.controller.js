@@ -355,4 +355,75 @@ const getHistoryDetail = async (req, res) => {
   }
 };
 
-module.exports = { getConfiguration, createEvaluation, listHistory, getHistoryDetail };
+// Exportación del histórico: una fila por evaluación con la nota, el % de cada ítem,
+// el asesor, la fecha de evaluación y el TMO; más el detalle por criterio y acción.
+// El % de un ítem sigue la fórmula de la ficha: Σ(peso acción × puntaje) / Σ(peso acción).
+const exportHistory = async (req, res) => {
+  try {
+    const ids = String(req.query.ids || "")
+      .split(",")
+      .map(Number)
+      .filter((id) => Number.isInteger(id) && id > 0);
+    const filtro = ids.length ? "WHERE e.ID_EVALUACION IN (:ids)" : "";
+    const replacements = { ids };
+    const [evaluaciones, items, detalles] = await Promise.all([
+      db.query(
+        `SELECT e.ID_EVALUACION,e.FE_REGISTRO,e.FE_GESTION,e.ID_GESTION,e.ID_DEUDOR,e.TELEFONO,e.TMO_SEG,
+          e.IN_CALIDAD,e.RESULTADO,m.NOMBRE AS MODELO,ca.cartera AS CARTERA,
+          CONCAT(TRIM(gestor.APELLIDOS), ', ', TRIM(gestor.NOMBRES)) AS ASESOR_NOMBRE,gestor.DOC AS ASESOR_DOC,
+          CONCAT(TRIM(monitor.APELLIDOS), ', ', TRIM(monitor.NOMBRES)) AS MONITOR_NOMBRE,
+          tl.NOMBRE_TIPO_LLAMADA,tg.NOMBRE_TIPO_GESTION,mnp.NOMBRE_MOTIVO_NO_PAGO
+        FROM CALIDAD.EVALUACION e
+        INNER JOIN CALIDAD.MODELO_EVALUACION m ON m.ID_MODELO=e.ID_MODELO
+        LEFT JOIN SISTEMAGEST.cartera ca ON ca.id=m.ID_CARTERA
+        LEFT JOIN CALIDAD.TIPO_LLAMADA tl ON tl.ID_TIPO_LLAMADA=e.ID_TIPO_LLAMADA
+        LEFT JOIN CALIDAD.TIPO_GESTION tg ON tg.ID_TIPO_GESTION=e.ID_TIPO_GESTION
+        LEFT JOIN CALIDAD.MOTIVO_NO_PAGO mnp ON mnp.ID_MOTIVO_NO_PAGO=e.ID_MOTIVO_NPG
+        LEFT JOIN SISTEMAGEST.personal gestor ON gestor.IDPERSONAL=e.ID_GESTOR
+        LEFT JOIN SISTEMAGEST.personal monitor ON monitor.IDPERSONAL=e.ID_MONITOR
+        ${filtro}
+        ORDER BY e.FE_REGISTRO DESC`,
+        { replacements, type: QueryTypes.SELECT },
+      ),
+      db.query(
+        `SELECT d.ID_EVALUACION,i.ID_ITEM,i.NOMBRE AS NOMBRE_ITEM,
+          SUM(d.PESO_ACCION * d.IN_PUNTAJE / 100) AS OBTENIDO,SUM(d.PESO_ACCION) AS MAXIMO
+        FROM CALIDAD.DETALLE_EVALUACION d
+        INNER JOIN CALIDAD.CRITERIO c ON c.ID_CRITERIO=d.ID_CRITERIO
+        INNER JOIN CALIDAD.ITEM i ON i.ID_ITEM=c.ID_ITEM
+        ${filtro.replace("e.ID_EVALUACION", "d.ID_EVALUACION")}
+        GROUP BY d.ID_EVALUACION,i.ID_ITEM,i.NOMBRE
+        ORDER BY i.ID_ITEM`,
+        { replacements, type: QueryTypes.SELECT },
+      ),
+      db.query(
+        `SELECT d.ID_EVALUACION,i.NOMBRE AS NOMBRE_ITEM,c.NOMBRE AS NOMBRE_CRITERIO,a.NOMBRE AS NOMBRE_ACCION,
+          d.PESO_ACCION,d.IN_PUNTAJE,o.OBSERVACION
+        FROM CALIDAD.DETALLE_EVALUACION d
+        INNER JOIN CALIDAD.CRITERIO c ON c.ID_CRITERIO=d.ID_CRITERIO
+        INNER JOIN CALIDAD.ITEM i ON i.ID_ITEM=c.ID_ITEM
+        INNER JOIN CALIDAD.ACCION_CRITERIO a ON a.ID_ACCION=d.ID_ACCION
+        LEFT JOIN CALIDAD.OBSERVACION_ITEM o ON o.ID_EVALUACION=d.ID_EVALUACION AND o.ID_ITEM=i.ID_ITEM
+        ${filtro.replace("e.ID_EVALUACION", "d.ID_EVALUACION")}
+        ORDER BY d.ID_EVALUACION,i.ID_ITEM,c.ID_CRITERIO,a.ID_ACCION`,
+        { replacements, type: QueryTypes.SELECT },
+      ),
+    ]);
+    res.json({
+      ok: true,
+      evaluaciones,
+      items: items.map((row) => ({
+        ID_EVALUACION: row.ID_EVALUACION,
+        ID_ITEM: row.ID_ITEM,
+        NOMBRE_ITEM: row.NOMBRE_ITEM,
+        PORCENTAJE: Number(row.MAXIMO) > 0 ? Number(((Number(row.OBTENIDO) / Number(row.MAXIMO)) * 100).toFixed(2)) : 0,
+      })),
+      detalles,
+    });
+  } catch (error) {
+    console.error("exportHistory:", error);
+    res.status(500).json({ ok: false, msg: "No se pudo generar la exportación." });
+  }
+};
+
+module.exports = { getConfiguration, createEvaluation, listHistory, getHistoryDetail, exportHistory };

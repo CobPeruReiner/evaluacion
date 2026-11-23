@@ -10,6 +10,7 @@ import { InputText } from "primereact/inputtext";
 import { Tag } from "primereact/tag";
 import { toast } from "sonner";
 import { AppLoader } from "../../components/ui/PrimeStates";
+import { exportarEvaluaciones } from "./exportarEvaluaciones";
 
 const tablePt = {
   root: { className: "overflow-hidden rounded-2xl border border-stone-200" },
@@ -104,6 +105,7 @@ export function HistorialEvaluaciones() {
   const [detailVisible, setDetailVisible] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detail, setDetail] = useState(null);
+  const [exporting, setExporting] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -129,9 +131,22 @@ export function HistorialEvaluaciones() {
     finally { setDetailLoading(false); }
   };
 
+  // Exporta lo que se ve en la tabla (respeta la búsqueda y el filtro de tipo).
+  const exportar = async () => {
+    if (!filtered.length) return toast.error("No hay evaluaciones para exportar.");
+    setExporting(true);
+    try {
+      const { data } = await axios.get(`${api}/exportar`);
+      const total = await exportarEvaluaciones(data, filtered.map((row) => row.ID_EVALUACION));
+      toast.success(`Se exportaron ${total} evaluaciones.`);
+    } catch {
+      toast.error("No se pudo generar el archivo de exportación.");
+    } finally { setExporting(false); }
+  };
+
   const header = <div className="evaluation-history-toolbar">
     <div><h2>Evaluaciones registradas</h2><p>Selecciona un registro para consultar su ficha y calificaciones.</p></div>
-    <div><span className="relative w-full sm:w-80"><i className="pi pi-search" /><InputText value={query} placeholder="Buscar por gestión, deudor o plantilla" onChange={(event) => setQuery(event.target.value)} /></span><Dropdown value={tipo} options={[{ label: "Todos los tipos", value: null }, { label: "Manual", value: 1 }, { label: "Automática", value: 2 }]} optionLabel="label" optionValue="value" onChange={(event) => setTipo(event.value)} /><Button icon="pi pi-refresh" outlined aria-label="Actualizar histórico" onClick={load} /></div>
+    <div><span className="relative w-full sm:w-80"><i className="pi pi-search" /><InputText value={query} placeholder="Buscar por gestión, deudor o plantilla" onChange={(event) => setQuery(event.target.value)} /></span><Dropdown value={tipo} options={[{ label: "Todos los tipos", value: null }, { label: "Manual", value: 1 }, { label: "Automática", value: 2 }]} optionLabel="label" optionValue="value" onChange={(event) => setTipo(event.value)} /><Button icon="pi pi-refresh" outlined aria-label="Actualizar histórico" onClick={load} /><Button label="Exportar" icon={exporting ? "pi pi-spin pi-spinner" : "pi pi-file-excel"} onClick={exportar} disabled={exporting || !filtered.length} aria-label="Exportar evaluaciones a Excel" /></div>
   </div>;
 
   return <main className="w-full space-y-6">
