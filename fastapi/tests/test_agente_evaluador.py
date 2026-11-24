@@ -73,6 +73,21 @@ def test_criterio_omitido_va_a_revision(modelo):
     assert r["resumen_final"]["requiere_revision"]
 
 
+def test_cero_tolerancia(modelo):
+    # Todo bien salvo la despedida (no la realiza): 40 % normal, 0 % en cartera de cero tolerancia.
+    elecciones = {10: {"id_accion": 100}, 11: {"id_accion": 110}, 20: {"id_accion": None}}
+    normal = calificar(modelo, elecciones, "castigo")
+    assert normal["resumen_final"]["cumplimiento_total"] == 40.0
+    assert normal["resumen_final"]["cero_tolerancia"]["aplicada"] is False
+    cero = calificar(modelo, elecciones, "castigo", cero_tolerancia=True)
+    assert cero["resumen_final"]["cumplimiento_total"] == 0.0
+    assert cero["resumen_final"]["cero_tolerancia"] == {"activa": True, "aplicada": True, "criterios": ["DESPEDIDA"]}
+    assert cero["items"][0]["cumplimiento"] == 100.0          # el detalle por ítem se conserva
+    # Parcial no es mala praxis; un criterio para revisión tampoco.
+    parcial = calificar(modelo, {10: {"id_accion": 101}, 11: {"id_accion": 110}}, "castigo", cero_tolerancia=True)
+    assert parcial["resumen_final"]["cero_tolerancia"]["aplicada"] is False
+
+
 # ─── salida del agente ───────────────────────────────────────────────────────
 def test_validar_salida(modelo):
     data = {

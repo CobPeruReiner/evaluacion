@@ -140,9 +140,26 @@ export const FichaEvaluacionR = () => {
       ) || [],
     [modelo],
   );
+  // Cero tolerancia (p. ej. cartera 46): un criterio calificado sin ninguna acción que cumpla
+  // deja la nota en 0. El servidor aplica la misma regla al guardar.
+  const negativos = useMemo(
+    () =>
+      modelo?.ceroTolerancia
+        ? modelo.items.flatMap((item) =>
+            item.criterios.filter(
+              (criterio) =>
+                criterio.acciones.every((accion) => puntajes[accion.idAccion] !== undefined) &&
+                !criterio.acciones.some((accion) => Number(puntajes[accion.idAccion]) > 0),
+            ).map((criterio) => criterio.nombre),
+          )
+        : [],
+    [modelo, puntajes],
+  );
   const calidad = useMemo(
     () =>
-      acciones.length
+      negativos.length
+        ? 0
+        : acciones.length
         ? Number(
             (
               acciones.reduce(
@@ -156,7 +173,7 @@ export const FichaEvaluacionR = () => {
             ).toFixed(2),
           )
         : 0,
-    [acciones, puntajes],
+    [acciones, puntajes, negativos],
   );
   const complete =
     acciones.length > 0 &&
@@ -251,6 +268,14 @@ export const FichaEvaluacionR = () => {
             <b>{calidad.toFixed(2)}%</b>
           </div>
           <ProgressBar value={calidad} showValue={false} />
+          {modelo?.ceroTolerancia && (
+            <p className="mt-2 max-w-xs text-xs text-red-100">
+              <i className="pi pi-exclamation-triangle mr-1" />
+              {negativos.length
+                ? `Nota 0 por cero tolerancia: ${negativos.join(", ")}.`
+                : "Cartera de cero tolerancia: un criterio en negativo deja la nota en 0."}
+            </p>
+          )}
         </div>
       </section>
       <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">

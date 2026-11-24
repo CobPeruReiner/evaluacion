@@ -120,6 +120,12 @@ export function EvaluacionAgente({ evaluacion, transcripcion, onSeek, compacto =
               {evaluacion.motivo_no_pago?.nombre && <> · Motivo de no pago: {evaluacion.motivo_no_pago.nombre}</>}
             </p>
           )}
+          {r.cero_tolerancia?.aplicada && (
+            <p className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
+              <i className="pi pi-ban mr-1.5" />
+              Nota 0 por cero tolerancia (mala praxis en: {r.cero_tolerancia.criterios.join(", ")}). El detalle por ítem se conserva.
+            </p>
+          )}
           {evaluacion.resumen && !compacto && <p className="mt-2 text-sm text-stone-700">{evaluacion.resumen}</p>}
         </div>
       </div>

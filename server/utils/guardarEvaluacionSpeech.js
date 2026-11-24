@@ -1,6 +1,7 @@
 const { QueryTypes } = require("sequelize");
 const { db } = require("./database.util");
 const { getModelRows, toModel } = require("../controllers/evaluaciones.controller");
+const { calcularNota } = require("./notaEvaluacion");
 
 // Guarda en CALIDAD.EVALUACION (+ DETALLE_EVALUACION y OBSERVACION_ITEM) cada llamada que el
 // agente calificó, para que aparezca en /evaluaciones y en sus reportes junto a las manuales.
@@ -122,8 +123,8 @@ async function guardarEvaluacionSpeech(item, { idCartera }) {
           inPuntaje: elegida && Number(elegida.id_accion) === Number(a.idAccion) ? 100 : 0,
         }));
       }));
-      // Misma fórmula que la ficha manual: Σ(peso acción × puntaje).
-      const inCalidad = Number(detalles.reduce((t, d) => t + (Number(d.pesoAccion) * d.inPuntaje) / 100, 0) * 100).toFixed(2);
+      // Misma nota que la ficha manual, con la cero tolerancia de la cartera.
+      const inCalidad = calcularNota(modelo, new Map(detalles.map((d) => [Number(d.idAccion), d.inPuntaje])), idCartera).calidad;
 
       const segundos = Object.values(item.timings || {}).reduce((t, v) => t + (Number(v) || 0), 0);
       const fin = new Date();

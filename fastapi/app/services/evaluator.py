@@ -4,7 +4,7 @@ from datetime import datetime
 from logging import getLogger
 
 from app.core import agente, palabras_clave
-from app.core.scoring import calificar
+from app.core.scoring import calificar, carteras_cero_tolerancia
 from app.data.dao import (
     obtener_configuracion_evaluacion,
     obtener_motivos_no_pago,
@@ -78,7 +78,8 @@ def evaluar_llamada(transcripcion: list, contexto: dict, fecha_llamada: str, hal
         return _pendiente("Transcripción disponible; el agente evaluador no respondió.", str(error),
                           resumen_palabras)
 
-    calificacion = calificar(contexto["modelo"], salida["elecciones"], contexto["tipo"])
+    calificacion = calificar(contexto["modelo"], salida["elecciones"], contexto["tipo"],
+                             str(contexto.get("id_cartera")) in carteras_cero_tolerancia())
     return {
         "version": VERSION_EVALUACION,
         "estado": "evaluado",

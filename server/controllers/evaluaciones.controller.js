@@ -1,5 +1,6 @@
 const { QueryTypes } = require("sequelize");
 const { db } = require("../utils/database.util");
+const { calcularNota, esCeroTolerancia } = require("../utils/notaEvaluacion");
 
 const number = (value) => Number(value);
 // Personal "SPEECH ANALYTICS": sus evaluaciones son las automáticas (TI_TIPO siempre es 1).
@@ -92,7 +93,8 @@ const getConfiguration = async (req, res) => {
       return res
         .status(400)
         .json({ ok: false, msg: "La cartera es obligatoria." });
-    res.json({ ok: true, modelo: toModel(await getModelRows(idCartera)) });
+    // ceroTolerancia: la ficha muestra en vivo la regla de la cartera (un negativo = nota 0).
+    res.json({ ok: true, modelo: { ...toModel(await getModelRows(idCartera)), ceroTolerancia: esCeroTolerancia(idCartera) } });
   } catch (error) {
     res.status(400).json({ ok: false, msg: error.message });
   }
@@ -175,6 +177,8 @@ const createEvaluation = async (req, res) => {
     const idEvaluacion = await db.transaction(async (transaction) => {
       const model = toModel(await getModelRows(gestion.idCartera, transaction));
       validateSubmission(req.body, model);
+      // La nota se recalcula aquí (no se confía en la del navegador) e incluye la cero tolerancia.
+      const nota = calcularNota(model, new Map(detalles.map((d) => [Number(d.idAccion), number(d.inPuntaje)])), gestion.idCartera);
       const [newId] = await db.query(
         `INSERT INTO CALIDAD.EVALUACION
         (ID_MODELO,ID_GESTION,FE_GESTION,ID_GESTOR,TELEFONO,ID_DEUDOR,RESULTADO,TMO_SEG,ID_TIPO_LLAMADA,ID_TIPO_GESTION,IN_ALERTA,ID_MOTIVO_ALERTA,ID_MOTIVO_NPG,ID_RESP_NO_FCR,ID_MOTIVO_NO_FCR,ID_MONITOR,FE_INICIO,FE_FIN,IN_CALIDAD,TI_TIPO,IN_FEEDBACK,DE_FEEDBACK,RUTA_AUDIO)
@@ -201,7 +205,7 @@ const createEvaluation = async (req, res) => {
             idMonitor,
             fechaInicio: mysqlDateTime(fechaInicio),
             fechaFin: mysqlDateTime(fechaFin),
-            inCalidad: datos.inCalidad,
+            inCalidad: nota.calidad,
             rutaAudio: gestion.rutaAudio || "",
           },
           transaction,
