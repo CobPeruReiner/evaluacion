@@ -108,3 +108,15 @@ export function TextoResaltado({ texto, hallazgos }) {
   if (cursor < texto.length) partes.push(texto.slice(cursor));
   return partes;
 }
+
+/** Estado del registro en CALIDAD.EVALUACION (lo que ve /evaluaciones). Lotes antiguos no lo traen. */
+export function EstadoBD({ bd }) {
+  if (!bd) return null;
+  return bd.guardado
+    ? <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold text-sky-800" title="Registrada en el histórico de evaluaciones">
+        <i className="pi pi-database mr-1 text-[10px]" />BD #{bd.idEvaluacion}
+      </span>
+    : <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800" title={bd.motivo || "No se guardó en la base de datos"}>
+        <i className="pi pi-exclamation-triangle mr-1 text-[10px]" />No guardada en BD
+      </span>;
+}

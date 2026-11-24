@@ -8,6 +8,7 @@ const { obtenerNombreAgente } = require("../utils/obtener-nombre-agente");
 const { obtenerConexionPorColor } = require("../utils/conexiones-vicidial");
 const { obtenerColorPorIdCartera } = require("../utils/obtener-color");
 const { terminosActivos } = require("./palabrasClave.controller");
+const { guardarEvaluacionSpeech } = require("../utils/guardarEvaluacionSpeech");
 
 // Dentro de Docker el nombre del servicio evita depender de puertos publicados.
 const servidorPython = process.env.PATH_SERVAPLICACIONES || "fastapi_backend";
@@ -1154,7 +1155,10 @@ const finalizeSpeechJob = async (jobId, result) => {
     await fs.promises.copyFile(path.join(jobDir, item.audio_path), path.join(outputDir, path.basename(item.archivo)));
     const { campaña, anexo } = item.metadatos || {};
     const full_name = campaña && anexo && dbConexion ? await obtenerNombreAgente(dbConexion, campaña, anexo) : null;
-    exitosos.push({ ...item, audio_path: undefined, metadatos: { ...item.metadatos, idCartera: context.idCartera, color: context.color, full_name } });
+    const publicado = { ...item, audio_path: undefined, metadatos: { ...item.metadatos, idCartera: context.idCartera, color: context.color, full_name } };
+    // Registro en CALIDAD.EVALUACION para /evaluaciones; si no se puede, la llamada sigue en auditoría con el motivo.
+    publicado.bd = await guardarEvaluacionSpeech(publicado, { idCartera: context.idCartera });
+    exitosos.push(publicado);
   }
   const completed = { ok: true, exitosos, fallidos: result.fallidos || [], duracion_total: result.duracion_total };
   // Un archivo por lote: dos ZIP de la misma cartera y fecha ya no se pisan entre sí.

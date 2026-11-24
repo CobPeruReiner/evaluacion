@@ -110,6 +110,21 @@ def construir_arbol(id_modelo, nombre_modelo, rows: list) -> dict:
     return {"id_modelo": id_modelo, "nombre_modelo": nombre_modelo, "items": items}
 
 
+def obtener_tipos_gestion(conn, id_cartera: str) -> list:
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            """SELECT ID_TIPO_GESTION AS id, NOMBRE_TIPO_GESTION AS nombre
+               FROM CALIDAD.TIPO_GESTION
+               WHERE ID_CARTERA = %s AND ID_ESTADO = 1
+               ORDER BY NOMBRE_TIPO_GESTION""",
+            (id_cartera,),
+        )
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+
+
 def obtener_motivos_no_pago(conn, id_cartera: str) -> list:
     cursor = conn.cursor(dictionary=True)
     try:

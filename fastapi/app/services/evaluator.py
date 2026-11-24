@@ -9,6 +9,7 @@ from app.data.dao import (
     obtener_configuracion_evaluacion,
     obtener_motivos_no_pago,
     obtener_tipo_cartera,
+    obtener_tipos_gestion,
 )
 from app.db.session import get_database_connection
 
@@ -21,7 +22,7 @@ def cargar_contexto(id_cartera: str, palabras: list | None = None) -> dict:
     SISTEMAGEST). Se carga UNA vez por lote; si la plantilla está mal configurada,
     `error` lo explica y los audios igual se transcriben. `palabras` son las palabras
     clave que envía el server Node con el lote (no viven en la BD)."""
-    contexto = {"id_cartera": id_cartera, "modelo": None, "tipo": None, "motivos": [],
+    contexto = {"id_cartera": id_cartera, "modelo": None, "tipo": None, "motivos": [], "tipos_gestion": [],
                 "palabras": palabras or [], "error": None}
     try:
         conn = get_database_connection()
@@ -34,6 +35,7 @@ def cargar_contexto(id_cartera: str, palabras: list | None = None) -> dict:
             contexto["modelo"] = obtener_configuracion_evaluacion(conn, id_cartera)
             contexto["tipo"] = obtener_tipo_cartera(conn, id_cartera)
             contexto["motivos"] = obtener_motivos_no_pago(conn, id_cartera)
+            contexto["tipos_gestion"] = obtener_tipos_gestion(conn, id_cartera)
         except Exception as error:
             logger.exception("Plantilla de la cartera %s no utilizable", id_cartera)
             contexto["error"] = str(error) or "Error de configuración de la plantilla."
@@ -69,7 +71,8 @@ def evaluar_llamada(transcripcion: list, contexto: dict, fecha_llamada: str, hal
                           "Define LLM_API_KEY / LLM_BASE_URL en el worker.", resumen_palabras)
     try:
         salida = agente.evaluar(contexto["modelo"], transcripcion, contexto["motivos"],
-                                _fecha_iso(fecha_llamada), resumen_palabras)
+                                _fecha_iso(fecha_llamada), resumen_palabras,
+                                contexto.get("tipos_gestion") or [])
     except agente.AgenteNoDisponible as error:
         logger.warning("Agente evaluador no disponible: %s", error)
         return _pendiente("Transcripción disponible; el agente evaluador no respondió.", str(error),
@@ -82,6 +85,8 @@ def evaluar_llamada(transcripcion: list, contexto: dict, fecha_llamada: str, hal
         **calificacion,
         "promesa_pago": salida["promesa_pago"],
         "motivo_no_pago": salida["motivo_no_pago"],
+        "tipo_gestion": salida["tipo_gestion"],
+        "evaluable": salida["evaluable"],
         "contacto": salida["contacto"],
         "sentimiento_cliente": salida["sentimiento_cliente"],
         "resumen": salida["resumen"],

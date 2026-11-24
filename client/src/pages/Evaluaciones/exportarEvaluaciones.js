@@ -37,6 +37,8 @@ export async function exportarEvaluaciones({ evaluaciones, items, detalles }, id
       Asesor: e.ASESOR_NOMBRE || "",
       "DNI asesor": e.ASESOR_DOC || "",
       Monitor: e.MONITOR_NOMBRE || "",
+      Tipo: Number(e.ES_AUTOMATICA) ? "Automática" : "Manual",
+      Audio: e.RUTA_AUDIO || "",
       Teléfono: e.TELEFONO || "",
       "N° gestión": e.ID_GESTION ?? "",
       "TMO (mm:ss)": tmo(e.TMO_SEG),

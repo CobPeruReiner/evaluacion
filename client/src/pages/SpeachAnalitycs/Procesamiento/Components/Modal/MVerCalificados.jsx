@@ -7,7 +7,7 @@ import { Close, Pause, Play } from "../../../../../Icons/Iconos";
 import { Conversacion } from "../../../Evaluacion/Conversacion";
 import { EvaluacionAgente } from "../../../Evaluacion/EvaluacionAgente";
 import { EvaluacionLegado } from "../../../Evaluacion/EvaluacionLegado";
-import { claseResultado, colorPuntaje, esEvaluacionAgente, resumenDe } from "../../../Evaluacion/evaluacionUtils";
+import { claseResultado, colorPuntaje, EstadoBD, esEvaluacionAgente, resumenDe } from "../../../Evaluacion/evaluacionUtils";
 
 const pestanaClase = (activa) =>
   `relative px-4 py-3 text-sm font-semibold border-b-2 transition-all duration-300 ${
@@ -111,6 +111,7 @@ export const MVerCalificados = () => {
                             : <span className="rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-800">{item.evaluacion?.mensaje ? "Sin calificar" : "Transcripción disponible"}</span>}
                           {item.evaluacion?.promesa_pago?.hay_promesa && <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-700">Promesa</span>}
                           {resumen?.requiere_revision && <i className="pi pi-exclamation-circle text-amber-500" title="Tiene criterios para revisión" />}
+                          <EstadoBD bd={item.bd} />
                         </div>
                         <div className="flex items-center justify-between text-xs text-stone-500">
                           <span>{item.metadatos?.telefono || ""} {hora && `· ${hora}`}</span>

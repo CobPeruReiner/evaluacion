@@ -54,7 +54,7 @@ function EvaluationDetail({ data, loading }) {
       <div>
         <p>Evaluación #{evaluation.ID_EVALUACION}</p>
         <h3>{evaluation.MODELO}</h3>
-        <span>Gestión #{evaluation.ID_GESTION} · registrada el {dateValue(evaluation.FE_REGISTRO)}</span>
+        <span>{evaluation.ID_GESTION ? `Gestión #${evaluation.ID_GESTION}` : "Evaluación automática (Speech Analytics)"} · registrada el {dateValue(evaluation.FE_REGISTRO)}</span>
       </div>
       {scoreTag(evaluation.IN_CALIDAD)}
     </section>
@@ -63,11 +63,11 @@ function EvaluationDetail({ data, loading }) {
       <div className="evaluation-section-heading"><h4>Resumen de la gestión</h4><p>Datos registrados al finalizar la evaluación.</p></div>
       <div className="evaluation-facts-grid">
         <Fact label="Deudor" value={evaluation.ID_DEUDOR} />
-        <Fact label="Gestor evaluado" value={evaluation.GESTOR_NOMBRE || `Personal #${evaluation.ID_GESTOR}`} />
+        <Fact label="Gestor evaluado" value={evaluation.GESTOR_NOMBRE || (evaluation.ID_GESTOR ? `Personal #${evaluation.ID_GESTOR}` : "No identificado")} />
         <Fact label="Monitor evaluador" value={evaluation.MONITOR_NOMBRE || `Personal #${evaluation.ID_MONITOR}`} />
         <Fact label="Teléfono" value={evaluation.TELEFONO} />
         <Fact label="Fecha de gestión" value={dateValue(evaluation.FE_GESTION)} />
-        <Fact label="Resultado" value={evaluation.RESULTADO} />
+        <Fact label={evaluation.ID_GESTION ? "Resultado" : "Resumen del agente"} value={evaluation.RESULTADO} />
         <Fact label="Duración (TMO)" value={`${evaluation.TMO_SEG || 0} segundos`} />
         <Fact label="Tipo de llamada" value={evaluation.NOMBRE_TIPO_LLAMADA} />
         <Fact label="Tipo de gestión" value={evaluation.NOMBRE_TIPO_GESTION} />
@@ -116,7 +116,7 @@ export function HistorialEvaluaciones() {
   useEffect(() => { load(); }, []);
 
   const filtered = useMemo(() => evaluaciones.filter((row) => {
-    const matchesType = tipo == null || Number(row.TI_TIPO) === tipo;
+    const matchesType = tipo == null || Number(row.ES_AUTOMATICA) === tipo;
     const value = query.trim().toLowerCase();
     const matchesQuery = !value || [row.ID_EVALUACION, row.ID_GESTION, row.ID_DEUDOR, row.RESULTADO, row.MODELO].filter(Boolean).some((field) => String(field).toLowerCase().includes(value));
     return matchesType && matchesQuery;
@@ -146,13 +146,13 @@ export function HistorialEvaluaciones() {
 
   const header = <div className="evaluation-history-toolbar">
     <div><h2>Evaluaciones registradas</h2><p>Selecciona un registro para consultar su ficha y calificaciones.</p></div>
-    <div><span className="relative w-full sm:w-80"><i className="pi pi-search" /><InputText value={query} placeholder="Buscar por gestión, deudor o plantilla" onChange={(event) => setQuery(event.target.value)} /></span><Dropdown value={tipo} options={[{ label: "Todos los tipos", value: null }, { label: "Manual", value: 1 }, { label: "Automática", value: 2 }]} optionLabel="label" optionValue="value" onChange={(event) => setTipo(event.value)} /><Button icon="pi pi-refresh" outlined aria-label="Actualizar histórico" onClick={load} /><Button label="Exportar" icon={exporting ? "pi pi-spin pi-spinner" : "pi pi-file-excel"} onClick={exportar} disabled={exporting || !filtered.length} aria-label="Exportar evaluaciones a Excel" /></div>
+    <div><span className="relative w-full sm:w-80"><i className="pi pi-search" /><InputText value={query} placeholder="Buscar por gestión, deudor o plantilla" onChange={(event) => setQuery(event.target.value)} /></span><Dropdown value={tipo} options={[{ label: "Todos los tipos", value: null }, { label: "Manual", value: 0 }, { label: "Automática", value: 1 }]} optionLabel="label" optionValue="value" onChange={(event) => setTipo(event.value)} /><Button icon="pi pi-refresh" outlined aria-label="Actualizar histórico" onClick={load} /><Button label="Exportar" icon={exporting ? "pi pi-spin pi-spinner" : "pi pi-file-excel"} onClick={exportar} disabled={exporting || !filtered.length} aria-label="Exportar evaluaciones a Excel" /></div>
   </div>;
 
   return <main className="w-full space-y-6">
     <section className="flex flex-col gap-5 rounded-3xl bg-gradient-to-br from-[#252525] to-[#69171c] p-6 text-white shadow-xl sm:p-8 lg:flex-row lg:items-end lg:justify-between"><div><Tag value="CONSOLIDADO DE CALIDAD" className="!bg-white/10 !text-red-100" /><h1 className="mt-3 text-3xl font-bold">Histórico de evaluaciones</h1><p className="mt-2 max-w-2xl text-sm text-stone-200">Consulta todas las evaluaciones manuales y automáticas registradas en la plataforma.</p></div><div className="rounded-2xl bg-white/10 px-5 py-4 text-center"><p className="text-xs uppercase tracking-wide text-red-100">Total de registros</p><p className="mt-1 text-3xl font-bold">{evaluaciones.length}</p></div></section>
     <section className="evaluation-history-panel">
-      {loading ? <AppLoader className="min-h-[320px]" /> : <><div className="evaluation-history-toolbar-card">{header}</div><DataTable value={filtered} paginator rows={10} rowsPerPageOptions={[10, 25, 50]} emptyMessage="No se encontraron evaluaciones." pt={tablePt} dataKey="ID_EVALUACION" onRowClick={(event) => openDetail(event.data)} rowClassName={() => "cursor-pointer hover:bg-red-50/40"}><Column field="ID_EVALUACION" header="Evaluación" sortable /><Column field="ID_GESTION" header="Gestión" sortable /><Column field="ID_DEUDOR" header="Deudor" sortable /><Column field="MODELO" header="Plantilla" sortable /><Column header="Tipo" body={(row) => <Tag value={Number(row.TI_TIPO) === 2 ? "Automática" : "Manual"} severity={Number(row.TI_TIPO) === 2 ? "info" : "secondary"} />} sortable sortField="TI_TIPO" /><Column header="Fecha gestión" body={(row) => dateValue(row.FE_GESTION)} sortable sortField="FE_GESTION" /><Column header="Calidad" body={(row) => scoreTag(row.IN_CALIDAD)} sortable sortField="IN_CALIDAD" /><Column header="Registrada" body={(row) => dateValue(row.FE_REGISTRO)} sortable sortField="FE_REGISTRO" /><Column header="Acciones" body={(row) => <Button label="Ver detalle" icon="pi pi-eye" text size="small" onClick={(event) => { event.stopPropagation(); openDetail(row); }} />} /></DataTable><p className="evaluation-history-count">Mostrando {filtered.length} de {evaluaciones.length} evaluaciones.</p></>}
+      {loading ? <AppLoader className="min-h-[320px]" /> : <><div className="evaluation-history-toolbar-card">{header}</div><DataTable value={filtered} paginator rows={10} rowsPerPageOptions={[10, 25, 50]} emptyMessage="No se encontraron evaluaciones." pt={tablePt} dataKey="ID_EVALUACION" onRowClick={(event) => openDetail(event.data)} rowClassName={() => "cursor-pointer hover:bg-red-50/40"}><Column field="ID_EVALUACION" header="Evaluación" sortable /><Column field="ID_GESTION" header="Gestión" sortable /><Column field="ID_DEUDOR" header="Deudor" sortable /><Column field="MODELO" header="Plantilla" sortable /><Column header="Tipo" body={(row) => <Tag value={Number(row.ES_AUTOMATICA) ? "Automática" : "Manual"} severity={Number(row.ES_AUTOMATICA) ? "info" : "secondary"} />} sortable sortField="ES_AUTOMATICA" /><Column header="Fecha gestión" body={(row) => dateValue(row.FE_GESTION)} sortable sortField="FE_GESTION" /><Column header="Calidad" body={(row) => scoreTag(row.IN_CALIDAD)} sortable sortField="IN_CALIDAD" /><Column header="Registrada" body={(row) => dateValue(row.FE_REGISTRO)} sortable sortField="FE_REGISTRO" /><Column header="Acciones" body={(row) => <Button label="Ver detalle" icon="pi pi-eye" text size="small" onClick={(event) => { event.stopPropagation(); openDetail(row); }} />} /></DataTable><p className="evaluation-history-count">Mostrando {filtered.length} de {evaluaciones.length} evaluaciones.</p></>}
     </section>
     <Dialog visible={detailVisible && Boolean(detail)} onHide={() => { setDetailVisible(false); setDetail(null); }} header="Detalle de la evaluación" className="evaluation-detail-dialog w-[96vw] max-w-6xl" breakpoints={{ "960px": "96vw" }} modal draggable={false}><EvaluationDetail data={detail} loading={detailLoading} /></Dialog>
   </main>;

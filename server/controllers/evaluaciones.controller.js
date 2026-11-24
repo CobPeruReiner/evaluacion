@@ -2,6 +2,8 @@ const { QueryTypes } = require("sequelize");
 const { db } = require("../utils/database.util");
 
 const number = (value) => Number(value);
+// Personal "SPEECH ANALYTICS": sus evaluaciones son las automáticas (TI_TIPO siempre es 1).
+const SPEECH_ID_MONITOR = Number(process.env.SPEECH_ID_MONITOR) || 1972;
 const mysqlDateTime = (value) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime()))
@@ -287,8 +289,9 @@ const createEvaluation = async (req, res) => {
 const listHistory = async (_req, res) => {
   try {
     const evaluaciones = await db.query(
-      `SELECT e.ID_EVALUACION,e.FE_GESTION,e.ID_GESTION,e.ID_GESTOR,e.ID_DEUDOR,e.RESULTADO,e.IN_CALIDAD,e.TI_TIPO,e.FE_REGISTRO,m.NOMBRE AS MODELO FROM CALIDAD.EVALUACION e INNER JOIN CALIDAD.MODELO_EVALUACION m ON m.ID_MODELO=e.ID_MODELO ORDER BY e.FE_REGISTRO DESC`,
-      { type: QueryTypes.SELECT },
+      `SELECT e.ID_EVALUACION,e.FE_GESTION,e.ID_GESTION,e.ID_GESTOR,e.ID_DEUDOR,e.RESULTADO,e.IN_CALIDAD,e.TI_TIPO,e.FE_REGISTRO,m.NOMBRE AS MODELO,
+        IF(e.ID_MONITOR = :idSpeech, 1, 0) AS ES_AUTOMATICA FROM CALIDAD.EVALUACION e INNER JOIN CALIDAD.MODELO_EVALUACION m ON m.ID_MODELO=e.ID_MODELO ORDER BY e.FE_REGISTRO DESC`,
+      { replacements: { idSpeech: SPEECH_ID_MONITOR }, type: QueryTypes.SELECT },
     );
     res.json({ ok: true, evaluaciones });
   } catch (error) {
@@ -365,11 +368,12 @@ const exportHistory = async (req, res) => {
       .map(Number)
       .filter((id) => Number.isInteger(id) && id > 0);
     const filtro = ids.length ? "WHERE e.ID_EVALUACION IN (:ids)" : "";
-    const replacements = { ids };
+    const replacements = { ids, idSpeech: SPEECH_ID_MONITOR };
     const [evaluaciones, items, detalles] = await Promise.all([
       db.query(
         `SELECT e.ID_EVALUACION,e.FE_REGISTRO,e.FE_GESTION,e.ID_GESTION,e.ID_DEUDOR,e.TELEFONO,e.TMO_SEG,
-          e.IN_CALIDAD,e.RESULTADO,m.NOMBRE AS MODELO,ca.cartera AS CARTERA,
+          e.IN_CALIDAD,e.RESULTADO,m.NOMBRE AS MODELO,ca.cartera AS CARTERA,e.RUTA_AUDIO,
+          IF(e.ID_MONITOR = :idSpeech, 1, 0) AS ES_AUTOMATICA,
           CONCAT(TRIM(gestor.APELLIDOS), ', ', TRIM(gestor.NOMBRES)) AS ASESOR_NOMBRE,gestor.DOC AS ASESOR_DOC,
           CONCAT(TRIM(monitor.APELLIDOS), ', ', TRIM(monitor.NOMBRES)) AS MONITOR_NOMBRE,
           tl.NOMBRE_TIPO_LLAMADA,tg.NOMBRE_TIPO_GESTION,mnp.NOMBRE_MOTIVO_NO_PAGO
@@ -426,4 +430,4 @@ const exportHistory = async (req, res) => {
   }
 };
 
-module.exports = { getConfiguration, createEvaluation, listHistory, getHistoryDetail, exportHistory };
+module.exports = { getConfiguration, createEvaluation, listHistory, getHistoryDetail, exportHistory, getModelRows, toModel };

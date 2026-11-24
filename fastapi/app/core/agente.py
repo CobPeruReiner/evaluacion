@@ -131,15 +131,30 @@ número [n] del segmento citado. Sin evidencia: evidencia="" y segmento=null. Nu
 (con fecha, monto o ambos), p. ej. "el viernes le deposito 200". "Voy a ver", "cuando pueda", \
 "tal vez" NO son promesa. "fecha" en YYYY-MM-DD calculada a partir de la fecha de la llamada; \
 "monto" en soles como número; null si no se dijo.
-6. Motivo de no pago: si el cliente da un motivo, elige el id del catálogo que mejor encaje \
-(null si ninguno encaja o no hay catálogo) y cita la frase.
-7. No calcules puntajes ni porcentajes.
+6. Motivo de no pago: elige SIEMPRE un id de "catalogo_motivos_no_pago" y cita la frase:
+   - si el cliente promete pagar: "No aplica - Cliente predispuesto";
+   - si el cliente da un motivo: el que mejor encaje (desempleo, salud, reclamo, etc.);
+   - si el asesor nunca le preguntó por qué no ha pagado: "Asesor no indaga motivo";
+   - si el cliente se niega a decirlo: "No quiere indicar motivo";
+   - si nada encaja: "Otros".
+7. Tipo de gestión: elige SIEMPRE un id de "catalogo_tipos_gestion":
+   - "Promesa de pago - Predispuesto": el cliente se compromete a pagar;
+   - "Promesa de pago - Negativa": se negocia una promesa pero el cliente se muestra renuente \
+o no la concreta;
+   - "Sin compromiso": hay contacto pero el cliente no se compromete a nada;
+   - "Preventiva": recordatorio de pago antes del vencimiento;
+   - "No evaluable": no hubo conversación evaluable (buzón de voz, llamada cortada, sin \
+contacto con el titular, audio vacío o ininteligible).
+8. "evaluable": false SOLO en los casos de "No evaluable"; en los demás, true.
+9. No calcules puntajes ni porcentajes.
 Responde SOLO un JSON:
 {"criterios": [{"id_criterio": n, "id_accion": n|null, "evidencia": "...", "segmento": n|null, \
 "justificacion": "..."}],
  "promesa_pago": {"hay_promesa": bool, "tipo": "TOTAL"|"PARCIAL"|"NINGUNA", "fecha": "YYYY-MM-DD"|null, \
 "monto": n|null, "segmento": n|null, "cita": "..."},
  "motivo_no_pago": {"id": n|null, "cita": "..."},
+ "tipo_gestion": {"id": n|null},
+ "evaluable": bool,
  "contacto": "TITULAR"|"TERCERO"|"SIN_CONTACTO",
  "sentimiento_cliente": "POSITIVO"|"NEUTRO"|"NEGATIVO",
  "resumen": "2 o 3 oraciones sobre lo ocurrido en la llamada"}"""
@@ -157,7 +172,7 @@ def _plantilla(modelo: dict) -> list:
 
 
 def evaluar(modelo: dict, transcripcion: list, motivos: list, fecha_llamada: str,
-            palabras: list | None = None) -> dict:
+            palabras: list | None = None, tipos_gestion: list | None = None) -> dict:
     lineas = "\n".join(
         f"[{i}] {_mmss(s.get('start'))} {'ASESOR' if s.get('speaker') == ASESOR else 'CLIENTE'}: {s['text']}"
         for i, s in enumerate(transcripcion))
@@ -166,9 +181,10 @@ def evaluar(modelo: dict, transcripcion: list, motivos: list, fecha_llamada: str
         "plantilla": modelo["nombre_modelo"],
         "items": _plantilla(modelo),
         "catalogo_motivos_no_pago": motivos,
+        "catalogo_tipos_gestion": tipos_gestion or [],
         "palabras_clave_detectadas": palabras or [],
     }, ensure_ascii=False) + "\n\nTRANSCRIPCIÓN:\n" + lineas
-    return validar_salida(_chat(_SISTEMA_EVAL, usuario), modelo, motivos, len(transcripcion))
+    return validar_salida(_chat(_SISTEMA_EVAL, usuario), modelo, motivos, len(transcripcion), tipos_gestion)
 
 
 def _fecha(valor) -> str | None:
@@ -186,8 +202,27 @@ def _segmento(valor, n: int):
     return int(valor) if 0 <= int(valor) < n else None
 
 
-def validar_salida(data: dict, modelo: dict, motivos: list, n_segmentos: int) -> dict:
-    """Ajusta la respuesta del agente a la plantilla y al catálogo (descarta lo ajeno)."""
+def _por_nombre(catalogo: dict, nombre: str):
+    """Id del catálogo cuyo nombre coincide (sin distinguir mayúsculas ni espacios)."""
+    clave = " ".join(nombre.lower().split())
+    return next((i for i, n in catalogo.items() if " ".join(str(n).lower().split()) == clave), None)
+
+
+def _id_catalogo(valor, catalogo: dict):
+    if valor is None or isinstance(valor, bool):
+        return None
+    try:
+        idv = int(valor)
+    except (TypeError, ValueError):
+        return None
+    return idv if idv in catalogo else None
+
+
+def validar_salida(data: dict, modelo: dict, motivos: list, n_segmentos: int,
+                   tipos_gestion: list | None = None) -> dict:
+    """Ajusta la respuesta del agente a la plantilla y a los catálogos (descarta lo ajeno).
+    Tipo de gestión y motivo de no pago siempre quedan con un valor del catálogo cuando
+    este existe: si el agente no da uno válido se usa el respaldo por nombre."""
     validas = {c["id_criterio"]: {a["id_accion"] for a in c["acciones"]}
                for it in modelo["items"] for c in it["criterios"]}
     elecciones = {}
@@ -226,16 +261,28 @@ def validar_salida(data: dict, modelo: dict, motivos: list, n_segmentos: int) ->
         "cita": str(pp.get("cita") or "")[:400] if hay else "",
     }
 
+    ev = data.get("evaluable")
+    evaluable = not (ev is False or str(ev).lower() == "false")
+
     catalogo = {int(m["id"]): m["nombre"] for m in motivos}
-    mnp = data.get("motivo_no_pago") or {}
-    try:
-        id_motivo = int(mnp["id"]) if mnp.get("id") is not None else None
-    except (TypeError, ValueError):
-        id_motivo = None
-    if id_motivo not in catalogo:
-        id_motivo = None
-    motivo = {"id": id_motivo, "nombre": catalogo.get(id_motivo),
-              "cita": str(mnp.get("cita") or "")[:400] if id_motivo else ""}
+    mnp = data.get("motivo_no_pago")
+    mnp = mnp if isinstance(mnp, dict) else {"id": mnp}
+    id_motivo = _id_catalogo(mnp.get("id"), catalogo)
+    cita_motivo = str(mnp.get("cita") or "")[:400] if id_motivo else ""
+    if id_motivo is None and catalogo:
+        id_motivo = (_por_nombre(catalogo, "No aplica - Cliente predispuesto") if hay else None) \
+            or _por_nombre(catalogo, "Otros")
+    motivo = {"id": id_motivo, "nombre": catalogo.get(id_motivo), "cita": cita_motivo}
+
+    tipos = {int(t["id"]): t["nombre"] for t in (tipos_gestion or [])}
+    tg = data.get("tipo_gestion")
+    id_tipo = _id_catalogo(tg.get("id") if isinstance(tg, dict) else tg, tipos)
+    if not evaluable and tipos:
+        id_tipo = _por_nombre(tipos, "No evaluable") or id_tipo
+    if id_tipo is None and tipos:
+        id_tipo = (_por_nombre(tipos, "Promesa de pago - Predispuesto") if hay else None) \
+            or _por_nombre(tipos, "No evaluable")
+    tipo_gestion = {"id": id_tipo, "nombre": tipos.get(id_tipo)}
 
     def _enum(valor, opciones, defecto):
         v = str(valor or "").upper()
@@ -245,6 +292,8 @@ def validar_salida(data: dict, modelo: dict, motivos: list, n_segmentos: int) ->
         "elecciones": elecciones,
         "promesa_pago": promesa,
         "motivo_no_pago": motivo,
+        "tipo_gestion": tipo_gestion,
+        "evaluable": evaluable,
         "contacto": _enum(data.get("contacto"), {"TITULAR", "TERCERO", "SIN_CONTACTO"}, "TITULAR"),
         "sentimiento_cliente": _enum(data.get("sentimiento_cliente"), {"POSITIVO", "NEUTRO", "NEGATIVO"}, "NEUTRO"),
         "resumen": str(data.get("resumen") or "")[:1500],

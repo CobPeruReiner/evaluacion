@@ -12,13 +12,14 @@ import { Audio } from "./Components/Audio/Audio";
 import { Conversacion } from "../Evaluacion/Conversacion";
 import { EvaluacionAgente } from "../Evaluacion/EvaluacionAgente";
 import { EvaluacionLegado } from "../Evaluacion/EvaluacionLegado";
-import { claseResultado, colorPuntaje, esEvaluacionAgente, resumenDe } from "../Evaluacion/evaluacionUtils";
+import { claseResultado, colorPuntaje, esEvaluacionAgente, resumenDe, EstadoBD } from "../Evaluacion/evaluacionUtils";
 
 function ChipsResumen({ item }) {
   const resumen = resumenDe(item.evaluacion);
   const promesa = item.evaluacion?.promesa_pago;
   return (
     <span className="flex flex-wrap items-center justify-end gap-1.5">
+      <EstadoBD bd={item.bd} />
       {resumen ? (
         <>
           <span className="text-sm font-bold" style={{ color: colorPuntaje(resumen.cumplimiento_total) }}>

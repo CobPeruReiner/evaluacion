@@ -114,6 +114,12 @@ export function EvaluacionAgente({ evaluacion, transcripcion, onSeek, compacto =
             Plantilla {r.modelo} · cartera {r.tipo_cartera} · aprueba con {r.umbral_aprobacion}%
             {evaluacion.agente?.modelo_llm && <> · agente {evaluacion.agente.modelo_llm}</>}
           </p>
+          {(evaluacion.tipo_gestion?.nombre || evaluacion.evaluable === false) && (
+            <p className="mt-1 text-xs font-semibold text-stone-600">
+              Tipo de gestión: {evaluacion.tipo_gestion?.nombre || "No evaluable"}
+              {evaluacion.motivo_no_pago?.nombre && <> · Motivo de no pago: {evaluacion.motivo_no_pago.nombre}</>}
+            </p>
+          )}
           {evaluacion.resumen && !compacto && <p className="mt-2 text-sm text-stone-700">{evaluacion.resumen}</p>}
         </div>
       </div>

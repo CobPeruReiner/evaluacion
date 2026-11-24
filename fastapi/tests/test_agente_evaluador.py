@@ -102,6 +102,34 @@ def test_fecha_imposible_y_sin_promesa(modelo):
                                  "segmento": None, "cita": ""}
 
 
+TIPOS = [{"id": 97, "nombre": "Preventiva"}, {"id": 98, "nombre": "Sin compromiso"},
+         {"id": 99, "nombre": "Promesa de pago - Negativa"},
+         {"id": 100, "nombre": "Promesa de pago - Predispuesto"}, {"id": 101, "nombre": "No evaluable"}]
+MOTIVOS = [{"id": 701, "nombre": "No aplica - Cliente predispuesto"}, {"id": 702, "nombre": "Asesor no indaga motivo"},
+           {"id": 735, "nombre": "Otros"}]
+
+
+def test_tipo_gestion_y_motivo_del_agente(modelo):
+    s = agente.validar_salida({"tipo_gestion": {"id": 98}, "motivo_no_pago": {"id": 702, "cita": ""}},
+                              modelo, MOTIVOS, 3, TIPOS)
+    assert s["tipo_gestion"] == {"id": 98, "nombre": "Sin compromiso"}
+    assert s["motivo_no_pago"]["id"] == 702 and s["evaluable"] is True
+
+
+def test_respaldos_por_nombre(modelo):
+    # Sin respuesta válida: con promesa → Predispuesto / No aplica; sin promesa → No evaluable / Otros.
+    con = agente.validar_salida({"promesa_pago": {"hay_promesa": True}, "tipo_gestion": {"id": 5}},
+                                modelo, MOTIVOS, 1, TIPOS)
+    assert con["tipo_gestion"]["id"] == 100 and con["motivo_no_pago"]["id"] == 701
+    sin = agente.validar_salida({}, modelo, MOTIVOS, 1, TIPOS)
+    assert sin["tipo_gestion"]["id"] == 101 and sin["motivo_no_pago"]["id"] == 735
+
+
+def test_no_evaluable_fuerza_tipo(modelo):
+    s = agente.validar_salida({"evaluable": False, "tipo_gestion": {"id": 98}}, modelo, MOTIVOS, 1, TIPOS)
+    assert s["evaluable"] is False and s["tipo_gestion"]["nombre"] == "No evaluable"
+
+
 def test_json_con_cercos():
     assert agente._json('```json\n{"asesor": "SPEAKER_01"}\n```') == {"asesor": "SPEAKER_01"}
 
